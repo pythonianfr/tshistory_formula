@@ -1149,12 +1149,12 @@ class timeseries(basets):
                           from_value_date=None,
                           to_value_date=None,
                           revision_date=None):
-        # find all the series in the formula that are referenced in
+        # Find all the series in the formula that are referenced in
         # the binding since the series can be anywhere in the
-        # dependencies - we use exanded_formula using (shownames) to
-        # limit the expansion to the minimum necessary to show such names.
-        # This semi-expanded formula will be
-        # used later in the interpretor
+        # dependencies - we use expanded_formula using (shownames) to
+        # limit the expansion to the minimum necessary to show such
+        # names. This partially-expanded formula will be used later in the
+        # interpreter.
         tree = helper.expanded(
             self,
             cn,
