@@ -1220,3 +1220,64 @@ class timeseries(basets):
             columns.append(bi.g_evaluate(formula, combination))
 
         return pd.concat(columns, axis=1)
+
+    @tx
+    def group_rename(self, cn, oldname, newname):
+        assert isinstance(oldname, str), 'The old name must be a string'
+        assert isinstance(newname, str), 'The new name must be a string'
+        newname = newname.strip()
+        assert len(newname), 'The new name must contain non whitespace items'
+
+        super().group_rename(cn, oldname, newname)
+        self._group_formula_rewrite(cn, oldname, newname)
+
+    def _group_formula_rewrite(self, cn, oldname, newname):
+        # read all formulas and parse them ...
+        formulas = cn.execute(
+            f'select name, internal_metadata -> \'formula\' '
+            f'from "{self.namespace}".group_registry '
+            f'where internal_metadata -> \'formula\' is not null'
+        ).fetchall()
+        errors = []
+
+        def edit(tree, oldname, newname):
+            newtree = []
+            group = False
+            for node in tree:
+                if isinstance(node, list):
+                    newtree.append(edit(node, oldname, newname))
+                    continue
+                if node == 'group':
+                    group = True
+                    newtree.append(node)
+                    continue
+                elif node == oldname and group:
+                    node = newname
+                newtree.append(node)
+                group = False
+            return newtree
+
+        rewritten = {}
+        for fname, text in formulas:
+            tree = parse(text)
+            groups = self.find_groups_and_series(
+                cn,
+                tree
+            )
+            if newname in groups:
+                errors.append(fname)
+            if oldname not in groups or errors:
+                continue
+
+            newtree = edit(tree, oldname, newname)
+            rewritten[fname] = serialize(newtree)
+
+        if errors:
+            raise ValueError(
+                f'new name is already referenced by `{",".join(errors)}`'
+            )
+
+        for fname, text in rewritten.items():
+            # updating using jsonb_set is such a PITA ... we for now
+            # prefer to be slightly more expensive
+            self.update_group_internal_metadata(cn, fname, {'formula': text})

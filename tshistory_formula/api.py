@@ -124,6 +124,7 @@ def formula(self,
             return serialize(tree)
 
     # NOTE: pass levels and remote
+    # except: if we are actually a primary ... do we want to look otherwise ?
     return self.othersources.formula(
         name,
         display=display,

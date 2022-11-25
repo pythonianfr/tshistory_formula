@@ -959,6 +959,16 @@ def test_group_formula(tsa):
 
     assert df_roundtrip.equals(df_original)
 
+    tsa.group_rename('difference', 'difference2')
+    tsa.group_rename('groupa', 'groupb')
+
+    gf = tsa.group_formula('roundtripeda')
+    assert gf == '(group-add (group "difference2") (series "plain_tsa"))'
+
+    df_roundtrip = tsa.group_get('roundtripeda')
+    df_original = tsa.group_get('groupb')
+    assert df_roundtrip.equals(df_original)
+
 
 def test_no_group(tsa):
     tsa.group_get('nope')
@@ -1076,6 +1086,16 @@ def test_group_bound_formula(tsa):
 2021-01-03 00:00:00+00:00  5.0  7.0
 """, df)
 
+    # robust to underlying primary group renaming ?
+    tsa.group_rename('wind-ens', 'wind-ens2')
+    df = tsa.group_get('hijacking')
+    assert_df("""
+                             0    1
+2021-01-01 00:00:00+00:00  1.0  3.0
+2021-01-02 00:00:00+00:00  3.0  5.0
+2021-01-03 00:00:00+00:00  5.0  7.0
+""", df)
+
     assert tsa.group_exists('hijacking')
     assert tsa.group_type('hijacking') == 'bound'
 
@@ -1102,10 +1122,27 @@ def test_group_bound_formula(tsa):
         'value_type': 'float64'
     }
 
-    tsa.group_delete('hijacking')
+    # let's rename things
+    tsa.rename('base-temp', 'base-temp2')
+    tsa.rename('base-wind', 'base-wind2')
+    tsa.rename('hijacked', 'hujacked2')
+    tsa.group_rename('temp-ens', 'temp-ens2')
+    tsa.group_rename('wind-ens', 'wind-ens2')
+    tsa.group_rename('hijacking', 'hijacking2')
+
     assert not tsa.group_exists('hijacking')
 
-    assert tsa.group_metadata('hijacking') is None
+    df = tsa.group_get('hijacking2')
+    assert_df("""
+                             0    1
+2021-01-01 00:00:00+00:00  1.0  3.0
+2021-01-02 00:00:00+00:00  3.0  5.0
+2021-01-03 00:00:00+00:00  5.0  7.0
+""", df)
+
+    tsa.group_delete('hijacking2')
+    assert not tsa.group_exists('hijacking2')
+    assert tsa.group_metadata('hijacking2') is None
 
 
 def test_more_group_errors(tsx):
