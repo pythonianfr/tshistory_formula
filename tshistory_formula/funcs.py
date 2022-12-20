@@ -153,9 +153,9 @@ def series(__interpreter__,
     if not exists:
         raise ValueError(f'No such series `{name}`')
 
-    meta = i.tsh.metadata(i.cn, name)
+    meta = i.tsh.internal_metadata(i.cn, name)
     if meta is None:
-        meta = i.tsh.othersources.metadata(name)
+        meta = i.tsh.othersources.internal_metadata(name)
     tzaware = meta['tzaware']
 
     args = {
@@ -185,10 +185,10 @@ def series(__interpreter__,
 @metadata('series')
 def series_metas(cn, tsh, stree):
     name = stree[1]
-    meta = tsh.metadata(cn, name)
+    meta = tsh.internal_metadata(cn, name)
     # alt sources lookup
     if meta is None and tsh.othersources:
-        meta = tsh.othersources.metadata(name)
+        meta = tsh.othersources.internal_metadata(name)
     return {name: meta}
 
 

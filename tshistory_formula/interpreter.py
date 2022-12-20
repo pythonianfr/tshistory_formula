@@ -128,7 +128,7 @@ class HistoryInterpreter(Interpreter):
         self.histories = histories
         # a callsite -> name mapping
         self.namecache = {}
-        self.tzaware = self.tsh.metadata(self.cn, name)['tzaware']
+        self.tzaware = self.tsh.internal_metadata(self.cn, name)['tzaware']
 
     def _find_by_nearest_idate(self, name, idate):
         hist = self.histories[name]

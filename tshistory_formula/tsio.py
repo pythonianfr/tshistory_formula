@@ -252,9 +252,9 @@ class timeseries(basets):
             return
 
         coremeta = self.default_meta(tzaware)
-        meta = self.metadata(cn, name) or {}
+        meta = self.internal_metadata(cn, name) or {}
         meta = dict(meta, **coremeta)
-        self.update_metadata(cn, name, meta, internal=True)
+        self.update_internal_metadata(cn, name, meta)
 
     def live_content_hash(self, cn, name):
         return hashlib.sha1(
@@ -838,6 +838,36 @@ class timeseries(basets):
         )
 
     @tx
+    def internal_metadata(self, cn, name):
+        if self.type(cn, name) != 'formula':
+            return super().internal_metadata(cn, name)
+
+        if name in cn.cache['internal_metadata']:
+            return cn.cache['internal_metadata'][name]
+        meta = cn.cache['internal_metadata'][name] = cn.execute(
+            f'select internal_metadata '
+            f'from "{self.namespace}".formula '
+            f'where name = %(name)s',
+            name=name
+        ).scalar()
+        return meta
+
+    @tx
+    def update_internal_metadata(self, cn, name, metadata):
+        if self.type(cn, name) != 'formula':
+            return super().update_internal_metadata(cn, name, metadata)
+
+        imeta = self.internal_metadata(cn, name) or {}
+        imeta.update(metadata)
+        cn.execute(
+            f'update "{self.namespace}".formula '
+            'set internal_metadata = %(metadata)s '
+            'where name = %(seriesname)s',
+            metadata=json.dumps(imeta),
+            seriesname=name
+        )
+
+    @tx
     def metadata(self, cn, name):
         """Return metadata dict of timeserie."""
         if self.type(cn, name) != 'formula':
@@ -845,13 +875,13 @@ class timeseries(basets):
 
         sql = (f'select metadata from "{self.namespace}".formula '
                'where name = %(name)s')
-        meta = cn.execute(sql, name=name).scalar()
+        meta = cn.execute(sql, name=name).scalar() or {}
         return meta
 
     @tx
-    def update_metadata(self, cn, name, metadata, internal=False):
+    def update_metadata(self, cn, name, metadata):
         if self.type(cn, name) != 'formula':
-            return super().update_metadata(cn, name, metadata, internal)
+            return super().update_metadata(cn, name, metadata)
 
         assert isinstance(metadata, dict)
         meta = self.metadata(cn, name) or {}
@@ -1341,7 +1371,7 @@ class timeseries(basets):
             for sname in binding.series:
                 assert self.exists(cn, sname), f'Series `{sname}` does not exist.'
                 tstzstate.append(
-                    (sname, self.metadata(cn, sname)['tzaware'])
+                    (sname, self.internal_metadata(cn, sname)['tzaware'])
                 )
             for (gname, gtz), (sname, stz) in zip(grtzstate, tstzstate):
                 assert gtz == stz, f'Series `{sname}` and group `{gname}` must be tz-compatible.'

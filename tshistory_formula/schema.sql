@@ -2,11 +2,14 @@ create table "{ns}".formula (
   id serial primary key,
   name text not null,
   text text not null,
+  internal_metadata jsonb,
   metadata jsonb,
   contenthash text not null
 );
 
 create unique index "ix_{ns}_formula_name" on "{ns}".formula (name);
+create index on "{ns}".formula using gin(internal_metadata);
+create index on "{ns}".formula using gin(metadata);
 
 
 create table "{ns}".dependant (
