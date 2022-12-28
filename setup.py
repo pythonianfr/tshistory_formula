@@ -25,8 +25,6 @@ setup(name='tshistory_formula',
           'schema.sql'
       ]},
       entry_points={'tshistory.subcommands': [
-          'ingest-formulas=tshistory_formula.cli:ingest_formulas',
-          'update-formula-metadata=tshistory_formula.cli:update_metadata',
           'typecheck-formula=tshistory_formula.cli:typecheck_formula',
           'test-formula=tshistory_formula.cli:test_formula',
           'formula-init-db=tshistory_formula.cli:init_db',

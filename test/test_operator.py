@@ -41,7 +41,7 @@ def test_naive_tzone(engine, tsh):
 2020-01-03 01:00:00    3.0
 """, ts)
 
-    meta = tsh.metadata(engine, 'to-naive')
+    meta = tsh.internal_metadata(engine, 'to-naive')
     assert meta['tzaware'] == False
 
     tsh.update(
@@ -121,7 +121,7 @@ def test_naive_over_naive(engine, tsh):
 Name: naive-series, dtype: float64
 """, ts)
 
-    meta = tsh.metadata(engine, 'naive-over-naive')
+    meta = tsh.internal_metadata(engine, 'naive-over-naive')
     assert meta['tzaware'] == False
 
 
@@ -2422,8 +2422,10 @@ def test_base_integration(engine, tsh):
         'ts_stock_fcst',
         '(integration "stock_obs" "flow")'
     )
-    meta = tsh.metadata(engine, 'ts_stock_fcst')
+    meta = tsh.internal_metadata(engine, 'ts_stock_fcst')
     assert meta == {
+        'contenthash': '3dc8c4510650147caf7096761a1a4fece5b708ce',
+        'formula': '(integration "stock_obs" "flow")',
         'index_dtype': '<M8[ns]',
         'index_type': 'datetime64[ns]',
         'tzaware': False,

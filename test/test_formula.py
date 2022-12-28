@@ -159,7 +159,9 @@ def test_metadata(engine, tsh):
         '(+ 2 (series "metadata_naive"))',
     )
 
-    assert tsh.metadata(engine, 'test_meta') == {
+    assert tsh.internal_metadata(engine, 'test_meta') == {
+        'contenthash': '3255418caaa64aaec854e9b2fcabe9f0ee95d866',
+        'formula': '(+ 2 (series "metadata_naive"))',
         'index_dtype': '<M8[ns]',
         'index_type': 'datetime64[ns]',
         'tzaware': False,
@@ -192,8 +194,10 @@ def test_metadata(engine, tsh):
         'test_meta_primary_plus_formula',
         '(add (series "test_meta") (series "metadata_naive"))',
     )
-    meta = tsh.metadata(engine, 'test_meta_primary_plus_formula')
+    meta = tsh.internal_metadata(engine, 'test_meta_primary_plus_formula')
     assert meta == {
+        'contenthash': 'c10807ce39ace1c56c0bc53ff77e2981aa64c2ec',
+        'formula': '(add (series "test_meta") (series "metadata_naive"))',
         'index_dtype': '<M8[ns]',
         'index_type': 'datetime64[ns]',
         'tzaware': False,
@@ -226,12 +230,7 @@ def test_user_meta(engine, tsh):
     meta = tsh.metadata(engine, 'test_user_meta')
     assert meta['foo'] == 42
     assert meta == {
-        'foo': 42,
-        'index_dtype': '|M8[ns]',
-        'index_type': 'datetime64[ns, UTC]',
-        'tzaware': True,
-        'value_dtype': '<f8',
-        'value_type': 'float64'
+        'foo': 42
     }
 
     tsh.register_formula(
@@ -242,12 +241,7 @@ def test_user_meta(engine, tsh):
     meta = tsh.metadata(engine, 'test_user_meta')
     # user meta preserved, core meta correctly updated
     assert meta == {
-        'foo': 42,
-        'index_dtype': '<M8[ns]',
-        'index_type': 'datetime64[ns]',
-        'tzaware': False,
-        'value_dtype': '<f8',
-        'value_type': 'float64'
+        'foo': 42
     }
 
 
@@ -446,24 +440,23 @@ def test_base_api(engine, tsh):
 2019-01-03    6.0
 """, plus)
 
-    m = tsh.metadata(engine, 'test_product_a')
+    m = tsh.internal_metadata(engine, 'test_product_a')
     assert m == {
+        'contenthash': '6f43a6a9181beacdea858482ed30a05ea5247401',
+        'formula': '(* 1.5 (series "test"))',
         'index_dtype': '<M8[ns]',
         'index_type': 'datetime64[ns]',
         'tzaware': False,
         'value_dtype': '<f8',
         'value_type': 'float64'
     }
+    m = tsh.metadata(engine, 'test_product_a')
+    assert m == {}
 
     tsh.update_metadata(engine, 'test_product_a', {'topic': 'spot price'})
     m = tsh.metadata(engine, 'test_product_a')
     assert m == {
-        'index_dtype': '<M8[ns]',
-        'index_type': 'datetime64[ns]',
-        'topic': 'spot price',
-        'tzaware': False,
-        'value_dtype': '<f8',
-        'value_type': 'float64'
+        'topic': 'spot price'
     }
 
     tsh.update_metadata(
@@ -474,13 +467,8 @@ def test_base_api(engine, tsh):
     )
     m = tsh.metadata(engine, 'test_product_a')
     assert m == {
-        'index_dtype': '<M8[ns]',
-        'index_type': 'datetime64[ns]',
         'topic': 'Spot Price',
-        'tzaware': False,
         'unit': '€',
-        'value_dtype': '<f8',
-        'value_type': 'float64'
     }
 
     tsh.update_metadata(
@@ -490,12 +478,7 @@ def test_base_api(engine, tsh):
     )
     m = tsh.metadata(engine, 'test_product_a')
     assert m == {
-        'index_dtype': '<M8[ns]',
-        'index_type': 'datetime64[ns]',
-        'tzaware': False,
         'unit': '€',
-        'value_dtype': '<f8',
-        'value_type': 'float64'
     }
 
     tsh.delete(engine, 'test_plus_two')
@@ -925,7 +908,7 @@ def test_ifunc(engine, tsh):
     @metadata('shifter')
     def shifter_metadata(cn, tsh, stree):
         return {
-            stree[1]: tsh.metadata(cn, stree[1])
+            stree[1]: tsh.internal_metadata(cn, stree[1])
         }
 
     @finder('shifter')
@@ -1196,8 +1179,10 @@ def test_custom_metadata(engine, tsh):
         False
     )
 
-    meta = tsh.metadata(engine, 'custom')
+    meta = tsh.internal_metadata(engine, 'custom')
     assert meta == {
+        'contenthash': '5c0ec5006648ef40a7358294233db59bebbacda6',
+        'formula': '(+ 3 (customseries))',
         'index_type': 'datetime64[ns]',
         'index_dtype': '<M8[ns]',
         'tzaware': False,
@@ -2008,7 +1993,7 @@ def test_autolike_operator_history_nr(engine, tsh):
     @metadata('weird-operator')
     def weirdo(cn, tsh, tree):
         return {
-            tree[1]: tsh.metadata(cn, tree[1])
+            tree[1]: tsh.internal_metadata(cn, tree[1])
         }
 
     @finder('weird-operator')
@@ -2938,20 +2923,20 @@ def test_group_bound_formula(engine, tsh):
         'hijacking': 'bound'
     }
 
-    assert tsh.group_metadata(engine, 'hijacking') == {
-        'index_dtype': '|M8[ns]',
-        'index_type': 'datetime64[ns, UTC]',
-        'tzaware': True,
-        'value_dtype': '<f8',
-        'value_type': 'float64'
-    }
+    assert tsh.group_metadata(engine, 'hijacking') == {}
+    #     'index_dtype': '|M8[ns]',
+    #     'index_type': 'datetime64[ns, UTC]',
+    #     'tzaware': True,
+    #     'value_dtype': '<f8',
+    #     'value_type': 'float64'
+    # }
     tsh.update_group_metadata(engine, 'hijacking', {'foo': 'bar'})
     assert tsh.group_metadata(engine, 'hijacking') == {
-        'index_dtype': '|M8[ns]',
-        'index_type': 'datetime64[ns, UTC]',
-        'tzaware': True,
-        'value_dtype': '<f8',
-        'value_type': 'float64',
+        # 'index_dtype': '|M8[ns]',
+        # 'index_type': 'datetime64[ns, UTC]',
+        # 'tzaware': True,
+        # 'value_dtype': '<f8',
+        # 'value_type': 'float64',
         'foo': 'bar'
     }
 

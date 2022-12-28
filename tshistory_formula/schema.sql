@@ -1,20 +1,6 @@
-create table "{ns}".formula (
-  id serial primary key,
-  name text not null,
-  text text not null,
-  internal_metadata jsonb,
-  metadata jsonb,
-  contenthash text not null
-);
-
-create unique index "ix_{ns}_formula_name" on "{ns}".formula (name);
-create index on "{ns}".formula using gin(internal_metadata);
-create index on "{ns}".formula using gin(metadata);
-
-
 create table "{ns}".dependant (
-  sid int not null references "{ns}".formula(id) on delete cascade,
-  needs int not null references "{ns}".formula(id) on delete cascade,
+  sid int not null references "{ns}".registry(id) on delete cascade,
+  needs int not null references "{ns}".registry(id) on delete cascade,
   unique(sid, needs)
 );
 

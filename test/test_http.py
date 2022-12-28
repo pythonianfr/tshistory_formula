@@ -418,11 +418,11 @@ def test_bound_formula(tsx):
     assert tsx.group_metadata('hijacking') == {'foo': 'bar'}
     assert tsx.group_metadata('hijacking', all=True) == {
         'foo': 'bar',
-        'index_dtype': '|M8[ns]',
-        'index_type': 'datetime64[ns, UTC]',
-        'tzaware': True,
-        'value_dtype': '<f8',
-        'value_type': 'float64'
+        # 'index_dtype': '|M8[ns]',
+        # 'index_type': 'datetime64[ns, UTC]',
+        # 'tzaware': True,
+        # 'value_dtype': '<f8',
+        # 'value_type': 'float64'
     }
 
     tsx.group_delete('hijacking')

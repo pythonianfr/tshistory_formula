@@ -1291,7 +1291,7 @@ def _integration(__interpreter__, iargs, stock_name, flow_name, fill):
     assert i.tsh.exists(i.cn, stock_name), f'No series {stock_name}'
     assert i.tsh.exists(i.cn, flow_name), f'No series {flow_name}'
 
-    tzaware = i.tsh.metadata(i.cn, stock_name)['tzaware']
+    tzaware = i.tsh.internal_metadata(i.cn, stock_name)['tzaware']
     ts_stock = find_last_values(
         __interpreter__,
         stock_name,
@@ -1414,8 +1414,8 @@ def integration(
 @metadata('integration')
 def integration_metadata(cn, tsh, tree):
     return {
-        tree[1]: tsh.metadata(cn, tree[1]),
-        tree[2]: tsh.metadata(cn, tree[2])
+        tree[1]: tsh.internal_metadata(cn, tree[1]),
+        tree[2]: tsh.internal_metadata(cn, tree[2])
     }
 
 

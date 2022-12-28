@@ -3,6 +3,7 @@ from datetime import timedelta
 import hashlib
 import itertools
 import json
+import logging
 
 import pandas as pd
 from psyl.lisp import parse, serialize
@@ -29,6 +30,9 @@ from tshistory_formula.registry import (
     GIDATES,
     GMETAS
 )
+
+
+L = logging.getLogger('tshistory.tsio')
 
 
 class timeseries(basets):
@@ -139,7 +143,8 @@ class timeseries(basets):
     def register_dependants(self, cn, name, tree):
         cn.execute(
             f'delete from "{self.namespace}".dependant where '
-            f'sid in (select id from "{self.namespace}".formula where name = %(name)s)',
+            f'sid in (select id from "{self.namespace}".registry '
+            f'        where name = %(name)s)',
             name=name
         )
         for dep in self.find_series(cn, tree):
@@ -149,8 +154,8 @@ class timeseries(basets):
                 f'insert into "{self.namespace}".dependant '
                 f'(sid, needs) '
                 f'values ('
-                f' (select id from "{self.namespace}".formula where name = %(name)s),'
-                f' (select id from "{self.namespace}".formula where name = %(dep)s)'
+                f' (select id from "{self.namespace}".registry where name = %(name)s),'
+                f' (select id from "{self.namespace}".registry where name = %(dep)s)'
                 f') on conflict do nothing',
                 name=name,
                 dep=dep
@@ -161,8 +166,8 @@ class timeseries(basets):
         deps = [
             n for n, in cn.execute(
                 f'select f.name '
-                f'from "{self.namespace}".formula as f, '
-                f'     "{self.namespace}".formula as f2,'
+                f'from "{self.namespace}".registry as f, '
+                f'     "{self.namespace}".registry as f2,'
                 f'     "{self.namespace}".dependant as d '
                 f'where f.id = d.sid and '
                 f'      d.needs = f2.id and '
@@ -185,8 +190,9 @@ class timeseries(basets):
         assert isinstance(name, str), 'The name must be a string'
         name = name.strip()
         assert len(name), 'The new name must contain non whitespace items'
+        exists = self.exists(cn, name)
 
-        if self.exists(cn, name) and self.type(cn, name) == 'primary':
+        if exists and self.type(cn, name) == 'primary':
             raise TypeError(
                 f'primary series `{name}` cannot be overriden by a formula'
             )
@@ -232,29 +238,39 @@ class timeseries(basets):
                 self._expanded_formula(cn, formula)
             ).encode()
         ).hexdigest()
-        sql = (f'insert into "{self.namespace}".formula '
-               '(name, text, contenthash) '
-               'values (%(name)s, %(text)s, %(contenthash)s) '
-               'on conflict (name) do update '
-               'set text = %(text)s, contenthash=%(contenthash)s')
-        cn.execute(
-            sql,
-            name=name,
-            text=formula,
-            contenthash=ch
-        )
 
-        self.register_dependants(cn, name, tree)
-
-        # save metadata
         if tzaware is None:
-            # bad situation ...
-            return
+            # bad situation ... we should stop accepting references to
+            # unknown series and provide a batch registration api
+            # point instead
+            L.warn('formula %s has no tzaware info (will be broken)', name)
 
         coremeta = self.default_meta(tzaware)
         meta = self.internal_metadata(cn, name) or {}
         meta = dict(meta, **coremeta)
-        self.update_internal_metadata(cn, name, meta)
+        meta['formula'] = formula
+        meta['contenthash'] = ch
+        self._register_formula(cn, name, meta, exists)
+        self.register_dependants(cn, name, tree)
+
+    def _register_formula(self, cn, name, seriesmeta, exists):
+        if exists:
+            cn.execute(
+                f'update "{self.namespace}".registry '
+                'set internal_metadata = %(meta)s '
+                'where name=%(name)s',
+                name=name,
+                meta=json.dumps(seriesmeta)
+            )
+        else:
+            cn.execute(
+                f'insert into "{self.namespace}".registry '
+                '(name, internal_metadata) '
+                'values (%s, %s) '
+                'returning id',
+                name,
+                json.dumps(seriesmeta)
+            )
 
     def live_content_hash(self, cn, name):
         return hashlib.sha1(
@@ -285,21 +301,26 @@ class timeseries(basets):
 
     def content_hash(self, cn, name):
         return cn.execute(
-            f'select contenthash from "{self.namespace}".formula '
+            f'select internal_metadata->\'contenthash\' '
+            f'from "{self.namespace}".registry '
             f'where name=%(name)s',
             name=name
         ).scalar()
 
     def formula(self, cn, name):
-        formula = cn.execute(
-            f'select text from "{self.namespace}".formula where name = %(name)s',
+        return cn.execute(
+            f'select internal_metadata->\'formula\' '
+            f'from "{self.namespace}".registry '
+            f'where name = %(name)s',
             name=name
         ).scalar()
-        return formula
 
     def list_series(self, cn):
         series = super().list_series(cn)
-        sql = f'select name from "{self.namespace}".formula'
+        sql = (
+            f'select name from "{self.namespace}".registry '
+            'where internal_metadata->\'formula\' is not null'
+        )
         series.update({
             name: 'formula'
             for name, in cn.execute(sql)
@@ -314,6 +335,17 @@ class timeseries(basets):
 
     def exists(self, cn, name):
         return super().exists(cn, name) or bool(self.formula(cn, name))
+
+    @tx
+    def delete(self, cn, name):
+        if self.type(cn, name) != 'formula':
+            return super().delete(cn, name)
+
+        cn.execute(
+            f'delete from "{self.namespace}".registry '
+            'where name = %(name)s',
+            name=name
+        )
 
     def update(self, cn, updatets, name, author, **k):
         if self.type(cn, name) == 'formula':
@@ -370,17 +402,6 @@ class timeseries(basets):
             return
 
         return serialize(tree)
-
-    @tx
-    def delete(self, cn, name):
-        if self.type(cn, name) != 'formula':
-            return super().delete(cn, name)
-
-        cn.execute(
-            f'delete from "{self.namespace}".formula '
-            'where name = %(name)s',
-            name=name
-        )
 
     @tx
     def iter_revisions(
@@ -838,70 +859,6 @@ class timeseries(basets):
         )
 
     @tx
-    def internal_metadata(self, cn, name):
-        if self.type(cn, name) != 'formula':
-            return super().internal_metadata(cn, name)
-
-        if name in cn.cache['internal_metadata']:
-            return cn.cache['internal_metadata'][name]
-        meta = cn.cache['internal_metadata'][name] = cn.execute(
-            f'select internal_metadata '
-            f'from "{self.namespace}".formula '
-            f'where name = %(name)s',
-            name=name
-        ).scalar()
-        return meta
-
-    @tx
-    def update_internal_metadata(self, cn, name, metadata):
-        if self.type(cn, name) != 'formula':
-            return super().update_internal_metadata(cn, name, metadata)
-
-        imeta = self.internal_metadata(cn, name) or {}
-        imeta.update(metadata)
-        cn.execute(
-            f'update "{self.namespace}".formula '
-            'set internal_metadata = %(metadata)s '
-            'where name = %(seriesname)s',
-            metadata=json.dumps(imeta),
-            seriesname=name
-        )
-
-    @tx
-    def metadata(self, cn, name):
-        """Return metadata dict of timeserie."""
-        if self.type(cn, name) != 'formula':
-            return super().metadata(cn, name)
-
-        sql = (f'select metadata from "{self.namespace}".formula '
-               'where name = %(name)s')
-        meta = cn.execute(sql, name=name).scalar() or {}
-        return meta
-
-    @tx
-    def update_metadata(self, cn, name, metadata):
-        if self.type(cn, name) != 'formula':
-            return super().update_metadata(cn, name, metadata)
-
-        assert isinstance(metadata, dict)
-        meta = self.metadata(cn, name) or {}
-        newmeta = {
-            key: meta[key]
-            for key in self.metakeys
-            if meta.get(key) is not None
-            and key not in self.metadata_compat_excluded
-        }
-        newmeta.update(metadata)
-        sql = (f'update "{self.namespace}".formula '
-               'set metadata = %(metadata)s '
-               'where name = %(name)s')
-        cn.execute(
-            sql,
-            metadata=json.dumps(newmeta),
-            name=name
-        )
-
-    @tx
     def log(self, cn, name, **kw):
         if self.formula(cn, name):
             if self.cache.exists(cn, name):
@@ -920,7 +877,8 @@ class timeseries(basets):
         assert len(newname), 'The new name must contain non whitespace items'
         # read all formulas and parse them ...
         formulas = cn.execute(
-            f'select name, text from "{self.namespace}".formula'
+            f'select name, internal_metadata->\'formula\' '
+            f'from "{self.namespace}".registry'
         ).fetchall()
         errors = []
 
@@ -954,30 +912,16 @@ class timeseries(basets):
 
             newtree = edit(tree, oldname, newname)
             newtext = serialize(newtree)
-            sql = (f'update "{self.namespace}".formula '
-                   'set text = %(text)s '
-                   'where name = %(name)s')
-            cn.execute(
-                sql,
-                text=newtext,
-                name=fname
-            )
+            # updating using jsonb_set is such a PITA ... we for now
+            # prefer to be slightly more expensive
+            self.update_internal_metadata(cn, fname, {'formula': newtext})
 
         if errors:
             raise ValueError(
                 f'new name is already referenced by `{",".join(errors)}`'
             )
 
-        if self.type(cn, oldname) == 'formula':
-            cn.execute(
-                f'update "{self.namespace}".formula '
-                'set name = %(newname)s '
-                'where name = %(oldname)s',
-                oldname=oldname,
-                newname=newname
-            )
-        else:
-            super().rename(cn, oldname, newname)
+        super().rename(cn, oldname, newname)
 
     # groups
 
