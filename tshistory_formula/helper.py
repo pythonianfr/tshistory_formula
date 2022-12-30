@@ -248,9 +248,7 @@ def find_autos(cn, tsh, name):
             _find_autos(
                 cn,
                 tsh,
-                parse(
-                    tsh.expanded_formula(cn, name)
-                )
+                tsh._expanded_formula(cn, tsh.formula(cn, name))
             )
         )
     )
