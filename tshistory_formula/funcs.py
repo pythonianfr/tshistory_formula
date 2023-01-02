@@ -119,6 +119,8 @@ def series(__interpreter__,
            limit: Optional[int]=None,
            weight: Optional[Number]=None) -> pd.Series:
     """
+    Returns a time series by name.
+
     The `series` operator accepts several keywords:
 
     * `fill` to specify a filling policy to avoid `nans` when the
@@ -590,7 +592,7 @@ def _group_series(*serieslist):
 # trigonometric functions
 
 @func('trig.cos')
-def cosinus(series: pd.Series,
+def trig_cosinus(series: pd.Series,
             decimals: Optional[Number]=None) -> pd.Series:
     """
     Cosine element-wise on a degree series.
@@ -606,7 +608,7 @@ def cosinus(series: pd.Series,
 
 
 @func('trig.arccos')
-def arccosinus(series: pd.Series) -> pd.Series:
+def trig_arccosinus(series: pd.Series) -> pd.Series:
     """
     Trigonometric inverse cosine on a series of values [-1, 1] with a degree output.
 
@@ -620,7 +622,7 @@ def arccosinus(series: pd.Series) -> pd.Series:
 
 
 @func('trig.sin')
-def sinus(series: pd.Series,
+def trig_sinus(series: pd.Series,
           decimals: Optional[Number]=None) -> pd.Series:
     """
     Trigonometric sine element-wise on a degree series.
@@ -637,7 +639,7 @@ def sinus(series: pd.Series,
 
 
 @func('trig.arcsin')
-def arcsinus(series: pd.Series) -> pd.Series:
+def trig_arcsinus(series: pd.Series) -> pd.Series:
     """
     Trigonometric inverse sine on a series of values [-1, 1] with a degree output.
 
@@ -651,8 +653,8 @@ def arcsinus(series: pd.Series) -> pd.Series:
 
 
 @func('trig.tan')
-def tangent(series: pd.Series,
-            decimals: Optional[Number]=None) -> pd.Series:
+def trig_tangent(series: pd.Series,
+                 decimals: Optional[Number]=None) -> pd.Series:
     """
     Compute tangent element-wise on a degree series.
 
@@ -668,7 +670,7 @@ def tangent(series: pd.Series,
 
 
 @func('trig.arctan')
-def arctangent(series: pd.Series) -> pd.Series:
+def trig_arctangent(series: pd.Series) -> pd.Series:
     """
     Trigonometric inverse tangent on a series of values [-1, 1] with a degree output.
 
@@ -681,8 +683,8 @@ def arctangent(series: pd.Series) -> pd.Series:
 
 
 @func('trig.row-arctan2')
-def arctangent2(series1: pd.Series,
-                series2: pd.Series) -> pd.Series:
+def trig_arctangent2(series1: pd.Series,
+                     series2: pd.Series) -> pd.Series:
     """
     Arc tangent of x1/x2 choosing the quadrant correctly with a degree output.
 
@@ -730,7 +732,7 @@ def series_multiply(*serieslist: pd.Series) -> pd.Series:
     Element wise multiplication of series. Takes a variable number of
     series as input.
 
-    Example: `(mul (series "banana-spot-price ($)") (series "$-to-€" #:fill 'ffill'))`
+    Example: `(mul (series "banana-spot-price ($)") (series "$-to-€" #:fill "ffill"))`
 
     This might convert a series priced in dollars to a series priced
     in euros, using a currency exchange rate series with a
@@ -921,6 +923,7 @@ def row_min(*serieslist: pd.Series, skipna: Optional[bool]=True) -> pd.Series:
     Computes the row-wise minimum of its input series.
 
     Example: `(row-min (series "station0") (series "station1") (series "station2"))`
+
     Example: `(row-min (series "station0") (series "station1") #:skipna #f)`
 
     The `skipna` keyword (which is true by default) controls the
@@ -936,6 +939,7 @@ def row_max(*serieslist: pd.Series, skipna: Optional[bool]=True) -> pd.Series:
     Computes the row-wise maximum of its input series.
 
     Example: `(row-max (series "station0") (series "station1") (series "station2"))`
+
     Example: `(row-max (series "station0") (series "station1") #:skipna #f)`
 
     The `skipna` keyword (which is true by default) controls the
@@ -951,6 +955,7 @@ def row_std(*serieslist: pd.Series, skipna: Optional[bool]=True) -> pd.Series:
     Computes the standard deviation over its input series.
 
     Example: `(std (series "station0") (series "station1") (series "station2"))`
+
     Example: `(std (series "station0") (series "station1") #:skipna #f)`
 
     The `skipna` keyword (which is true by default) controls the
@@ -1434,7 +1439,8 @@ def doy_scope_shift_transform(tree):
             Symbol('shifted'), Symbol('from_value_date'), Keyword('years'), -int(depth)
         ],
         Symbol('to_value_date'), [
-            Symbol('shifted'), Symbol('to_value_date'), Keyword('years'), -1],
+            Symbol('shifted'), Symbol('to_value_date'), Keyword('years'), -1
+        ],
     ]
     top.append(tree)
     return top
@@ -1454,7 +1460,9 @@ def doy_aggregation(
     Examples:
 
      `(doy-agg (series "foo") 4)`
+
      `(doy-agg (series "bar") 10 #:method "median")`
+
      `(doy-agg (series "quux") 4 #:leap_day_rule "ignore" #:valid_aggr_ratio 0.)`
 
     The `method` keyword controls the function of aggregation (see
