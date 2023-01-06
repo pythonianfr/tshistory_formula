@@ -140,9 +140,9 @@ class timeseries(basets):
         return nodes
 
     @tx
-    def register_dependants(self, cn, name, tree):
+    def register_dependents(self, cn, name, tree):
         cn.execute(
-            f'delete from "{self.namespace}".dependant where '
+            f'delete from "{self.namespace}".dependent where '
             f'sid in (select id from "{self.namespace}".registry '
             f'        where name = %(name)s)',
             name=name
@@ -151,7 +151,7 @@ class timeseries(basets):
             if self.type(cn, dep) != 'formula':
                 continue
             cn.execute(
-                f'insert into "{self.namespace}".dependant '
+                f'insert into "{self.namespace}".dependent '
                 f'(sid, needs) '
                 f'values ('
                 f' (select id from "{self.namespace}".registry where name = %(name)s),'
@@ -162,13 +162,13 @@ class timeseries(basets):
             )
 
     @tx
-    def dependants(self, cn, name, direct=False):
+    def dependents(self, cn, name, direct=False):
         deps = [
             n for n, in cn.execute(
                 f'select f.name '
                 f'from "{self.namespace}".registry as f, '
                 f'     "{self.namespace}".registry as f2,'
-                f'     "{self.namespace}".dependant as d '
+                f'     "{self.namespace}".dependent as d '
                 f'where f.id = d.sid and '
                 f'      d.needs = f2.id and '
                 f'      f2.name = %(name)s',
@@ -181,7 +181,7 @@ class timeseries(basets):
 
         for dname in deps[:]:
             deps.extend(
-                self.dependants(cn, dname)
+                self.dependents(cn, dname)
             )
         return sorted(set(deps))
 
@@ -251,7 +251,7 @@ class timeseries(basets):
         meta['formula'] = formula
         meta['contenthash'] = ch
         self._register_formula(cn, name, meta, exists)
-        self.register_dependants(cn, name, tree)
+        self.register_dependents(cn, name, tree)
 
     def _register_formula(self, cn, name, seriesmeta, exists):
         if exists:

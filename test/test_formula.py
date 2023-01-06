@@ -2068,20 +2068,20 @@ def test_dependants(engine, tsh):
         'dep-top',
         '(add (series "dep-middle-left") (series "dep-middle-right"))'
     )
-    assert tsh.dependants(engine, 'dep-top') == []
-    assert tsh.dependants(engine, 'dep-middle-left') == [
+    assert tsh.dependents(engine, 'dep-top') == []
+    assert tsh.dependents(engine, 'dep-middle-left') == [
         'dep-top',
     ]
-    assert tsh.dependants(engine, 'dep-middle-right') == [
+    assert tsh.dependents(engine, 'dep-middle-right') == [
         'dep-top',
     ]
-    assert tsh.dependants(engine, 'dep-bottom') == [
+    assert tsh.dependents(engine, 'dep-bottom') == [
         'dep-middle-left',
         'dep-middle-right',
         'dep-top'
     ]
 
-    assert tsh.dependants(engine, 'dep-bottom', direct=True) == [
+    assert tsh.dependents(engine, 'dep-bottom', direct=True) == [
         'dep-middle-left',
         'dep-middle-right'
     ]
@@ -2106,10 +2106,10 @@ def test_dependants(engine, tsh):
         ' (series "dep-middle-right")'
         ' (series "dep-middle-right"))'
     )
-    assert tsh.dependants(engine, 'dep-bottom-2') == [
+    assert tsh.dependents(engine, 'dep-bottom-2') == [
         'dep-middle-left',
     ]
-    assert tsh.dependants(engine, 'dep-bottom') == [
+    assert tsh.dependents(engine, 'dep-bottom') == [
         'dep-middle-right',
         'dep-top'
     ]
@@ -2117,16 +2117,16 @@ def test_dependants(engine, tsh):
     # delete things and see
     tsh.delete(engine, 'dep-top')
 
-    assert tsh.dependants(engine, 'dep-bottom') == [
+    assert tsh.dependents(engine, 'dep-bottom') == [
         'dep-middle-right'
     ]
 
     tsh.delete(engine, 'dep-middle-right')
-    assert tsh.dependants(engine, 'dep-middle-left') == []
-    assert tsh.dependants(engine, 'dep-middle-right') == []
+    assert tsh.dependents(engine, 'dep-middle-left') == []
+    assert tsh.dependents(engine, 'dep-middle-right') == []
 
 
-def test_transitive_closure_dependants(engine, tsh):
+def test_transitive_closure_dependents(engine, tsh):
     ts = pd.Series(
         [1, 2, 3],
         index=pd.date_range(utcdt(2022, 1, 1), periods=3, freq='D')
@@ -2154,7 +2154,7 @@ def test_transitive_closure_dependants(engine, tsh):
         '(series "dep-f2")'
     )
 
-    deps = tsh.dependants(engine, 'dep-f1')
+    deps = tsh.dependents(engine, 'dep-f1')
     assert deps == ['dep-f2', 'dep-f3']
 
 

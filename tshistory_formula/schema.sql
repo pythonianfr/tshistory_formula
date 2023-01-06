@@ -1,11 +1,11 @@
-create table "{ns}".dependant (
+create table "{ns}".dependent (
   sid int not null references "{ns}".registry(id) on delete cascade,
   needs int not null references "{ns}".registry(id) on delete cascade,
   unique(sid, needs)
 );
 
-create index "ix_{ns}_dependant_sid" on "{ns}".dependant (sid);
-create index "ix_{ns}_dependant_needs" on "{ns}".dependant (needs);
+create index "ix_{ns}_dependent_sid" on "{ns}".dependent (sid);
+create index "ix_{ns}_dependent_needs" on "{ns}".dependent (needs);
 
 
 create table "{ns}".group_formula (
