@@ -27,8 +27,10 @@ def register_formula(self,
                      reject_unknown: bool=True) -> NONETYPE:
     """Define a series as a named formula.
 
-    e.g. `register_formula('sales.eu', '(add (series "sales.fr") (series "sales.be"))')`
+    .. highlight:: python
+    .. code-block:: python
 
+      tsa.register_formula('sales.eu', '(add (series "sales.fr") (series "sales.be"))')
     """
 
     self.tsh.register_formula(
@@ -45,6 +47,13 @@ def eval_formula(self,
                  revision_date: pd.Timestamp=None,
                  from_value_date: pd.Timestamp=None,
                  to_value_date: pd.Timestamp=None) -> pd.Series:
+    """Execute a formula on the spot.
+
+    .. highlight:: python
+    .. code-block:: python
+
+      tsa.eval_formula('(add (series "sales.fr") (series "sales.be"))')
+    """
 
     # basic syntax check
     tree = parse(formula)
@@ -75,6 +84,13 @@ def formula(self,
             display: bool=False,
             expanded: bool=False) -> Optional[str]:
     """Get the formula associated with a name.
+
+    .. highlight:: python
+    .. code-block:: python
+
+      tsa.formula('sales.eu')
+      ...
+      '(add (series "sales.fr") (series "sales.be"))')
 
     """
     form = self.tsh.formula(self.engine, name)
@@ -123,11 +139,10 @@ def formula_components(self,
     the components. Hence only "ground" series (stored or autotrophic
     formulas) will show up in the leaves.
 
-
-    >>> formula_components('my-series')
+    >>> tsa.formula_components('my-series')
     {'show-components': ['component-a', 'component-b']}
 
-    >>> formula_components('my-series-2', expanded=True)
+    >>> tsa.formula_components('my-series-2', expanded=True)
     {'my-series-2': [{'sub-component-1': ['component-a', 'component-b']}, 'component-b']}
 
     """
@@ -258,7 +273,7 @@ def register_formula_bindings(self,
         columns=('series', 'group', 'family')
     ))
 
-    Within a given famility, all groups must have the same number of
+    Within a given family, all groups must have the same number of
     members (series) and the member roles are considered equivalent
     (e.g. meteorological scenarios).
 
