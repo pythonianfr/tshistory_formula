@@ -21,8 +21,10 @@ from tshistory.util import (
     ensuretz,
     patch,
     patchmany,
+    threadpool,
     tzaware_serie
 )
+from tshistory import search
 from tshistory_formula.registry import (
     finder,
     func,
@@ -194,6 +196,49 @@ def series_metas(cn, tsh, stree):
 def series_finder(cn, tsh, stree):
     name = stree[1]
     return {name: stree}
+
+
+@func('serieslist')
+def serieslist(__interpreter__,
+               __from_value_date__,
+               __to_value_date__,
+               __revision_date__,
+               names: List[str]) -> List[pd.Series]:
+    poolrun = threadpool(16)
+
+    result = []
+    def collect(name, interpreter, fvd, tvd, rd):
+        result.append(
+            series(interpreter, fvd, tvd, rd, name)
+        )
+
+    poolrun(
+        collect,
+        [
+            (
+                name,
+                __interpreter__,
+                __from_value_date__,
+                __to_value_date__,
+                __revision_date__
+            )
+            for name in names
+        ]
+    )
+
+    return result
+
+
+@func('findnames')
+def findnames(__interpreter__,
+              q: search.query) -> List[str]:
+    i = __interpreter__
+    return i.tsh.find(i.cn, q)
+
+
+@func('byname')
+def byname(namequery: str) -> search.query:
+    return search.byname(namequery)
 
 
 def asof_transform(tree):

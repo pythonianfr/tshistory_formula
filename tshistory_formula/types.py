@@ -10,7 +10,8 @@ from psyl.lisp import (
     Env,
     evaluate,
     Keyword,
-    serialize
+    serialize,
+    SPLICE
 )
 
 from tshistory_formula.registry import FUNCS
@@ -262,6 +263,12 @@ def narrow_types(op, typespec, argstypes):
     return typespec  # no narrowing was possible
 
 
+def splice_type(typespec):
+    if typespec._name == 'List':
+        return typespec.__args__[0]
+    return typespec
+
+
 def typecheck(tree, env=FUNCS):
     op = tree[0]
     try:
@@ -306,10 +313,19 @@ def typecheck(tree, env=FUNCS):
             findtype(signature, argidx=idx)
         )
 
+    # check positional
     narrowed_argstypes = []
+    splice = False
     for idx, (arg, expecttype) in enumerate(zip(tree[1:], posargstypes)):
+        # we just ignore it
+        if arg == SPLICE:
+            splice = True
+            continue
         if isinstance(arg, list):
             exprtype = typecheck(arg, env)
+            if splice:
+                exprtype = splice_type(exprtype)
+                splice = False
             if not sametype(expecttype, exprtype):
                 raise TypeError(
                     f'item {idx}: expect {expecttype}, got {exprtype}'
@@ -324,6 +340,7 @@ def typecheck(tree, env=FUNCS):
                 narrow_arg(expecttype, arg)
             )
 
+    # check keywords
     for name, val in kwargs.items():
         expecttype = kwargstypes[name]
         if isinstance(val, list):

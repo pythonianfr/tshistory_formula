@@ -424,6 +424,37 @@ def test_add(engine, tsh):
 """, ts)
 
 
+def test_serieslist(engine, tsh):
+    a = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(dt(2023, 1, 1), periods=3, freq='D')
+    )
+    tsh.update(engine, a, 'find.me.a', 'Babar')
+    tsh.update(engine, a + 1, 'find.me.a', 'Celeste')
+
+    tsh.register_formula(
+        engine,
+        'found.them',
+        '(add <| (serieslist (findnames (byname "find.me"))))'
+    )
+
+    ts = tsh.get(engine, 'found.them')
+    assert_df("""
+2023-01-01    2.0
+2023-01-02    3.0
+2023-01-03    4.0
+""", ts)
+
+    tsh.update(engine, a, 'find.me.b', 'Babar')
+
+    ts = tsh.get(engine, 'found.them')
+    assert_df("""
+2023-01-01    3.0
+2023-01-02    5.0
+2023-01-03    7.0
+""", ts)
+
+
 def test_scalar_div(engine, tsh):
     a = pd.Series(
         [1, 2, 3],
