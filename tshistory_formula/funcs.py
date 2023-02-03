@@ -960,7 +960,47 @@ def row_std(*serieslist: pd.Series, skipna: Optional[bool]=True) -> pd.Series:
     return allseries.std(axis=1, skipna=skipna).dropna()
 
 
+@func('resample_boundary')
+def resample_boundary(
+        date: Optional[pd.Timestamp],
+        freq: str,
+        kind: str,
+) -> Optional[pd.Timestamp]:
+    if date is None:
+        return date
+
+    assert kind in ('left', 'right')
+    if freq == 'D':
+        res = pd.Timestamp(date.date(), tz=date.tz)
+        if kind == 'left':
+            return res
+        elif res == date:
+            return res + relativedelta(microseconds=-1)
+        else:
+            return res + relativedelta(days=1, microseconds=-1)
+    else:
+        raise ValueError(f'freq {freq!r} is not handled')
+
+
+def resample_scope(tree):
+    _posargs, kwargs = buildargs(tree[1:])
+    freq = _posargs[1]
+    print(f'Got freq={freq}')
+    top = [
+        Symbol('let'),
+        Symbol('from_value_date'), [
+            Symbol('resample_boundary'), Symbol('from_value_date'), freq, 'left',
+        ],
+        Symbol('to_value_date'), [
+            Symbol('resample_boundary'), Symbol('to_value_date'), freq, 'right',
+        ],
+    ]
+    top.append(tree)
+    return top
+
+
 @func('resample')
+@argscope('resample', resample_scope)
 def resample(series: pd.Series,
              freq: str,
              method: str='mean') -> pd.Series:
