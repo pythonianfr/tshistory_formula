@@ -960,26 +960,35 @@ def row_std(*serieslist: pd.Series, skipna: Optional[bool]=True) -> pd.Series:
     return allseries.std(axis=1, skipna=skipna).dropna()
 
 
+def get_resample_interval_start(dt: pd.Timestamp, freq: str) -> pd.Timestamp:
+    """Return start of interval that includes datetime when resampling with freq
+
+    Examples:
+        >>> get_resample_interval_start(pd.Timestamp('2021-01-01 12:31'), 'D')
+        pd.Timestamp('2021-01-01')
+        >>> get_resample_interval_start(pd.Timestamp('2021-01-01 12:31'), 'H')
+        pd.Timestamp('2021-01-01 12:00')
+    """
+    return next(iter(pd.Series([0], index=[dt]).resample(freq).groups))
+
+
 @func('resample_boundary')
 def resample_boundary(
         date: Optional[pd.Timestamp],
         freq: str,
         kind: str,
 ) -> Optional[pd.Timestamp]:
+    assert kind in ('left', 'right')
     if date is None:
         return date
 
-    assert kind in ('left', 'right')
-    if freq == 'D':
-        res = pd.Timestamp(date.date(), tz=date.tz)
-        if kind == 'left':
-            return res
-        elif res == date:
-            return res + relativedelta(microseconds=-1)
-        else:
-            return res + relativedelta(days=1, microseconds=-1)
+    interval_start = get_resample_interval_start(date, freq)
+    if kind == 'left':
+        return interval_start
+    elif interval_start == date:
+        return interval_start + relativedelta(microseconds=-1)
     else:
-        raise ValueError(f'freq {freq!r} is not handled')
+        return interval_start + pd.tseries.frequencies.to_offset(freq) + relativedelta(microseconds=-1)
 
 
 def resample_scope(tree):
