@@ -978,6 +978,16 @@ def resample_boundary(
         freq: str,
         kind: str,
 ) -> Optional[pd.Timestamp]:
+    """Return enlarged-boundary to resample a series
+
+    Args:
+        date: timestamp of boundary
+        freq: frequency for resampling (see pandas.resample)
+        kind: kind of boundary ('left' or 'right')
+
+    About:
+        see resample_scope explanation
+    """
     assert kind in ('left', 'right')
     if date is None:
         return date
@@ -992,6 +1002,22 @@ def resample_boundary(
 
 
 def resample_scope(tree):
+    """Enlarge from_value_date and to_value_date to get consistent resampling data
+
+    About:
+        pandas resampling creates intervals based on origin (by default 'start_day')
+        For instance, when resampling series starting on '2000-01-02 08:37':
+        - if freq='D', first interval is ['2000-01-02 00:00', '2000-01-03 00:00']
+        - if freq='H', first interval is ['2000-01-02 08:00', '2000-01-02 09:00']
+
+        So number of points in the first and last intervals tends to be smaller
+        For instance a series with one point per minute and starting at '08:37' will have 23 points in the first
+        interval when resampled to the hour. Which can be inconsistent depending on the aggregation.
+
+        To solve this issue, we enlarge the boundaries of the series that is resampled.
+        For instance, in the previous example, from_value_date will be switch from '08:37' to '08:00' for an hourly
+        resampling.
+    """
     _posargs, kwargs = buildargs(tree[1:])
     freq = _posargs[1]
     print(f'Got freq={freq}')
