@@ -1,7 +1,27 @@
 from datetime import datetime
 import pandas as pd
+import pytest
 
 from test.tools import tuples2series
+from tshistory_formula.funcs import get_resample_interval_endpoint
+
+
+@pytest.mark.parametrize("dt,freq,kind,expected", [
+    ('2020-01-01 08:37:56', 'D', 'left', '2020-01-01'),
+    ('2020-01-01 08:37:56', 'D', 'right', '2020-01-01 23:59:59.999999'),
+    ('2020-01-01', 'D', 'left', '2020-01-01'),
+    ('2020-01-01', 'D', 'right', '2020-01-01 23:59:59.999999'),
+    ('2020-01-01 08:37:56', 'H', 'left', '2020-01-01 08:00'),
+    ('2020-01-01 08:37:56', 'H', 'right', '2020-01-01 08:59:59.999999'),
+    ('2020-01-01 08:00', 'H', 'left', '2020-01-01 08:00'),
+    ('2020-01-01 08:00', 'H', 'right', '2020-01-01 08:59:59.999999'),
+    ('2020-01-01 08:37:56', 'min', 'left', '2020-01-01 08:37:00'),
+    ('2020-01-01 08:37:56', 'min', 'right', '2020-01-01 08:37:59.999999'),
+    ('2020-01-01 08:37:56', '30S', 'left', '2020-01-01 08:37:30'),
+    ('2020-01-01 08:37:56', '30S', 'right', '2020-01-01 08:37:59.999999'),
+])
+def test_get_resample_interval_endpoint(dt, freq, kind, expected):
+    assert get_resample_interval_endpoint(pd.Timestamp(dt), freq, kind) == pd.Timestamp(expected)
 
 
 def test_resample_hourly2daily(tsa):
