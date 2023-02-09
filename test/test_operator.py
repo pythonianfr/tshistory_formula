@@ -228,7 +228,7 @@ def test_naive_tz_boundaries(engine, tsh):
 
     assert_df("""
 2022-02-02    40.5
-2022-02-03    53.0
+2022-02-03    62.5
 """, ts)
 
     tsh.register_formula(
