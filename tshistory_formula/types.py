@@ -280,7 +280,6 @@ def typecheck(tree, env=FUNCS):
     # build args list and kwargs dict
     # unfortunately args vs kwargs separation is only
     # clean in python 3.8 -- see PEP 570
-    posargs = []
     posargstypes = []
     kwargs = {}
     kwargstypes = {}
@@ -303,7 +302,6 @@ def typecheck(tree, env=FUNCS):
             kw = None
             continue
         # positional
-        posargs.append(arg)
         posargstypes.append(
             findtype(signature, argidx=idx)
         )
