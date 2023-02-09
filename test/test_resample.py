@@ -1,37 +1,23 @@
+from datetime import datetime
 import pandas as pd
-import pytest
+
+from test.tools import tuples2series
 
 
-def tuples2series(series_as_tuples, index_name=None, name='indicator'):
-    """Convert a list of (index, value) to a pandas Series"""
-    idx, values = zip(*series_as_tuples)
-    series = pd.Series(
-        values,
-        index=idx,
-        name=name,
-    )
-    if index_name:
-        series.index.name = index_name
-    return series
-
-
-def test_cache_resample_hourly2daily(tsa):
-    from datetime import datetime
+def test_resample_hourly2daily(tsa):
     series_name = 'constant-values-hourly'
-    for day in [1, 2, 3, 4, 5, 6]:
-        series = tuples2series(
-            [
-                (datetime(2020, 1, day, hour), 1)
-                for hour in range(24)
-            ],
-            name=series_name,
-        )
-        tsa.update(
-            series_name,
-            series,
-            'test_cache_resample',
-            insertion_date=datetime(2020, 1, day, 12, 35)
-        )
+    series = tuples2series(
+        [
+            (datetime(2020, 1, day, hour), 1)
+            for day in [1, 2, 3, 4, 5, 6] for hour in range(24)
+        ],
+        name=series_name,
+    )
+    tsa.update(
+        series_name,
+        series,
+        'test_cache_resample',
+    )
     formula_name = 'constant-values-hourly-resampled-daily'
     tsa.register_formula(
         formula_name,

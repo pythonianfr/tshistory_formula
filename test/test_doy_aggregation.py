@@ -1,10 +1,11 @@
 import inspect
 from datetime import datetime, timedelta
-from typing import List, Literal
 
 import numpy as np
 import pandas as pd
 import pytest
+
+from test.tools import tuples2series
 from tshistory.util import empty_series
 from tshistory.testutil import assert_df
 
@@ -24,19 +25,6 @@ def linear_series(days, month=1, year=2020):
             for day in days
         ]
     )
-
-
-def tuples2series(series_as_tuples, index_name=None, name='indicator'):
-    """Convert a list of (index, value) to a pandas Series"""
-    idx, values = zip(*series_as_tuples)
-    series = pd.Series(
-        values,
-        index=idx,
-        name=name,
-    )
-    if index_name:
-        series.index.name = index_name
-    return series
 
 
 def generate_name(kind):
