@@ -960,7 +960,92 @@ def row_std(*serieslist: pd.Series, skipna: Optional[bool]=True) -> pd.Series:
     return allseries.std(axis=1, skipna=skipna).dropna()
 
 
+def resample_adjust(tstamp, freq):
+    """Return adjusted time stamp when resampling with freq.
+
+    Examples:
+        >>> resample_interval_start(pd.Timestamp('2021-01-01 12:31'), 'D')
+        pd.Timestamp('2021-01-01')
+        >>> resample_interval_start(pd.Timestamp('2021-01-01 12:31'), 'H')
+        pd.Timestamp('2021-01-01 12:00')
+    """
+    return next(iter(pd.Series([0], index=[tstamp]).resample(freq).groups))
+
+
+@func('resample_adjusted_stamp')
+def resample_adjusted_stamp(
+        tstamp: Optional[pd.Timestamp],
+        freq: str,
+        direction: str) -> Optional[pd.Timestamp]:
+    # Return timestamp compensated to account for the resampling
+    # operation (we must provide enough data outside the strict query
+    # range for the operation to not yield bad results).
+
+    assert direction in ('left', 'right')
+    if tstamp is None:
+        return tstamp
+
+    interval_start = resample_adjust(tstamp, freq)
+    if direction == 'left':
+        return interval_start
+
+    # workaround: Retrieve 1 microsecond to left endpoint to force
+    # half-open interval - necessary because to_value_date is included
+    # in tsio.timeseries.get see test.test_resample
+    return (
+        interval_start
+        + pd.tseries.frequencies.to_offset(freq)
+        + relativedelta(microseconds=-1)
+    )
+
+
+def resample_transform(tree):
+    """Enlarge the from_value_date <-> to_value_date range to get
+    consistent resampling data
+
+    pandas resampling creates intervals based on origin (by default
+    'start_day') For instance, when resampling series starting on
+    '2000-01-02 08:37': - if freq='D', first interval is ['2000-01-02
+    00:00', '2000-01-03 00:00'] - if freq='H', first interval is
+    ['2000-01-02 08:00', '2000-01-02 09:00']
+
+    So number of points in the first and last intervals tends to be
+    smaller.
+
+    For instance a series with one point per minute and starting at
+    '08:37' will have 23 points in the first interval when resampled
+    to the hour.
+
+    To solve this issue, we enlarge the retrieval boundaries of the
+    series that is resampled.
+
+    For instance, in the previous example, from_value_date will be
+    moved from '08:37' to '08:00' for an hourly resampling.
+
+    """
+    _posargs, kwargs = buildargs(tree[1:])
+    freq = _posargs[1]
+    top = [
+        Symbol('let'),
+        Symbol('from_value_date'), [
+            Symbol('resample_adjusted_stamp'),
+            Symbol('from_value_date'),
+            freq,
+            'left',
+        ],
+        Symbol('to_value_date'), [
+            Symbol('resample_adjusted_stamp'),
+            Symbol('to_value_date'),
+            freq,
+            'right',
+        ],
+    ]
+    top.append(tree)
+    return top
+
+
 @func('resample')
+@argscope('resample', resample_transform)
 def resample(series: pd.Series,
              freq: str,
              method: str='mean') -> pd.Series:

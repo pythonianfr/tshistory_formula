@@ -1,10 +1,10 @@
 import inspect
 from datetime import datetime, timedelta
-from typing import List, Literal
 
 import numpy as np
 import pandas as pd
 import pytest
+
 from tshistory.util import empty_series
 from tshistory.testutil import assert_df
 
@@ -13,17 +13,6 @@ from tshistory_formula import funcs
 
 TZ_BERLIN = 'Europe/Berlin'
 USER = 'pytest-test-doy'
-
-
-def linear_series(days, month=1, year=2020):
-    """Create a linear series on given month (default is jan. 2020)"""
-    return pd.Series(
-        days,
-        index=[
-            pd.Timestamp(f"{year}-{month}-{day}")
-            for day in days
-        ]
-    )
 
 
 def tuples2series(series_as_tuples, index_name=None, name='indicator'):
@@ -37,6 +26,17 @@ def tuples2series(series_as_tuples, index_name=None, name='indicator'):
     if index_name:
         series.index.name = index_name
     return series
+
+
+def linear_series(days, month=1, year=2020):
+    """Create a linear series on given month (default is jan. 2020)"""
+    return pd.Series(
+        days,
+        index=[
+            pd.Timestamp(f"{year}-{month}-{day}")
+            for day in days
+        ]
+    )
 
 
 def generate_name(kind):

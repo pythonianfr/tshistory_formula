@@ -228,7 +228,7 @@ def test_naive_tz_boundaries(engine, tsh):
 
     assert_df("""
 2022-02-02    40.5
-2022-02-03    53.0
+2022-02-03    62.5
 """, ts)
 
     tsh.register_formula(
@@ -1341,6 +1341,92 @@ def test_resample(engine, tsh):
 2020-01-01 00:00:00+00:00    1.0
 2020-01-03 00:00:00+00:00    3.0
 """, tsh.get(engine, 'gasdaytoday'))
+
+
+def test_resample_boundaries(tsh, engine):
+    series_name = 'constant-values-hourly'
+    for day in (1, 2, 3, 4, 5, 6):
+        series = pd.Series(
+            [1.] * 24,
+            index=pd.date_range(
+                dt(2023, 1, day, 0),
+                freq='H',
+                periods=24
+            )
+        )
+        tsh.update(
+            engine,
+            series,
+            series_name,
+            'test_cache_resample',
+            insertion_date=pd.Timestamp(f'2023-1-{day} 12:35', tz='utc')
+        )
+    formula_name = 'constant-values-hourly-resampled-daily'
+    tsh.register_formula(
+        engine,
+        formula_name,
+        f'(resample (series "{series_name}") "D" "sum")',
+    )
+
+    ts = tsh.get(
+        engine,
+        formula_name,
+        from_value_date=dt(2023, 1, 4, 12)
+    )
+    ref = pd.Series(
+        [24., 24., 24.],
+        index=pd.date_range(dt(2023, 1, 4), freq='D', periods=3)
+    )
+
+    assert ts.equals(ref)
+
+    ts = tsh.get(
+        engine,
+        formula_name,
+        to_value_date=dt(2023, 1, 3, 12)
+    )
+    ref = pd.Series(
+        [24., 24., 24.],
+        index=pd.date_range(dt(2023, 1, 1), freq='D', periods=3)
+    )
+
+    assert ts.equals(ref)
+
+    ts = tsh.get(
+        engine,
+        formula_name,
+        from_value_date=dt(2023, 1, 3),
+        to_value_date=dt(2023, 1, 5)
+    )
+    ref = pd.Series(
+        [24., 24., 24.],
+        index=pd.date_range(dt(2023, 1, 3), freq='D', periods=3)
+    )
+
+    assert ts.equals(ref)
+
+
+@pytest.mark.parametrize("tstamp,freq,direction,expected", [
+    ('2020-01-01 08:37:56', 'D', 'left', '2020-01-01'),
+    ('2020-01-01 08:37:56', 'D', 'right', '2020-01-01 23:59:59.999999'),
+    ('2020-01-01', 'D', 'left', '2020-01-01'),
+    ('2020-01-01', 'D', 'right', '2020-01-01 23:59:59.999999'),
+    ('2020-01-01 08:37:56', 'H', 'left', '2020-01-01 08:00'),
+    ('2020-01-01 08:37:56', 'H', 'right', '2020-01-01 08:59:59.999999'),
+    ('2020-01-01 08:00', 'H', 'left', '2020-01-01 08:00'),
+    ('2020-01-01 08:00', 'H', 'right', '2020-01-01 08:59:59.999999'),
+    ('2020-01-01 08:37:56', 'min', 'left', '2020-01-01 08:37:00'),
+    ('2020-01-01 08:37:56', 'min', 'right', '2020-01-01 08:37:59.999999'),
+    ('2020-01-01 08:37:56', '30S', 'left', '2020-01-01 08:37:30'),
+    ('2020-01-01 08:37:56', '30S', 'right', '2020-01-01 08:37:59.999999'),
+])
+def test_resample_adjusted_stamp(tstamp, freq, direction, expected):
+    from tshistory_formula.funcs import resample_adjusted_stamp
+    assert resample_adjusted_stamp(
+        pd.Timestamp(tstamp),
+        freq,
+        direction
+    ) == pd.Timestamp(expected)
 
 
 def test_cumsum(engine, tsh):
