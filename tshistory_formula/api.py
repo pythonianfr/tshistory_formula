@@ -12,7 +12,7 @@ from tshistory.api import (
     mainsource
 )
 from tshistory_formula import (
-    helper,
+    types,
     interpreter
 )
 
@@ -63,8 +63,8 @@ def eval_formula(self,
     with self.engine.begin() as cn:
         # type checking
         i = interpreter.Interpreter(cn, self, {})
-        rtype = helper.typecheck(tree, env=i.env)
-        if not helper.sametype(rtype, pd.Series):
+        rtype = types.typecheck(tree, env=i.env)
+        if not types.sametype(rtype, pd.Series):
             raise TypeError(
                 f'formula `{name}` must return a `Series`, not `{rtype.__name__}`'
             )

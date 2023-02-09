@@ -15,13 +15,14 @@ from tshistory_formula.evaluator import pevaluate
 
 from tshistory_formula import (
     helper,
+    types,
     registry
 )
 
 
 def functypes(all=False):
     return {
-        name: helper.function_types(func)
+        name: types.function_types(func)
         for name, func in registry.FUNCS.items()
         if all or func.__doc__ is not None
     }

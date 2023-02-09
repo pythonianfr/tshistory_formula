@@ -12,11 +12,11 @@ from tshistory_formula.interpreter import (
     jsontypes
 )
 from tshistory_formula.registry import func, FUNCS
-from tshistory_formula.helper import (
+from tshistory_formula.helper import seriesname
+from tshistory_formula.types import (
     isoftype,
     function_types,
     sametype,
-    seriesname,
     typecheck
 )
 

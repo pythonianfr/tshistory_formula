@@ -24,7 +24,7 @@ def _ensure_options(obj):
 
 def func(name, auto=False):
     # work around the circular import
-    from tshistory_formula.helper import assert_typed
+    from tshistory_formula.types import assert_typed
     from tshistory_formula.interpreter import HistoryInterpreter
 
     def decorator(func):
@@ -154,7 +154,7 @@ GIDATES = {}
 
 def gfunc(name, auto=False):
     # work around the circular import
-    from tshistory_formula.helper import assert_typed
+    from tshistory_formula.types import assert_typed
 
     def decorator(func):
         assert_typed(func)

@@ -17,7 +17,8 @@ from tshistory_formula import funcs, gfuncs  # trigger registration
 from tshistory_formula import (
     api,  # trigger extension
     interpreter,
-    helper
+    helper,
+    types
 )
 from tshistory_formula.registry import (
     FINDERS,
@@ -217,8 +218,8 @@ class timeseries(basets):
 
         # type checking
         i = interpreter.Interpreter(cn, self, {})
-        rtype = helper.typecheck(tree, env=i.env)
-        if not helper.sametype(rtype, pd.Series):
+        rtype = types.typecheck(tree, env=i.env)
+        if not types.sametype(rtype, pd.Series):
             raise TypeError(
                 f'formula `{name}` must return a `Series`, not `{rtype.__name__}`'
             )
@@ -1042,8 +1043,8 @@ class timeseries(basets):
 
         # type checking
         i = interpreter.GroupInterpreter(cn, self, {})
-        rtype = helper.typecheck(tree, env=i.env)
-        if not helper.sametype(rtype, pd.DataFrame):
+        rtype = types.typecheck(tree, env=i.env)
+        if not types.sametype(rtype, pd.DataFrame):
             raise TypeError(
                 f'formula `{name}` must return a `DataFrame`, not `{rtype.__name__}`'
             )

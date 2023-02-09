@@ -31,10 +31,8 @@ from tshistory_formula.registry import (
     metadata,
     argscope
 )
-from tshistory_formula.helper import (
-    NONETYPE,
-    seriesname
-)
+from tshistory_formula.types import NONETYPE
+from tshistory_formula.helper import seriesname
 from tshistory_formula.interpreter import Interpreter
 
 

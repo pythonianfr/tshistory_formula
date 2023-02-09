@@ -26,8 +26,8 @@ from tshistory_formula.registry import (
     ginsertion_dates,
     gmeta
 )
+from tshistory_formula.types import constant_fold
 from tshistory_formula.helper import (
-    constant_fold,
     _extract_from_expr,
     expanded,
     has_names,
