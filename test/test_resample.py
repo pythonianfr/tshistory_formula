@@ -67,6 +67,7 @@ def test_cache_resample_hourly2daily(tsa):
             [
                 (datetime(2020, 1, 3), 24.),
                 (datetime(2020, 1, 4), 24.),
+                (datetime(2020, 1, 5), 24.),
             ],
             name=formula_name,
         ),

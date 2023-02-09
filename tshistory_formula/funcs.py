@@ -961,7 +961,7 @@ def row_std(*serieslist: pd.Series, skipna: Optional[bool]=True) -> pd.Series:
 
 
 def get_resample_interval_start(dt: pd.Timestamp, freq: str) -> pd.Timestamp:
-    """Return start of interval that includes datetime when resampling with freq
+    """Return start of interval that includes dt when resampling with freq
 
     Examples:
         >>> get_resample_interval_start(pd.Timestamp('2021-01-01 12:31'), 'D')
@@ -972,33 +972,35 @@ def get_resample_interval_start(dt: pd.Timestamp, freq: str) -> pd.Timestamp:
     return next(iter(pd.Series([0], index=[dt]).resample(freq).groups))
 
 
-@func('resample_boundary')
-def resample_boundary(
-        date: Optional[pd.Timestamp],
+@func('get_resample_interval_endpoint')
+def get_resample_interval_endpoint(
+        dt: Optional[pd.Timestamp],
         freq: str,
         kind: str,
 ) -> Optional[pd.Timestamp]:
-    """Return enlarged-boundary to resample a series
+    """Return left/right endpoint of interval that includes date on a resampling with freq
 
     Args:
-        date: timestamp of boundary
+        dt  : timestamp
         freq: frequency for resampling (see pandas.resample)
-        kind: kind of boundary ('left' or 'right')
-
-    About:
-        see resample_scope explanation
+        kind: kind of endpoint ('left' or 'right')
     """
     assert kind in ('left', 'right')
-    if date is None:
-        return date
+    if dt is None:
+        return dt
 
-    interval_start = get_resample_interval_start(date, freq)
+    interval_start = get_resample_interval_start(dt, freq)
     if kind == 'left':
         return interval_start
-    elif interval_start == date:
-        return interval_start + relativedelta(microseconds=-1)
     else:
-        return interval_start + pd.tseries.frequencies.to_offset(freq) + relativedelta(microseconds=-1)
+        # Workaround: Retrieve 1 microsecond to left endpoint to force half-open interval
+        # # Necessary because to_value_date is included in tsio.timeseries.get
+        # # see test.test_resample
+        return (
+            interval_start
+            + pd.tseries.frequencies.to_offset(freq)
+            + relativedelta(microseconds=-1)
+        )
 
 
 def resample_scope(tree):
@@ -1012,22 +1014,21 @@ def resample_scope(tree):
 
         So number of points in the first and last intervals tends to be smaller
         For instance a series with one point per minute and starting at '08:37' will have 23 points in the first
-        interval when resampled to the hour. Which can be inconsistent depending on the aggregation.
+        interval when resampled to the hour.
 
-        To solve this issue, we enlarge the boundaries of the series that is resampled.
-        For instance, in the previous example, from_value_date will be switch from '08:37' to '08:00' for an hourly
+        To solve this issue, we enlarge the retrieval boundaries of the series that is resampled.
+        For instance, in the previous example, from_value_date will be moved from '08:37' to '08:00' for an hourly
         resampling.
     """
     _posargs, kwargs = buildargs(tree[1:])
     freq = _posargs[1]
-    print(f'Got freq={freq}')
     top = [
         Symbol('let'),
         Symbol('from_value_date'), [
-            Symbol('resample_boundary'), Symbol('from_value_date'), freq, 'left',
+            Symbol('get_resample_interval_endpoint'), Symbol('from_value_date'), freq, 'left',
         ],
         Symbol('to_value_date'), [
-            Symbol('resample_boundary'), Symbol('to_value_date'), freq, 'right',
+            Symbol('get_resample_interval_endpoint'), Symbol('to_value_date'), freq, 'right',
         ],
     ]
     top.append(tree)
