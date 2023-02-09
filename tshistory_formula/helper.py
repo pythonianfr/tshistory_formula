@@ -370,7 +370,6 @@ class ThreadPoolExecutor:
             self._work_queue.put(_WorkItem(f, fn, args, kwargs))
             num_threads = len(self._threads)
             if num_threads < self._max_workers:
-                thread_name = f'{self}_{num_threads}'
                 t = threading.Thread(target=self._worker)
                 t.start()
                 self._threads.add(t)
