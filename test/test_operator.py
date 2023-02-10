@@ -454,6 +454,22 @@ def test_serieslist(engine, tsh):
 2023-01-03    7.0
 """, ts)
 
+    tsh.register_formula(
+        engine,
+        'found.none',
+        '(add <| (serieslist (findnames (byname "no.luck"))))'
+    )
+    ts = tsh.get(engine, 'found.none')
+    assert len(ts) == 0
+
+    tsh.register_formula(
+        engine,
+        'combine.add-with-empty',
+        '(add (series "found.them") (series "found.none"))'
+    )
+    ts = tsh.get(engine, 'combine.add-with-empty')
+    assert len(ts) == 0
+
 
 def test_scalar_div(engine, tsh):
     a = pd.Series(

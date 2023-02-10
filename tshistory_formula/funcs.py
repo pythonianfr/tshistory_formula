@@ -761,6 +761,12 @@ def series_add(*serieslist: pd.Series) -> pd.Series:
     timestamp (unless a fill rule is provided).
 
     """
+    if not serieslist:
+        # by default, yield an empty timezone aware series
+        # ideally, we'd get the tzaware bit from the context
+        # but we don't yet have that
+        return empty_series(True)
+
     assert [
         isinstance(s, pd.Series)
         for s in serieslist
