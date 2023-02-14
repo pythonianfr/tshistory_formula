@@ -10,6 +10,7 @@ from psyl.lisp import parse, serialize
 from tshistory.tsio import timeseries as basets
 from tshistory.util import (
     diff,
+    patch,
     tx
 )
 
@@ -37,6 +38,13 @@ L = logging.getLogger('tshistory.tsio')
 
 
 class timeseries(basets):
+
+    def __init__(self, *a, **kw):
+        super().__init__(*a, **kw)
+        self.patch = basets(
+            namespace='{}-formula-patch'.format(self.namespace)
+        )
+
     fast_staircase_operators = set(['+', '*', 'series', 'add', 'priority'])
     metadata_compat_excluded = ()
     concurrency = 16
@@ -350,8 +358,7 @@ class timeseries(basets):
 
     def update(self, cn, updatets, name, author, **k):
         if self.type(cn, name) == 'formula':
-            raise ValueError(f'`{name}` is a formula, it cannot be updated')
-
+            return self.patch.update(cn, updatets, name, author, **k)
         return super().update(cn, updatets, name, author, **k)
 
     @tx
@@ -361,6 +368,11 @@ class timeseries(basets):
             ts = self.eval_formula(cn, formula, **kw)
             if ts is not None:
                 ts.name = name
+            if self.patch.exists(cn, name):
+                ts_patch = self.patch.get(cn, name, **kw)
+                if not len(ts_patch):
+                    return ts
+                ts = patch(ts, ts_patch)
             return ts
 
         ts = super().get(cn, name, **kw)

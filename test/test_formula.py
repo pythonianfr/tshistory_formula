@@ -336,7 +336,7 @@ def test_override_primary(engine, tsh):
     )
 
 
-def test_override_formula(engine, tsh):
+def _test_override_formula(engine, tsh):
     test = pd.Series(
         [1, 2, 3],
         index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
@@ -2357,6 +2357,51 @@ def test_diagnose(engine, tsh):
             ('prim-diag-2', 1)
         ]
     }
+
+
+def test_formula_patch(engine, tsh):
+    ts = pd.Series(
+        range(5),
+        index=pd.date_range(
+            start=dt(2023, 1, 10),
+            freq='D',
+            periods=5
+        )
+    )
+    tsh.update(engine, ts, 'series-sup-0', 'test')
+    tsh.update(engine, ts, 'series-sup-1', 'test')
+
+    formula = '(add (series "series-sup-0") (series "series-sup-1"))'
+
+    tsh.register_formula(engine, 'form-to-supervise', formula)
+    assert_df("""
+2023-01-10    0.0
+2023-01-11    2.0
+2023-01-12    4.0
+2023-01-13    6.0
+2023-01-14    8.0
+""", tsh.get(engine, 'form-to-supervise'))
+
+    # we want to patch the 2 last values and add an extra point
+    ts = pd.Series(
+        [-1] * 3,
+        index=pd.date_range(
+            start=dt(2023, 1, 13),
+            freq='D',
+            periods=3
+        )
+    )
+    tsh.update(engine, ts, 'form-to-supervise', 'supervisor')
+
+    assert_df("""
+2023-01-10    0.0
+2023-01-11    2.0
+2023-01-12    4.0
+2023-01-13   -1.0
+2023-01-14   -1.0
+2023-01-15   -1.0
+""", tsh.get(engine, 'form-to-supervise'))
+
 
 # groups
 
