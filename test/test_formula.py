@@ -2923,20 +2923,20 @@ def test_group_bound_formula(engine, tsh):
         'hijacking': 'bound'
     }
 
-    assert tsh.group_metadata(engine, 'hijacking') == {}
-    #     'index_dtype': '|M8[ns]',
-    #     'index_type': 'datetime64[ns, UTC]',
-    #     'tzaware': True,
-    #     'value_dtype': '<f8',
-    #     'value_type': 'float64'
-    # }
+    assert tsh.group_metadata(engine, 'hijacking') == {
+        'index_dtype': '|M8[ns]',
+        'index_type': 'datetime64[ns, UTC]',
+        'tzaware': True,
+        'value_dtype': '<f8',
+        'value_type': 'float64'
+    }
     tsh.update_group_metadata(engine, 'hijacking', {'foo': 'bar'})
     assert tsh.group_metadata(engine, 'hijacking') == {
-        # 'index_dtype': '|M8[ns]',
-        # 'index_type': 'datetime64[ns, UTC]',
-        # 'tzaware': True,
-        # 'value_dtype': '<f8',
-        # 'value_type': 'float64',
+        'index_dtype': '|M8[ns]',
+        'index_type': 'datetime64[ns, UTC]',
+        'tzaware': True,
+        'value_dtype': '<f8',
+        'value_type': 'float64',
         'foo': 'bar'
     }
 

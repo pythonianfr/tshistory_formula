@@ -975,13 +975,16 @@ class timeseries(basets):
             table, col = 'group_binding', 'groupname'
 
         meta = self.group_metadata(cn, name) or {}
-        # remove al but internal stuff
-        newmeta = {
-            key: meta[key]
-            for key in self.metakeys
-            if meta.get(key) is not None
-        }
-        newmeta.update(metadata)
+        # remove al but internal stuff from the provided metadata
+        if internal:
+            newmeta = metadata
+        else:
+            newmeta = {
+                key: metadata[key]
+                for key in metadata
+                if key not in self.metakeys
+            }
+        newmeta.update(meta)
 
         sql = (
             f'update "{self.namespace}".{table} '
@@ -1341,7 +1344,7 @@ class timeseries(basets):
 
         seriesmeta = {
             k: v
-            for k, v in self.metadata(cn, formulaname).items()
+            for k, v in self.internal_metadata(cn, formulaname).items()
             if k in self.metakeys
         }
         metadata = self.group_metadata(cn, groupname) or {}

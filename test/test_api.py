@@ -635,25 +635,23 @@ def test_group_bound_formula(tsa):
     assert ('hijacking', 'bound') in cat
 
     assert tsa.group_metadata('hijacking') == {}
-    assert tsa.group_metadata('hijacking', all=True) == {}
-    # We will come back soon to this (with tsa.group_internal_metadata)
-    #  {
-    #     'index_dtype': '|M8[ns]',
-    #     'index_type': 'datetime64[ns, UTC]',
-    #     'tzaware': True,
-    #     'value_dtype': '<f8',
-    #     'value_type': 'float64'
-    # }
+    assert tsa.group_metadata('hijacking', all=True) == {
+        'index_dtype': '|M8[ns]',
+        'index_type': 'datetime64[ns, UTC]',
+        'tzaware': True,
+        'value_dtype': '<f8',
+        'value_type': 'float64'
+    }
     tsa.update_group_metadata('hijacking', {'foo': 'bar'})
     assert tsa.group_metadata('hijacking') == {'foo': 'bar'}
-    # assert tsa.group_metadata('hijacking', all=True) == {
-    #     'index_dtype': '|M8[ns]',
-    #     'index_type': 'datetime64[ns, UTC]',
-    #     'tzaware': True,
-    #     'value_dtype': '<f8',
-    #     'value_type': 'float64',
-    #     'foo': 'bar'
-    # }
+    assert tsa.group_metadata('hijacking', all=True) == {
+        'index_dtype': '|M8[ns]',
+        'index_type': 'datetime64[ns, UTC]',
+        'tzaware': True,
+        'value_dtype': '<f8',
+        'value_type': 'float64',
+        'foo': 'bar'
+    }
 
     tsa.group_delete('hijacking')
     assert not tsa.group_exists('hijacking')
