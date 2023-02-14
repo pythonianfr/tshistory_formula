@@ -744,6 +744,145 @@ def trig_arctangent2(series1: pd.Series,
 
 # /trigo
 
+# conditionals operators
+
+def _comparator(
+    operation,
+    series,
+    num_or_series,
+    false_value,
+    true_value,
+):
+    if isinstance(num_or_series, pd.Series):
+        # pandas only allows comparison of series with the same index
+        # hence we restrict each series to their commmon part
+        intersect = series.index.intersection(num_or_series.index)
+        if not len(intersect):
+            return empty_series(tzaware_serie(series))
+        series = series[intersect]
+        num_or_series = num_or_series[intersect]
+
+    if operation == '<':
+        mask = series < num_or_series
+    elif operation == '<=':
+        mask = series <= num_or_series
+    elif operation == '>':
+        mask = series > num_or_series
+    elif operation == '>=':
+        mask = series >= num_or_series
+    elif operation == '==':
+        mask = series == num_or_series
+    elif operation == '<>':
+        mask = series != num_or_series
+
+    ts = pd.Series(index=mask.index)
+    ts[mask] = true_value
+    ts[~mask] = false_value
+    return ts
+
+
+@func('>')
+def superior_to(series: pd.Series,
+                num_or_series: Union[Number, pd.Series],
+                false_value: Optional[Number] = 0,
+                true_value: Optional[Number] = 1) -> pd.Series:
+    """
+    Returns a series of length of the first argument if the second one
+    is a scalar, or of the length of the index intersection in the case
+    of two series.
+
+    Series values are dependent on the condition:
+    * the values are set to true_value (default 1) where the condition is verified.
+    * the values are set to false_value (default 0) where the condition is NOT verified.
+    """
+    return _comparator('>', series, num_or_series, false_value, true_value)
+
+
+@func('>=')
+def superior_or_equal_to(series: pd.Series,
+                         num_or_series: Union[Number, pd.Series],
+                         false_value: Optional[Number] = 0,
+                         true_value: Optional[Number] = 1) -> pd.Series:
+    """
+    Returns a series of length of the first argument if the second one
+    is a scalar, or of the length of the index intersection in the case
+    of two series.
+
+    Series values are dependent on the condition:
+    * the values are set to true_value (default 1) where the condition is verified.
+    * the values are set to false_value (default 0) where the condition is NOT verified.
+    """
+    return _comparator('>=', series, num_or_series, false_value, true_value)
+
+
+@func('<')
+def inferior_to(series: pd.Series,
+                num_or_series: Union[Number, pd.Series],
+                false_value: Optional[Number] = 0,
+                true_value: Optional[Number] = 1) -> pd.Series:
+    """
+    Returns a series of length of the first argument if the second one
+    is a scalar, or of the length of the index intersection in the case
+    of two series.
+
+    Series values are dependent on the condition:
+    * the values are set to true_value (default 1) where the condition is verified.
+    * the values are set to false_value (default 0) where the condition is NOT verified.
+    """
+    return _comparator('<=', series, num_or_series, false_value, true_value)
+
+
+@func('<=')
+def inferior_or_equal_to(series: pd.Series,
+                         num_or_series: Union[Number, pd.Series],
+                         false_value: Optional[Number] = 0,
+                         true_value: Optional[Number] = 1) -> pd.Series:
+    """
+    Returns a series of length of the first argument if the second one
+    is a scalar, or of the length of the index intersection in the case
+    of two series.
+
+    Series values are dependent on the condition:
+    * the values are set to true_value (default 1) where the condition is verified.
+    * the values are set to false_value (default 0) where the condition is NOT verified.
+    """
+    return _comparator('<=', series, num_or_series, false_value, true_value)
+
+
+@func('==')
+def equal_to(series: pd.Series,
+             num_or_series: Union[Number, pd.Series],
+             false_value: Optional[Number] = 0,
+             true_value: Optional[Number] = 1) -> pd.Series:
+    """
+    Returns a series of length of the first argument if the second one
+    is a scalar, or of the length of the index intersection in the case
+    of two series.
+
+    Series values are dependent on the condition:
+    * the values are set to true_value (default 1) where the condition is verified.
+    * the values are set to false_value (default 0) where the condition is NOT verified.
+    """
+    return _comparator('==', series, num_or_series, false_value, true_value)
+
+
+@func('<>')
+def different_to(series: pd.Series,
+                 num_or_series: Union[Number, pd.Series],
+                 false_value: Optional[Number] = 0,
+                 true_value: Optional[Number] = 1) -> pd.Series:
+    """
+    Returns a series of length of the first argument if the second one
+    is a scalar, or of the length of the index intersection in the case
+    of two series.
+
+    Series values are dependent on the condition:
+    * the values are set to true_value (default 1) where the condition is verified.
+    * the values are set to false_value (default 0) where the condition is NOT verified.
+    """
+    return _comparator('<>', series, num_or_series, false_value, true_value)
+
+# /conditionals
 
 @func('add')
 def series_add(*serieslist: pd.Series) -> pd.Series:

@@ -3148,3 +3148,99 @@ def test_integration_which_big_gap(engine, tsh):
 """, tsp)
 
     assert tsp.equals(tsf)
+
+
+def test_conditional_operators(engine, tsh):
+    # base series
+    ts = pd.Series(
+        range(5),
+        index=pd.date_range(
+            start=dt(2023, 1, 10),
+            freq='D',
+            periods=5
+        )
+    )
+    tsh.update(engine, ts, 'series-cond', 'test')
+
+    # series for comparison (index shifted with overlap)
+    ts = pd.Series(
+        [3.0] * 5,
+        index=pd.date_range(
+            start=dt(2023, 1, 8),
+            freq='D',
+            periods=5
+        )
+    )
+    tsh.update(engine, ts, 'series-to-compare', 'test')
+
+    # series to compare without overlap
+    ts = pd.Series(
+        [4.0] * 5,
+        index=pd.date_range(
+            start=dt(2023, 1, 2),
+            freq='D',
+            periods=5
+        )
+    )
+    tsh.update(engine, ts, 'series-no-overlap', 'test')
+
+    tsh.register_formula(
+        engine,
+        'cond0',
+        '(> (series "series-cond") 3)'
+    )
+    assert_df("""
+2023-01-10    0.0
+2023-01-11    0.0
+2023-01-12    0.0
+2023-01-13    0.0
+2023-01-14    1.0
+""", tsh.get(engine, 'cond0'))
+
+    tsh.register_formula(
+        engine,
+        'cond1',
+        '(<= (series "series-cond") 3 #:true_value 3.14)'
+    )
+    assert_df("""
+2023-01-10    3.14
+2023-01-11    3.14
+2023-01-12    3.14
+2023-01-13    3.14
+2023-01-14    0.00
+""", tsh.get(engine, 'cond1'))
+
+    tsh.register_formula(
+        engine,
+        'cond2',
+        '(== (series "series-cond") 3 #:false_value -1)'
+    )
+    assert_df("""
+2023-01-10   -1.0
+2023-01-11   -1.0
+2023-01-12   -1.0
+2023-01-13    1.0
+2023-01-14   -1.0
+""", tsh.get(engine, 'cond2'))
+
+    # the two series do not have the same length
+    # the comparison return a result-series only
+    # on the common part
+    tsh.register_formula(
+        engine,
+        'cond3',
+        '(>= (series "series-cond") (series "series-to-compare")))'
+    )
+    assert_df("""
+2023-01-10    0.0
+2023-01-11    0.0
+2023-01-12    0.0
+""", tsh.get(engine, 'cond3'))
+
+    tsh.register_formula(
+        engine,
+        'cond4',
+        '(<> (series "series-cond") (series "series-no-overlap")))'
+    )
+
+    assert len(tsh.get(engine, 'cond4')) == 0
