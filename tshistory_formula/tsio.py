@@ -355,6 +355,8 @@ class timeseries(basets):
             'where name = %(name)s',
             name=name
         )
+        if self.patch.exists(cn, name):
+            self.patch.delete(cn, name)
 
     def update(self, cn, updatets, name, author, **k):
         if self.type(cn, name) == 'formula':
@@ -934,6 +936,8 @@ class timeseries(basets):
                 f'new name is already referenced by `{",".join(errors)}`'
             )
 
+        if self.patch.exists(cn, oldname):
+            self.patch.rename(cn, oldname, newname)
         super().rename(cn, oldname, newname)
 
     # groups
