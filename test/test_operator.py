@@ -435,7 +435,7 @@ def test_serieslist(engine, tsh):
     tsh.register_formula(
         engine,
         'found.them',
-        '(add <| (serieslist (findnames (byname "find.me"))))'
+        '(add <| (serieslist (findnames (by.name "find.me"))))'
     )
 
     ts = tsh.get(engine, 'found.them')
@@ -457,7 +457,7 @@ def test_serieslist(engine, tsh):
     tsh.register_formula(
         engine,
         'found.none',
-        '(add <| (serieslist (findnames (byname "no.luck"))))'
+        '(add <| (serieslist (findnames (by.name "no.luck"))))'
     )
     ts = tsh.get(engine, 'found.none')
     assert len(ts) == 0
@@ -469,6 +469,116 @@ def test_serieslist(engine, tsh):
     )
     ts = tsh.get(engine, 'combine.add-with-empty')
     assert len(ts) == 0
+
+
+def test_more_filter(engine, tsh):
+    a = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(dt(2023, 1, 1), periods=3, freq='D')
+    )
+    tsh.update(engine, a, 'find.me.A', 'Babar')
+    tsh.update(engine, a * 2, 'find.me.B', 'Celeste')
+    tsh.update_metadata(
+        engine,
+        'find.me.A',
+        {
+            'weight': 42,
+            'type': 'A',
+            'something': 'something'
+         }
+    )
+    tsh.update_metadata(
+        engine,
+        'find.me.B',
+        {
+            'weight': 43,
+            'type': 'B'
+         }
+    )
+
+    tsh.register_formula(
+        engine,
+        'find.some',
+        '(add <| (serieslist (findnames (by.metakey "something"))))'
+    )
+    ts = tsh.get(engine, 'find.some')
+    assert_df("""
+2023-01-01    1.0
+2023-01-02    2.0
+2023-01-03    3.0
+""", ts)
+
+    tsh.register_formula(
+        engine,
+        'find.some',
+        '(add <| (serieslist (findnames (by.metaitem "type" "A"))))'
+    )
+    ts = tsh.get(engine, 'find.some')
+    assert_df("""
+2023-01-01    1.0
+2023-01-02    2.0
+2023-01-03    3.0
+""", ts)
+
+    tsh.register_formula(
+        engine,
+        'find.some',
+        '(add <| (serieslist (findnames (by.metaitem "weight" 43))))'
+    )
+    ts = tsh.get(engine, 'find.some')
+    assert_df("""
+2023-01-01    2.0
+2023-01-02    4.0
+2023-01-03    6.0
+""", ts)
+
+    tsh.register_formula(
+        engine,
+        'find.some',
+        '(add <| (serieslist (findnames (by.value "weight" "<" 43))))'
+    )
+    ts = tsh.get(engine, 'find.some')
+    assert_df("""
+2023-01-01    1.0
+2023-01-02    2.0
+2023-01-03    3.0
+""", ts)
+
+    tsh.register_formula(
+        engine,
+        'find.some',
+        '(add <| (serieslist (findnames (by.value "weight" "<=" 43))))'
+    )
+    ts = tsh.get(engine, 'find.some')
+    assert_df("""
+2023-01-01    3.0
+2023-01-02    6.0
+2023-01-03    9.0
+""", ts)
+
+    tsh.register_formula(
+        engine,
+        'find.some',
+        '(add <| (serieslist (findnames (by.value "weight" ">" 42))))'
+    )
+    ts = tsh.get(engine, 'find.some')
+    assert_df("""
+2023-01-01    2.0
+2023-01-02    4.0
+2023-01-03    6.0
+""", ts)
+
+    tsh.register_formula(
+        engine,
+        'find.some',
+        '(add <| (serieslist (findnames (by.value "weight" ">=" 42))))'
+    )
+    ts = tsh.get(engine, 'find.some')
+    assert_df("""
+2023-01-01    3.0
+2023-01-02    6.0
+2023-01-03    9.0
+""", ts)
 
 
 def test_scalar_div(engine, tsh):

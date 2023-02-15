@@ -236,9 +236,29 @@ def findnames(__interpreter__,
     return i.tsh.find(i.cn, q)
 
 
-@func('byname')
+@func('by.name')
 def byname(namequery: str) -> search.query:
     return search.byname(namequery)
+
+
+@func('by.metakey')
+def bymetakey(keyquery: str) -> search.query:
+    return search.bymetakey(keyquery)
+
+
+@func('by.metaitem')
+def bymetaitems(key: str, value: Union[str, Number]) -> search.query:
+    return search.bymetaitem(key, value)
+
+
+@func('by.value')
+def byvalue(key: str, operator: str, value: Union[str, Number]) -> search.query:
+    assert operator in ('<', '<=', '>', '>=')
+    if isinstance(value, str):
+        valexpr = f'"{value}"'
+    else:
+        valexpr = f'{value}'
+    return search.query.fromexpr(f'({operator} "{key}" {valexpr})')
 
 
 def asof_transform(tree):
