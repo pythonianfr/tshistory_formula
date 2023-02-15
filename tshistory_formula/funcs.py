@@ -236,6 +236,23 @@ def findnames(__interpreter__,
     return i.tsh.find(i.cn, q)
 
 
+@func('findseries')
+def findseries(__interpreter__,
+               __from_value_date__,
+               __to_value_date__,
+               __revision_date__,
+               q: search.query) -> List[pd.Series]:
+    i = __interpreter__
+    names = i.tsh.find(i.cn, q)
+    return serieslist(
+        __interpreter__,
+        __from_value_date__,
+        __to_value_date__,
+        __revision_date__,
+        names
+    )
+
+
 @func('by.name')
 def byname(namequery: str) -> search.query:
     return search.byname(namequery)

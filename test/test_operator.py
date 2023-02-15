@@ -580,6 +580,19 @@ def test_more_filter(engine, tsh):
 2023-01-03    9.0
 """, ts)
 
+    # check findseries
+    tsh.register_formula(
+        engine,
+        'find.some',
+        '(add <| (findseries (by.value "weight" ">=" 42)))'
+    )
+    ts = tsh.get(engine, 'find.some')
+    assert_df("""
+2023-01-01    3.0
+2023-01-02    6.0
+2023-01-03    9.0
+""", ts)
+
 
 def test_scalar_div(engine, tsh):
     a = pd.Series(
