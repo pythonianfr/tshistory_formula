@@ -58,8 +58,10 @@ class FunctionMaker:
     # Atomic get-and-increment provided by the GIL
     _compile_count = itertools.count()
 
-    # make pylint happy
-    args = varargs = varkw = defaults = kwonlyargs = kwonlydefaults = ()
+    # make pytype happy
+    args = defaults = kwonlyargs = kwonlydefaults = []
+    varargs: str = ''
+    varkw: str = ''
 
     def __init__(self, func, extrakw={}):
         # func can be a class or a callable, but not an instance method

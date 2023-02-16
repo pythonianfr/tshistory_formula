@@ -66,7 +66,7 @@ def eval_formula(self,
         rtype = types.typecheck(tree, env=i.env)
         if not types.sametype(rtype, pd.Series):
             raise TypeError(
-                f'formula `{name}` must return a `Series`, not `{rtype.__name__}`'
+                f'formula `{formula}` must return a `Series`, not `{rtype.__name__}`'
             )
 
         return self.tsh.eval_formula(
@@ -131,7 +131,7 @@ def formula(self,
 @extend(mainsource)
 def formula_components(self,
                        name: str,
-                       expanded: bool=False) -> Optional[Dict[str, str]]:
+                       expanded: bool=False) -> Optional[Dict[str, list]]:
     """Compute a mapping from series name (defined as formulas) to the
     names of the component series.
 
