@@ -723,7 +723,7 @@ def _group_series(*serieslist):
 
 @func('trig.cos')
 def trig_cosinus(series: pd.Series,
-            decimals: Optional[Number]=None) -> pd.Series:
+                 decimals: Optional[Number]=None) -> pd.Series:
     """
     Cosine element-wise on a degree series.
 
@@ -732,7 +732,7 @@ def trig_cosinus(series: pd.Series,
     opts = series.options
     res = np.cos(series * (np.pi / 180))
     if decimals:
-        res = round(res, decimals)
+        res = res.round(decimals)
     res.options = opts
     return res
 
@@ -763,7 +763,7 @@ def trig_sinus(series: pd.Series,
 
     res = np.sin(series * (np.pi / 180))
     if decimals:
-        res = round(res, decimals)
+        res = res.round(decimals)
     res.options = opts
     return res
 
@@ -794,7 +794,7 @@ def trig_tangent(series: pd.Series,
 
     res = np.tan(series * (np.pi / 180))
     if decimals:
-        res = round(res, decimals)
+        res = res.round(decimals)
     res.options = opts
     return res
 
@@ -970,6 +970,7 @@ def different_to(series: pd.Series,
     return _comparator('<>', series, num_or_series, false_value, true_value)
 
 # /conditionals
+
 
 @func('add')
 def series_add(*serieslist: pd.Series) -> pd.Series:
