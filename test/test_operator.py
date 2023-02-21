@@ -435,7 +435,7 @@ def test_serieslist(engine, tsh):
     tsh.register_formula(
         engine,
         'found.them',
-        '(add <| (serieslist (findnames (by.name "find.me"))))'
+        '(add (serieslist (findnames (by.name "find.me"))))'
     )
 
     ts = tsh.get(engine, 'found.them')
@@ -457,7 +457,7 @@ def test_serieslist(engine, tsh):
     tsh.register_formula(
         engine,
         'found.none',
-        '(add <| (serieslist (findnames (by.name "no.luck"))))'
+        '(add (serieslist (findnames (by.name "no.luck"))))'
     )
     ts = tsh.get(engine, 'found.none')
     assert len(ts) == 0
@@ -499,7 +499,7 @@ def test_more_filter(engine, tsh):
     tsh.register_formula(
         engine,
         'find.some',
-        '(add <| (serieslist (findnames (by.metakey "something"))))'
+        '(add (serieslist (findnames (by.metakey "something"))))'
     )
     ts = tsh.get(engine, 'find.some')
     assert_df("""
@@ -511,7 +511,7 @@ def test_more_filter(engine, tsh):
     tsh.register_formula(
         engine,
         'find.some',
-        '(add <| (serieslist (findnames (by.metaitem "type" "A"))))'
+        '(add (serieslist (findnames (by.metaitem "type" "A"))))'
     )
     ts = tsh.get(engine, 'find.some')
     assert_df("""
@@ -523,7 +523,7 @@ def test_more_filter(engine, tsh):
     tsh.register_formula(
         engine,
         'find.some',
-        '(add <| (serieslist (findnames (by.metaitem "weight" 43))))'
+        '(add (serieslist (findnames (by.metaitem "weight" 43))))'
     )
     ts = tsh.get(engine, 'find.some')
     assert_df("""
@@ -535,7 +535,7 @@ def test_more_filter(engine, tsh):
     tsh.register_formula(
         engine,
         'find.some',
-        '(add <| (serieslist (findnames (by.value "weight" "<" 43))))'
+        '(add (serieslist (findnames (by.value "weight" "<" 43))))'
     )
     ts = tsh.get(engine, 'find.some')
     assert_df("""
@@ -547,7 +547,7 @@ def test_more_filter(engine, tsh):
     tsh.register_formula(
         engine,
         'find.some',
-        '(add <| (serieslist (findnames (by.value "weight" "<=" 43))))'
+        '(add (serieslist (findnames (by.value "weight" "<=" 43))))'
     )
     ts = tsh.get(engine, 'find.some')
     assert_df("""
@@ -559,7 +559,7 @@ def test_more_filter(engine, tsh):
     tsh.register_formula(
         engine,
         'find.some',
-        '(add <| (serieslist (findnames (by.value "weight" ">" 42))))'
+        '(add (serieslist (findnames (by.value "weight" ">" 42))))'
     )
     ts = tsh.get(engine, 'find.some')
     assert_df("""
@@ -571,7 +571,7 @@ def test_more_filter(engine, tsh):
     tsh.register_formula(
         engine,
         'find.some',
-        '(add <| (serieslist (findnames (by.value "weight" ">=" 42))))'
+        '(add (serieslist (findnames (by.value "weight" ">=" 42))))'
     )
     ts = tsh.get(engine, 'find.some')
     assert_df("""
@@ -584,7 +584,7 @@ def test_more_filter(engine, tsh):
     tsh.register_formula(
         engine,
         'find.some',
-        '(add <| (findseries (by.value "weight" ">=" 42)))'
+        '(add (findseries (by.value "weight" ">=" 42)))'
     )
     ts = tsh.get(engine, 'find.some')
     assert_df("""

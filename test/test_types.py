@@ -1,4 +1,5 @@
 import json
+import inspect
 import itertools
 import typing
 from numbers import Number
@@ -16,6 +17,8 @@ from tshistory_formula.helper import seriesname
 from tshistory_formula.types import (
     isoftype,
     function_types,
+    findtype,
+    Packed,
     sametype,
     typecheck
 )
@@ -115,6 +118,18 @@ def test_isoftype():
     assert not isoftype(str, 1)
     assert isoftype(typing.Union[NONETYPE, int], 1)
     assert isoftype(typing.Union[NONETYPE, Number], 1)
+
+
+def test_findtype():
+    def foo(__nope__, a:int, *b:str, kw1:str = None, kw2:int = 42) -> typing.List[str]:
+        pass
+
+    sig = inspect.signature(foo)
+
+    atype = findtype(sig, 1)
+    assert atype is int
+    btype = findtype(sig, 2)
+    assert btype == Packed[str]
 
 
 def test_operators_types():

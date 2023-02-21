@@ -98,12 +98,16 @@ def _evaluate(tree, env, funcids=(), pool=None, hist=False):
     if hist and funkey in funcids:
         kwargs['__tree__'] = tree
 
+    signature = inspect.getfullargspec(func)
+    if signature.varargs:
+        if len(posargs) == 1 and isinstance(posargs[0], list):
+            posargs = posargs[0]
     # prepare args injection from the lisp environment
-    sig = inspect.getfullargspec(func).args
     posargs = [
-        env.find(QARGS[arg]) for arg in sig
+        env.find(QARGS[arg]) for arg in signature.args
         if arg in QARGS
     ] + posargs
+
 
     # an async function, e.g. series, being I/O oriented
     # can be deferred to a thread

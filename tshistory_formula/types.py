@@ -10,8 +10,7 @@ from psyl.lisp import (
     Env,
     evaluate,
     Keyword,
-    serialize,
-    SPLICE
+    serialize
 )
 
 from tshistory_formula.registry import FUNCS
@@ -110,6 +109,17 @@ def sametype(supertype, atype):
                 return True
     else:
         # supertype is typing crap
+        if 'Packed' in str(supertype):
+            # allow to match a Packed<T> with List<T>, then
+            # the evaluator will do the automatic list-unpacking
+            same = sametype(supertype.__args__[0], atype)
+            if same:
+                return True
+            if getattr(atype, '_name', None):
+                if atype._name == 'List':
+                    if supertype.__args__[0] == atype.__args__[0]:
+                        return True
+
         if isinstance(atype, type):
             # atype ∈ supertype (type vs typing)
             if supertype.__origin__ is typing.Union:
@@ -132,6 +142,15 @@ def sametype(supertype, atype):
     return False
 
 
+# Yeah, I opened the typing module to understand how these things are
+# done ... It turns out List et al cannot be part of the right hand
+# side of an issubclass check, and they also do not answer true to
+# isinstance(<typedescr>, type) but "class Unpacked(List): pass" would
+# ...
+# With the typing module, we have another asyncio it seems.
+Packed = typing._alias(list, 1, inst=False, name='Packed')
+
+
 def findtype(signature, argidx=None, argname=None):
     if argidx is not None:
         # in general we can have [<p1>, <p2>, ... <vararg>, <kw1W, ... ]
@@ -146,7 +165,10 @@ def findtype(signature, argidx=None, argname=None):
         if varargidx is not None:
             if argidx >= varargidx:
                 argidx = varargidx  # it is being absorbed
-            return params[argidx].annotation
+            if argidx < varargidx:
+                return params[argidx].annotation
+            # we wrap varargs into something
+            return Packed[params[argidx].annotation]
         # let's catch vararg vs kwarg vs plain bogus idx
         param = params[argidx]
         if param.kind in (inspect.Parameter.KEYWORD_ONLY,
@@ -263,12 +285,6 @@ def narrow_types(op, typespec, argstypes):
     return typespec  # no narrowing was possible
 
 
-def splice_type(typespec):
-    if typespec._name == 'List':
-        return typespec.__args__[0]
-    return typespec
-
-
 def typecheck(tree, env=FUNCS):
     op = tree[0]
     try:
@@ -315,17 +331,9 @@ def typecheck(tree, env=FUNCS):
 
     # check positional
     narrowed_argstypes = []
-    splice = False
     for idx, (arg, expecttype) in enumerate(zip(tree[1:], posargstypes)):
-        # we just ignore it
-        if arg == SPLICE:
-            splice = True
-            continue
         if isinstance(arg, list):
             exprtype = typecheck(arg, env)
-            if splice:
-                exprtype = splice_type(exprtype)
-                splice = False
             if not sametype(expecttype, exprtype):
                 raise TypeError(
                     f'item {idx}: expect {expecttype}, got {exprtype}'
