@@ -6,7 +6,7 @@ import json
 import logging
 
 import pandas as pd
-from psyl.lisp import parse, serialize
+from psyl.lisp import parse, serialize, Symbol
 from tshistory.tsio import timeseries as basets
 from tshistory.util import (
     diff,
@@ -126,20 +126,72 @@ class timeseries(basets):
 
         metamap = {}
         find_meta(tree, metamap)
-        if not metamap:
-            return {}
+
+        def find_tzaware_query():
+            # look for a search query and
+            # a) check coherency of its current output
+            # b) use it to get the tzawareness
+
+            def find_query_subtree(tree):
+                if tree[0] == 'findseries':
+                    return tree[1]
+                for item in tree[1:]:
+                    if isinstance(item, list):
+                        subtree = find_query_subtree(item)
+                        if subtree is not None:
+                            return subtree
+
+            querytree = find_query_subtree(tree)
+            if not querytree:
+                # NOTE: in some not too distant future, maybe raise ?
+                return {}
+
+            itrp = interpreter.Interpreter(cn, self, {})
+            names = itrp.evaluate(
+                [Symbol('findnames'), querytree]
+            )
+            if not len(names):
+                raise ValueError(
+                    f'Formula `{name}` appear to be bound to no series. '
+                    'We cannot determine its tzaware status.'
+                )
+
+            tzaware = [
+                self.tzaware(cn, name)
+                for name in names
+            ]
+            if tzaware.count(tzaware[0]) != len(tzaware):
+                raise ValueError(
+                    f'Formula `{name}` uses a mix of tzaware and naive series '
+                    'in its query. '
+                )
+            return tzaware[0]
 
         def tzlabel(status):
             if status is None: return 'unknown'
             return 'tzaware' if status else 'tznaive'
 
-        first_tzaware = next(iter(metamap.values()))
-        for (name, path), tzaware in metamap.items():
-            if first_tzaware != tzaware:
-                raise ValueError(
-                    f'Formula `{name}` has tzaware vs tznaive series:'
-                    f'{",".join("`%s:%s`" % (k, tzlabel(v)) for k, v in metamap.items())}'
-                )
+        first_tzaware = None
+        if metamap:
+            first_tzaware = next(iter(metamap.values()))
+            for (name, path), tzaware in metamap.items():
+                if first_tzaware != tzaware:
+                    raise ValueError(
+                        f'Formula `{name}` has tzaware vs tznaive series:'
+                        f'{",".join("`%s:%s`" % (k, tzlabel(v)) for k, v in metamap.items())}'
+                    )
+
+        querytz = find_tzaware_query()
+        if querytz:
+            if first_tzaware:
+                if querytz != first_tzaware:
+                    raise ValueError(
+                        f'Formula {name} has {"tzaware" if first_tzaware else "naive"} series '
+                        'and also {"naive" if not querytz else "tzaware"} dynamic series.'
+                    )
+            else:
+                first_tzaware = querytz
+
         return first_tzaware
 
     def formula_stats(self, cn, name):

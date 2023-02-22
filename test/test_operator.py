@@ -499,7 +499,7 @@ def test_more_filter(engine, tsh):
     tsh.register_formula(
         engine,
         'find.some',
-        '(add (serieslist (findnames (by.metakey "something"))))'
+        '(add (findseries (by.metakey "something"))))'
     )
     ts = tsh.get(engine, 'find.some')
     assert_df("""
@@ -511,7 +511,7 @@ def test_more_filter(engine, tsh):
     tsh.register_formula(
         engine,
         'find.some',
-        '(add (serieslist (findnames (by.metaitem "type" "A"))))'
+        '(add (findseries (by.metaitem "type" "A"))))'
     )
     ts = tsh.get(engine, 'find.some')
     assert_df("""
@@ -523,7 +523,7 @@ def test_more_filter(engine, tsh):
     tsh.register_formula(
         engine,
         'find.some',
-        '(add (serieslist (findnames (by.metaitem "weight" 43))))'
+        '(add (findseries (by.metaitem "weight" 43))))'
     )
     ts = tsh.get(engine, 'find.some')
     assert_df("""
@@ -535,7 +535,7 @@ def test_more_filter(engine, tsh):
     tsh.register_formula(
         engine,
         'find.some',
-        '(add (serieslist (findnames (by.value "weight" "<" 43))))'
+        '(add (findseries (by.value "weight" "<" 43))))'
     )
     ts = tsh.get(engine, 'find.some')
     assert_df("""
@@ -547,7 +547,7 @@ def test_more_filter(engine, tsh):
     tsh.register_formula(
         engine,
         'find.some',
-        '(add (serieslist (findnames (by.value "weight" "<=" 43))))'
+        '(add (findseries (by.value "weight" "<=" 43))))'
     )
     ts = tsh.get(engine, 'find.some')
     assert_df("""
@@ -559,7 +559,7 @@ def test_more_filter(engine, tsh):
     tsh.register_formula(
         engine,
         'find.some',
-        '(add (serieslist (findnames (by.value "weight" ">" 42))))'
+        '(add (findseries (by.value "weight" ">" 42))))'
     )
     ts = tsh.get(engine, 'find.some')
     assert_df("""
@@ -571,7 +571,7 @@ def test_more_filter(engine, tsh):
     tsh.register_formula(
         engine,
         'find.some',
-        '(add (serieslist (findnames (by.value "weight" ">=" 42))))'
+        '(add (findseries (by.value "weight" ">=" 42))))'
     )
     ts = tsh.get(engine, 'find.some')
     assert_df("""
@@ -638,7 +638,7 @@ def test_more_filter(engine, tsh):
 """, ts)
 
     assert tsh.tzaware(engine, 'find.me.B')
-    assert not tsh.tzaware(engine, 'find.and')
+    assert tsh.tzaware(engine, 'find.and')
 
 
 def test_scalar_div(engine, tsh):
