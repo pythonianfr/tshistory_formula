@@ -206,7 +206,7 @@ def serieslist(__interpreter__,
                names: List[str]) -> List[pd.Series]:
     """Yields a list of series names out of list of names.
 
-    Example: `(add <| (serieslist (findnames (by.value "weight" "<" 43)))`
+    Example: `(add (serieslist (findnames (by.value "weight" "<" 43)))`
 
     """
     poolrun = threadpool(16)
@@ -240,7 +240,7 @@ def findnames(__interpreter__,
     """Yields a list of series names out of a metadata/name/... filtering
     query.
 
-    Example: `(add <| (serieslist (findnames (by.value "weight" "<" 43)))`
+    Example: `(add (serieslist (findnames (by.value "weight" "<" 43)))`
 
     """
     i = __interpreter__
@@ -255,7 +255,7 @@ def findseries(__interpreter__,
                q: search.query) -> List[pd.Series]:
     """Yields a series list out of a metadata/name/... filtering query.
 
-    Example: `(add <| (findseries (by.value "weight" "<" 43)))`
+    Example: `(add (findseries (by.value "weight" "<" 43)))`
 
     """
     i = __interpreter__
@@ -273,7 +273,7 @@ def findseries(__interpreter__,
 def byname(namequery: str) -> search.query:
     """Yields a query filter operating on series names.
 
-    Example: `(add <| (findseries (by.name "fr capacity")))`
+    Example: `(add (findseries (by.name "fr capacity")))`
 
     This will filter the series whose names contain, in order, the
     "fr" and "capacity" fragments.
@@ -286,7 +286,7 @@ def byname(namequery: str) -> search.query:
 def bymetakey(keyquery: str) -> search.query:
     """Yields a query filter operating on metadata key.
 
-    Example: `(add <| (findseries (by.metakey "plant_status")))`
+    Example: `(add (findseries (by.metakey "plant_status")))`
 
     This will filter the series having "plant_status" in their
     metadata.
@@ -299,7 +299,7 @@ def bymetakey(keyquery: str) -> search.query:
 def bymetaitems(key: str, value: Union[str, Number]) -> search.query:
     """Yields a query filter operating on metadata items.
 
-    Example: `(add <| (findseries (by.metaitem "plant_status" "running")))`
+    Example: `(add (findseries (by.metaitem "plant_status" "running")))`
 
     This will filter the series having "running" as a value for the
     "plant_status" key in their metadata.
@@ -312,7 +312,7 @@ def bymetaitems(key: str, value: Union[str, Number]) -> search.query:
 def byvalue(key: str, operator: str, value: Union[str, Number]) -> search.query:
     """Yields a query filter operating on metadata items.
 
-    Example: `(add <| (findseries (by.value "weigth" "<=" 42)))`
+    Example: `(add (findseries (by.value "weigth" "<=" 42)))`
 
     This will filter the series having a "weight" metadata entry and
     keep those whose values is <= 42.
