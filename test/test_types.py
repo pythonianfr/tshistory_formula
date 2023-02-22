@@ -74,6 +74,13 @@ def test_function_types():
         'tz': 'Default[str="UTC"]'
     }
 
+    f = FUNCS['by.name']
+    types = function_types(f)
+    assert types == {
+        'namequery': 'str',
+        'return': 'query'
+    }
+
 
 def test_sametype():
     types = (str, int, float, pd.Series)
