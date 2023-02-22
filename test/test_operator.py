@@ -474,7 +474,7 @@ def test_serieslist(engine, tsh):
 def test_more_filter(engine, tsh):
     a = pd.Series(
         [1, 2, 3],
-        index=pd.date_range(dt(2023, 1, 1), periods=3, freq='D')
+        index=pd.date_range(utcdt(2023, 1, 1), periods=3, freq='D')
     )
     tsh.update(engine, a, 'find.me.A', 'Babar')
     tsh.update(engine, a * 2, 'find.me.B', 'Celeste')
@@ -503,9 +503,9 @@ def test_more_filter(engine, tsh):
     )
     ts = tsh.get(engine, 'find.some')
     assert_df("""
-2023-01-01    1.0
-2023-01-02    2.0
-2023-01-03    3.0
+2023-01-01 00:00:00+00:00    1.0
+2023-01-02 00:00:00+00:00    2.0
+2023-01-03 00:00:00+00:00    3.0
 """, ts)
 
     tsh.register_formula(
@@ -515,9 +515,9 @@ def test_more_filter(engine, tsh):
     )
     ts = tsh.get(engine, 'find.some')
     assert_df("""
-2023-01-01    1.0
-2023-01-02    2.0
-2023-01-03    3.0
+2023-01-01 00:00:00+00:00    1.0
+2023-01-02 00:00:00+00:00    2.0
+2023-01-03 00:00:00+00:00    3.0
 """, ts)
 
     tsh.register_formula(
@@ -527,9 +527,9 @@ def test_more_filter(engine, tsh):
     )
     ts = tsh.get(engine, 'find.some')
     assert_df("""
-2023-01-01    2.0
-2023-01-02    4.0
-2023-01-03    6.0
+2023-01-01 00:00:00+00:00    2.0
+2023-01-02 00:00:00+00:00    4.0
+2023-01-03 00:00:00+00:00    6.0
 """, ts)
 
     tsh.register_formula(
@@ -539,9 +539,9 @@ def test_more_filter(engine, tsh):
     )
     ts = tsh.get(engine, 'find.some')
     assert_df("""
-2023-01-01    1.0
-2023-01-02    2.0
-2023-01-03    3.0
+2023-01-01 00:00:00+00:00    1.0
+2023-01-02 00:00:00+00:00    2.0
+2023-01-03 00:00:00+00:00    3.0
 """, ts)
 
     tsh.register_formula(
@@ -551,9 +551,9 @@ def test_more_filter(engine, tsh):
     )
     ts = tsh.get(engine, 'find.some')
     assert_df("""
-2023-01-01    3.0
-2023-01-02    6.0
-2023-01-03    9.0
+2023-01-01 00:00:00+00:00    3.0
+2023-01-02 00:00:00+00:00    6.0
+2023-01-03 00:00:00+00:00    9.0
 """, ts)
 
     tsh.register_formula(
@@ -563,9 +563,9 @@ def test_more_filter(engine, tsh):
     )
     ts = tsh.get(engine, 'find.some')
     assert_df("""
-2023-01-01    2.0
-2023-01-02    4.0
-2023-01-03    6.0
+2023-01-01 00:00:00+00:00    2.0
+2023-01-02 00:00:00+00:00    4.0
+2023-01-03 00:00:00+00:00    6.0
 """, ts)
 
     tsh.register_formula(
@@ -575,9 +575,9 @@ def test_more_filter(engine, tsh):
     )
     ts = tsh.get(engine, 'find.some')
     assert_df("""
-2023-01-01    3.0
-2023-01-02    6.0
-2023-01-03    9.0
+2023-01-01 00:00:00+00:00    3.0
+2023-01-02 00:00:00+00:00    6.0
+2023-01-03 00:00:00+00:00    9.0
 """, ts)
 
     # check findseries
@@ -588,9 +588,9 @@ def test_more_filter(engine, tsh):
     )
     ts = tsh.get(engine, 'find.some')
     assert_df("""
-2023-01-01    3.0
-2023-01-02    6.0
-2023-01-03    9.0
+2023-01-01 00:00:00+00:00    3.0
+2023-01-02 00:00:00+00:00    6.0
+2023-01-03 00:00:00+00:00    9.0
 """, ts)
 
     # logical combinators
@@ -604,9 +604,9 @@ def test_more_filter(engine, tsh):
     )
     ts = tsh.get(engine, 'find.or')
     assert_df("""
-2023-01-01    3.0
-2023-01-02    6.0
-2023-01-03    9.0
+2023-01-01 00:00:00+00:00    3.0
+2023-01-02 00:00:00+00:00    6.0
+2023-01-03 00:00:00+00:00    9.0
 """, ts)
 
     tsh.register_formula(
@@ -619,9 +619,9 @@ def test_more_filter(engine, tsh):
     )
     ts = tsh.get(engine, 'find.and')
     assert_df("""
-2023-01-01    2.0
-2023-01-02    4.0
-2023-01-03    6.0
+2023-01-01 00:00:00+00:00    2.0
+2023-01-02 00:00:00+00:00    4.0
+2023-01-03 00:00:00+00:00    6.0
 """, ts)
 
     tsh.register_formula(
@@ -632,12 +632,13 @@ def test_more_filter(engine, tsh):
     )
     ts = tsh.get(engine, 'find.and')
     assert_df("""
-2023-01-01    2.0
-2023-01-02    4.0
-2023-01-03    6.0
+2023-01-01 00:00:00+00:00    2.0
+2023-01-02 00:00:00+00:00    4.0
+2023-01-03 00:00:00+00:00    6.0
 """, ts)
 
-
+    assert tsh.tzaware(engine, 'find.me.B')
+    assert not tsh.tzaware(engine, 'find.and')
 
 
 def test_scalar_div(engine, tsh):
