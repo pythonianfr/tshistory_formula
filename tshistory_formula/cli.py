@@ -425,6 +425,25 @@ create index if not exists "ix_{ns}_dependant_needs" on "{ns}".dependant (needs)
         tsh.register_dependants(engine, name, parse(text))
 
 
+@click.command(name='migrate-to-formula-patch')
+@click.argument('db-uri')
+@click.option('--namespace', default='tsh')
+def migrate_to_formula_patch(db_uri, namespace='tsh'):
+    engine = create_engine(find_dburi(db_uri))
+    ns_name = f'{namespace}-formula-patch'
+    with engine.begin() as cn:
+        exists = cn.execute(
+            'select 1 from information_schema.schemata where schema_name = %(name)s',
+            name=ns_name
+        ).scalar()
+        if exists:
+            print(f'Schema `{ns_name}` already exists. Nothing to do.')
+            return
+    from tshistory.schema import tsschema
+    schem = tsschema(ns_name)
+    schem.create(engine)
+
+
 @click.command(name='shell')
 @click.argument('db-uri')
 @click.option('--namespace', default='tsh')
