@@ -328,6 +328,40 @@ def byvalue(key: str, operator: str, value: Union[str, Number]) -> search.query:
     return search.query.fromexpr(f'({operator} "{key}" {valexpr})')
 
 
+@func('by.not')
+def bynot(query: search.query) -> search.query:
+    """Yields a query filter negating its input query filter.
+
+    Example: `(add (findseries (by.not (by.name "capacity"))))`
+
+    This will filter the series NOT having "capacity" in their name.
+
+    """
+    return search.not_(query)
+
+
+@func('by.and')
+def byand(*queries: search.query) -> search.query:
+    """Yields a query filter doing a logical AND to its input query
+    filters.
+
+    Example: `(add (findseries (by.and (by.name "capacity") (by.metakey "plant"))))`
+
+    """
+    return search.and_(*queries)
+
+
+@func('by.or')
+def byor(*queries: search.query) -> search.query:
+    """Yields a query filter doing a logical OR to its input query
+    filters.
+
+    Example: `(add (findseries (by.or (by.name "capacity") (by.metakey "plant"))))`
+
+    """
+    return search.or_(*queries)
+
+
 def asof_transform(tree):
     posargs, _kwargs = buildargs(tree[1:])
     return [
