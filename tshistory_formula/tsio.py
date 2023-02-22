@@ -252,7 +252,7 @@ class timeseries(basets):
             # bad situation ... we should stop accepting references to
             # unknown series and provide a batch registration api
             # point instead
-            L.warn('formula %s has no tzaware info (will be broken)', name)
+            L.warning('formula %s has no tzaware info (will be broken)', name)
 
         coremeta = self.default_meta(tzaware)
         meta = self.internal_metadata(cn, name) or {}
