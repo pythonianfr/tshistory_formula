@@ -896,7 +896,7 @@ def _comparator(
     elif operation == '<>':
         mask = series != num_or_series
 
-    ts = pd.Series(index=mask.index)
+    ts = pd.Series(index=mask.index, dtype='float64')
     ts[mask] = true_value
     ts[~mask] = false_value
     return ts
