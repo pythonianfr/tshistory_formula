@@ -143,7 +143,9 @@ def test_operators_types():
     # prune the types registered from other modules/plugins
     # we want to only show the ones provided by the current package
     opnames = set(
-        ('*', '**', '+', '/', 'add', 'asof',
+        ('*', '**', '+', '/',
+         '<', # '<=', '<>', '==', '>', '>=',
+         'add', 'asof',
          'by.name', 'by.metaitem', 'by.metakey', 'by.value',
          'clip', 'constant', 'cumsum', 'div',
          'end-of-month',
@@ -177,6 +179,11 @@ def test_operators_types():
         '/': {'num_or_series': 'Union[Number, Series]',
               'num': 'Number',
               'return': 'Union[Number, Series]'},
+        '<': {'false_value': 'Default[Number=0]',
+              'num_or_series': 'Union[Number, Series]',
+              'return': 'Series',
+              'series': 'Series',
+              'true_value': 'Default[Number=1]'},
         'add': {'return': 'Series', 'serieslist': 'Series'},
         'asof': {'return': 'Series',
                  'revision_date': 'Timestamp',
