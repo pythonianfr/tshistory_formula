@@ -109,67 +109,8 @@ class timeseries(basets):
     def check_tz_compatibility(self, cn, tree):
         """check that series are timezone-compatible
         """
-
-        def find_meta(tree, tzstatus, path=()):
-            op = tree[0]
-            path = path + (op,)
-            metas = METAS.get(op)
-            if metas:
-                for name, metadata in metas(cn, self, tree).items():
-                    tzaware = metadata['tzaware'] if metadata else None
-                    if 'naive' in path:
-                        tzaware = False
-                    tzstatus[(name, path)] = tzaware
-            for item in tree:
-                if isinstance(item, list):
-                    find_meta(item, tzstatus, path)
-
         metamap = {}
-        find_meta(tree, metamap)
-
-        def find_tzaware_query():
-            # look for a search query and
-            # a) check coherency of its current output
-            # b) use it to get the tzawareness
-
-            def find_query_subtree(tree):
-                if tree[0] == 'findseries':
-                    return tree[1]
-                for item in tree[1:]:
-                    if isinstance(item, list):
-                        subtree = find_query_subtree(item)
-                        if subtree is not None:
-                            return subtree
-
-            querytree = find_query_subtree(tree)
-            if not querytree:
-                # NOTE: in some not too distant future, maybe raise ?
-                return {}
-
-            itrp = interpreter.Interpreter(cn, self, {})
-            names = itrp.evaluate(
-                [Symbol('findnames'), querytree]
-            )
-            if not len(names):
-                raise ValueError(
-                    f'Formula `{name}` appear to be bound to no series. '
-                    'We cannot determine its tzaware status.'
-                )
-
-            tzaware = [
-                self.tzaware(cn, name)
-                for name in names
-            ]
-            if tzaware.count(tzaware[0]) != len(tzaware):
-                raise ValueError(
-                    f'Formula `{name}` uses a mix of tzaware and naive series '
-                    'in its query. '
-                )
-            return tzaware[0]
-
-        def tzlabel(status):
-            if status is None: return 'unknown'
-            return 'tzaware' if status else 'tznaive'
+        helper.find_meta(self, cn, tree, metamap)
 
         first_tzaware = None
         if metamap:
@@ -178,16 +119,16 @@ class timeseries(basets):
                 if first_tzaware != tzaware:
                     raise ValueError(
                         f'Formula `{name}` has tzaware vs tznaive series:'
-                        f'{",".join("`%s:%s`" % (k, tzlabel(v)) for k, v in metamap.items())}'
+                        f'{",".join("`%s:%s`" % (k, helper.tzlabel(v)) for k, v in metamap.items())}'
                     )
 
-        querytz = find_tzaware_query()
-        if querytz:
+        querytz = helper.find_tzaware_query(self, cn, tree)
+        if querytz is not None:
             if first_tzaware:
                 if querytz != first_tzaware:
                     raise ValueError(
-                        f'Formula {name} has {"tzaware" if first_tzaware else "naive"} series '
-                        'and also {"naive" if not querytz else "tzaware"} dynamic series.'
+                        f'Formula `{name}` has {"tzaware" if first_tzaware else "naive"} series '
+                        f'and also {"naive" if not querytz else "tzaware"} dynamic series.'
                     )
             else:
                 first_tzaware = querytz

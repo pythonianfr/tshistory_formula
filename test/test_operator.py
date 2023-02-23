@@ -641,6 +641,62 @@ def test_more_filter(engine, tsh):
     assert tsh.tzaware(engine, 'find.and')
 
 
+def test_filter_vs_tzaware(engine, tsh):
+    a = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(dt(2023, 1, 1), periods=3, freq='D')
+    )
+    tsh.update(engine, a, 'find.me.naive', 'Babar')
+    b = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(utcdt(2023, 1, 1), periods=3, freq='D')
+    )
+    tsh.update(engine, b, 'find.me.tzaware', 'Babar')
+
+    with pytest.raises(ValueError) as err:
+        tsh.register_formula(
+            engine,
+            'bogus',
+            '(add (findseries (by.name "find.me")))'
+        )
+    assert err.value.args[0] == (
+        'Filter expression uses a mix of tzaware and naive series in its query.'
+    )
+
+    with pytest.raises(ValueError) as err:
+        tsh.register_formula(
+            engine,
+            'bogus',
+            '(add (findseries (by.name "NOPE.NOPE.NOPE")))'
+        )
+    assert err.value.args[0] == (
+        'Filter expression yields no series. We cannot determine its tzaware status.'
+    )
+
+    with pytest.raises(ValueError) as err:
+        tsh.register_formula(
+            engine,
+            'bogus',
+            '(add (add (findseries (by.name "find.me.naive")))'
+            '     (series "find.me.tzaware"))'
+        )
+    assert err.value.args[0] == (
+        'Formula `find.me.tzaware` has tzaware series and also naive dynamic series.'
+    )
+
+    with pytest.raises(ValueError) as err:
+        tsh.register_formula(
+            engine,
+            'bogus',
+            '(add (add (findseries (by.name "find.me.naive")))'
+            '     (add (findseries (by.name "find.me.tzaware"))))'
+        )
+    assert err.value.args[0] == (
+        "Formula has tzaware vs tznaive series:"
+        "`['by.name, 'find.me.naive']:tznaive`,`['by.name, 'find.me.tzaware']:tzaware`"
+    )
+
+
 def test_scalar_div(engine, tsh):
     a = pd.Series(
         [1, 2, 3],
