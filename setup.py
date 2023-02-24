@@ -6,7 +6,7 @@ doc = Path(__file__).parent / 'README.md'
 
 
 setup(name='tshistory_formula',
-      version='0.13.1',
+      version='0.14.0',
       author='Pythonian',
       author_email='aurelien.campeas@pythonian.fr',
       url='https://hg.sr.ht/~pythonian/tshistory_formula',
@@ -17,9 +17,8 @@ setup(name='tshistory_formula',
       packages=['tshistory_formula'],
       zip_safe=False,
       install_requires=[
-          'tshistory',
-          'psyl',
-          'decorator'
+          'tshistory >= 0.18',
+          'psyl >= 0.8'
       ],
       package_data={'tshistory_formula': [
           'schema.sql'
