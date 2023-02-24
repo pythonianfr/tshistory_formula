@@ -4,7 +4,6 @@ from dateutil.relativedelta import relativedelta
 import pandas as pd
 import numpy as np
 import pytest
-from decorator import decorate
 
 from psyl import lisp
 from tshistory.testutil import (
@@ -14,6 +13,7 @@ from tshistory.testutil import (
     utcdt
 )
 
+from tshistory_formula.decorator import decorate
 from tshistory_formula.registry import (
     func,
     FUNCS,
