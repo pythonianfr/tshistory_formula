@@ -697,6 +697,30 @@ def test_filter_vs_tzaware(engine, tsh):
     )
 
 
+def test_filter_fill(engine, tsh):
+    ts = pd.Series(
+        [1] * 4,
+        index=pd.date_range(
+            dt(2023, 3, 1),
+            periods=4,
+            freq='D'
+        )
+    )
+    tsh.update(engine, ts, 'series-filter-fill-0', 'test')
+
+    ts = ts * 2
+    ts.iloc[-2:] = np.nan
+    tsh.update(engine, ts, 'series-filter-fill-1', 'test')
+
+    with pytest.raises(KeyError) as err:
+        tsh.register_formula(
+            engine,
+            'formula-filter-fill',
+            '(add (findseries (by.name "series-filter-fill") #:fill 0))'
+        )
+    assert str(err.value) == '#:fill'
+
+
 def test_scalar_div(engine, tsh):
     a = pd.Series(
         [1, 2, 3],
