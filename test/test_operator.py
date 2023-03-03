@@ -736,6 +736,19 @@ def test_filter_fill(engine, tsh):
 2023-03-04    1.0
 """, tsf)
 
+    tsh.register_formula(
+        engine,
+        'formula-filter-ffill',
+        '(add (findseries (by.name "series-filter-fill") #:fill "ffill"))'
+    )
+    tsf = tsh.get(engine, 'formula-filter-ffill')
+    assert_df("""
+2023-03-01    3.0
+2023-03-02    3.0
+2023-03-03    3.0
+2023-03-04    3.0
+""", tsf)
+
 
 def test_scalar_div(engine, tsh):
     a = pd.Series(
