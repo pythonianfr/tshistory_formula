@@ -203,7 +203,8 @@ def serieslist(__interpreter__,
                __from_value_date__,
                __to_value_date__,
                __revision_date__,
-               names: List[str]) -> List[pd.Series]:
+               names: List[str],
+               fill: Union[str, Number, NONETYPE]=None) -> List[pd.Series]:
     """Yields a list of series names out of list of names.
 
     Example: `(add (serieslist (findnames (by.value "weight" "<" 43)))`
@@ -214,7 +215,7 @@ def serieslist(__interpreter__,
     result = []
     def collect(name, interpreter, fvd, tvd, rd):
         result.append(
-            series(interpreter, fvd, tvd, rd, name)
+            series(interpreter, fvd, tvd, rd, name, fill=fill)
         )
 
     poolrun(
@@ -252,7 +253,8 @@ def findseries(__interpreter__,
                __from_value_date__,
                __to_value_date__,
                __revision_date__,
-               q: search.query) -> List[pd.Series]:
+               q: search.query,
+               fill: Union[str, Number, NONETYPE]=None) -> List[pd.Series]:
     """Yields a series list out of a metadata/name/... filtering query.
 
     Example: `(add (findseries (by.value "weight" "<" 43)))`
@@ -265,7 +267,8 @@ def findseries(__interpreter__,
         __from_value_date__,
         __to_value_date__,
         __revision_date__,
-        names
+        names,
+        fill,
     )
 
 

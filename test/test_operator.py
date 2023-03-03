@@ -712,13 +712,29 @@ def test_filter_fill(engine, tsh):
     ts.iloc[-2:] = np.nan
     tsh.update(engine, ts, 'series-filter-fill-1', 'test')
 
-    with pytest.raises(KeyError) as err:
-        tsh.register_formula(
-            engine,
-            'formula-filter-fill',
-            '(add (findseries (by.name "series-filter-fill") #:fill 0))'
-        )
-    assert str(err.value) == '#:fill'
+    tsh.register_formula(
+        engine,
+        'formula-filter-no-fill',
+        '(add (findseries (by.name "series-filter-fill")))'
+    )
+    tsf = tsh.get(engine, 'formula-filter-no-fill')
+    assert_df("""
+2023-03-01    3.0
+2023-03-02    3.0
+""", tsf)
+
+    tsh.register_formula(
+        engine,
+        'formula-filter-fill',
+        '(add (findseries (by.name "series-filter-fill") #:fill 0))'
+    )
+    tsf = tsh.get(engine, 'formula-filter-fill')
+    assert_df("""
+2023-03-01    3.0
+2023-03-02    3.0
+2023-03-03    1.0
+2023-03-04    1.0
+""", tsf)
 
 
 def test_scalar_div(engine, tsh):
