@@ -1931,3 +1931,86 @@ def linear_insert_date(series: pd.Series, d: datetime) -> pd.Series:
     ) / (prev_gap + next_gap)
     series.sort_index(inplace=True)
     return series
+
+
+# block staircase
+
+def build_argdict_delta(arg_days, arg_hours):
+    if arg_days is None and arg_hours is None:
+        return None
+    if arg_hours is None:
+        return {'days': arg_days}
+    if arg_days is None:
+        return {'hours': arg_hours}
+    else:
+        return {'days': arg_days, 'hours': arg_hours}
+
+
+def build_argdict(arg_days, arg_hours):
+    if arg_days is None and arg_hours is None:
+        return None
+    if arg_hours is None:
+        return {'day': arg_days}
+    if arg_days is None:
+        return {'hour': arg_hours}
+    else:
+        return {'day': arg_days, 'hour': arg_hours}
+
+
+@func('block-staircase')
+def block_staircase(__interpreter__,
+                    __from_value_date__,
+                    __to_value_date__,
+                    name: seriesname,
+                    revision_freq_hours: Optional[int] = None,
+                    revision_freq_days: Optional[int] = None,
+                    revision_time_hours: Optional[int] = None,
+                    revision_time_days: Optional[int] = None,
+                    revision_tz: str = 'UTC',
+                    maturity_offset_hours: Optional[int] = None,
+                    maturity_offset_days: Optional[int] = None,
+                    maturity_time_hours: Optional[int] = None,
+                    maturity_time_days: Optional[int] = None,
+                    ) -> pd.Series:
+    """
+    Computes a series rebuilt from successive blocks of history, each
+    linked to a distinct revision date. The revision dates are taken
+    at regular time intervals determined by `revision_freq`,
+    `revision_time` and `revision_tz`. The time lag between revision
+    dates and value dates of each block is determined by
+    `maturity_offset` and `maturity_time`.
+
+    Example:
+
+    `(block-staircase "forecast-series" #:revision_freq_days 1 #:revision_time_hours 11 #:maturity_offset_days 1)`
+
+    """
+
+    i = __interpreter__
+    series = i.tsh.block_staircase(
+        i.cn,
+        name,
+        __from_value_date__,
+        __to_value_date__,
+        revision_freq=build_argdict_delta(revision_freq_days, revision_freq_hours),
+        revision_time=build_argdict(revision_time_days, revision_time_hours),
+        revision_tz=revision_tz,
+        maturity_offset=build_argdict_delta(maturity_offset_days, maturity_offset_hours),
+        maturity_time=build_argdict(maturity_time_days, maturity_time_hours)
+    )
+
+    return series
+
+
+@metadata('block-staircase')
+def block_staircase_metadata(cn, tsh, tree):
+    return {
+        tree[1]: tsh.internal_metadata(cn, tree[1])
+    }
+
+
+@finder('block-staircase')
+def block_staircase_finder(cn, tsh, tree):
+    return {
+        tree[1]: tree
+    }

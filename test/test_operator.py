@@ -3523,3 +3523,71 @@ def test_conditional_operators(engine, tsh):
     )
 
     assert len(tsh.get(engine, 'cond4')) == 0
+
+
+def test_block_staircase_operator(engine, tsh):
+    # create a forecast series
+    insertion_dates = pd.date_range(
+        start=pd.Timestamp('2023-03-01 09:00'),
+        end=pd.Timestamp('2023-03-05 09:00'),
+        freq='D',
+        tz='utc'
+    )
+
+    i=1
+    for insertion_date in insertion_dates:
+        ts = pd.Series(
+            np.array([1,1,1]) * i,
+            index = pd.date_range(start=insertion_date.date(), periods=3, freq='D')
+        )
+        ts = ts.tz_localize('UTC')
+        tsh.update(
+            engine,
+            ts,
+            'forecast-series',
+            'test',
+            insertion_date=insertion_date.replace(hour=0)
+        )
+        tsh.update(
+            engine,
+            ts + 0.1,
+            'forecast-series',
+            'test',
+            insertion_date=insertion_date.replace(hour=6)
+        )
+        tsh.update(
+            engine,
+            ts + 0.2,
+            'forecast-series',
+            'test',
+            insertion_date=insertion_date.replace(hour=12)
+        )
+        tsh.update(
+            engine,
+            ts + 0.5,
+            'forecast-series',
+            'test',
+            insertion_date=insertion_date.replace(hour=18)
+        )
+        i=i*10
+
+    tsh.register_formula(
+        engine,
+        'backtest-series',
+        '(block-staircase  "forecast-series" #:revision_freq_days 1 #:revision_time_hours 11 #:maturity_offset_days 1)'
+    )
+
+    assert_df("""
+2023-03-03 00:00:00+00:00        1.1
+2023-03-04 00:00:00+00:00       10.1
+2023-03-05 00:00:00+00:00      100.1
+2023-03-06 00:00:00+00:00     1000.1
+2023-03-07 00:00:00+00:00    10000.1
+""", tsh.get(engine, 'backtest-series'))
+
+    assert_df("""
+2023-03-04 00:00:00+00:00       10.1
+2023-03-05 00:00:00+00:00      100.1
+2023-03-06 00:00:00+00:00     1000.1
+2023-03-07 00:00:00+00:00    10000.1
+""", tsh.get(engine, 'backtest-series', from_value_date=pd.Timestamp("2023-03-04")))
