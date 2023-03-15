@@ -1457,6 +1457,50 @@ insertion_date             value_date
 """, hist)
 
 
+def test_slice_tzaware(engine, tsh):
+    tomorwow = dt.now().date() + timedelta(days=1)
+    tomorwow_tz = pd.Timestamp(tomorwow, tz='UTC')
+    begin_tz = tomorwow_tz - timedelta(days=2)
+
+    index = pd.date_range(
+        start=begin_tz,
+        end=tomorwow_tz,
+        freq='H'
+    )
+    ts = pd.Series(
+        [1.0] * len(index),
+        index=index,
+    )
+    tsh.update(engine, ts, 'whocares', 'test')
+
+
+    formula = '(naive (slice (series "whocares")  #:todate (today)) "CET")'
+    tsh.register_formula(engine, 'slice_tz', formula)
+
+    intermediary_utc = begin_tz + timedelta(days=1)
+
+    # without bounds => no error
+    tsh.get(engine, 'naive_slice')
+
+    # with naive bound => no error
+    tsh.get(engine, 'naive_slice', from_value_date=dt.now().date())
+
+    # with UTC bounds => error
+    with pytest.raises(ValueError) as err:
+        tsh.get(engine, 'slice_tz', from_value_date=intermediary_utc)
+    assert str(err.value) == (
+        'name: "whocares", revdate: None (from "Both dates must have the same UTC offset")'
+    )
+
+    intermediary_cet = intermediary_utc.tz_convert('CET')
+    # with CET bounds => still an error ¯\_(ツ)_/¯
+    with pytest.raises(ValueError) as err:
+        tsh.get(engine, 'slice_tz', from_value_date=intermediary_cet)
+    assert str(err.value) == (
+        'name: "whocares", revdate: None (from "Both dates must have the same UTC offset")'
+    )
+
+
 def test_history_autotrophic_nr(engine, tsh):
     # reset this to be sure it contains our _very late_ new operators definitions
     OperatorHistory.FUNCS = None
