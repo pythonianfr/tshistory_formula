@@ -367,7 +367,14 @@ def find_tzaware_query(self, cn, tree):
     tzawares = []
     for querytree in tzexpr:
         names = itrp.evaluate(
-            [Symbol('findnames'), querytree]
+            inject_toplevel_bindings(
+                [Symbol('findnames'), querytree],
+                {
+                    'from_value_date': None,
+                    'to_value_date': None,
+                    'revision_date': None
+                }
+            )
         )
         if not len(names):
             raise ValueError(

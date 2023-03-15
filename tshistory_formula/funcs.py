@@ -285,6 +285,24 @@ def byname(namequery: str) -> search.query:
     return search.byname(namequery)
 
 
+@func('by.basket')
+def bybasket(__interpreter__,
+             __from_value_date__,
+             __to_value_date__,
+             __revision_date__,
+             basketname: str) -> search.query:
+    """Yields a query filter operating on series names.
+
+    Example: `(add (findseries (by.basket "fr.powerplants")))`
+
+    This will yield the series matching the basket definition.
+
+    """
+    i = __interpreter__
+    query = i.tsh.basket_definition(i.cn, basketname)
+    return search.query.fromexpr(query)
+
+
 @func('by.metakey')
 def bymetakey(keyquery: str) -> search.query:
     """Yields a query filter operating on metadata key.

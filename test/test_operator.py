@@ -472,6 +472,33 @@ def test_serieslist(engine, tsh):
     assert len(ts) == 0
 
 
+def test_filter_bybasket(engine, tsh):
+    a = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(utcdt(2023, 1, 1), periods=3, freq='D')
+    )
+    tsh.update(engine, a, 'inbasket.A', 'Babar')
+    tsh.update(engine, a * 2, 'inbasket.B', 'Celeste')
+
+    tsh.register_basket(
+        engine,
+        'mybasket',
+        '(byname "inbasket")'
+    )
+    tsh.register_formula(
+        engine,
+        'bybasket',
+        '(add (findseries (by.basket "mybasket")))'
+    )
+
+    ts = tsh.get(engine, 'bybasket')
+    assert_df("""
+2023-01-01 00:00:00+00:00    3.0
+2023-01-02 00:00:00+00:00    6.0
+2023-01-03 00:00:00+00:00    9.0
+""", ts)
+
+
 def test_more_filter(engine, tsh):
     a = pd.Series(
         [1, 2, 3],
@@ -598,7 +625,7 @@ def test_more_filter(engine, tsh):
     names = tsh.find(
         engine,
         search.query.fromexpr(
-            '(or (> "weight" 42) (byname "A"))'
+            '(or (> "weight" 42) (byname "me.A"))'
         )
     )
     assert names == ['find.me.A', 'find.me.B']
@@ -608,7 +635,7 @@ def test_more_filter(engine, tsh):
         '(add (findseries '
         '       (by.or '
         '          (by.value "weight" ">" 42)'
-        '          (by.name "A"))))'
+        '          (by.name "me.A"))))'
     )
     ts = tsh.get(engine, 'find.or')
     assert_df("""
@@ -623,7 +650,7 @@ def test_more_filter(engine, tsh):
         '(add (findseries '
         '       (by.and '
         '          (by.value "weight" ">" 42)'
-        '          (by.name "B"))))'
+        '          (by.name "me.B"))))'
     )
     ts = tsh.get(engine, 'find.and')
     assert_df("""
