@@ -4,6 +4,7 @@ import threading
 from concurrent.futures import _base
 
 from psyl.lisp import (
+    buildargs,
     Keyword,
     parse,
     serialize,
@@ -327,7 +328,7 @@ def tzlabel(status):
     return 'tzaware' if status else 'tznaive'
 
 
-def find_meta(self, cn, tree, tzmap, path=()):
+def find_tz(self, cn, tree, tzmap, path=()):
     op = tree[0]
     path = path + (op,)
     metas = METAS.get(op)
@@ -337,69 +338,14 @@ def find_meta(self, cn, tree, tzmap, path=()):
             if 'naive' in path:
                 tzaware = False
             tzmap[(name, path)] = tzaware
+
+    if op == 'findseries':
+        _, kw = buildargs(tree)
+        tzmap[(serialize(tree[1]), path)] = not kw.get('naive', False)
+
     for item in tree:
         if isinstance(item, list):
-            find_meta(self, cn, item, tzmap, path)
-
-
-def find_tzaware_query(self, cn, tree):
-    from tshistory_formula import interpreter
-    # look for a search query and
-    # a) check coherency of its current output
-    # b) use it to get the tzawareness
-    tzexpr = []
-
-    def find_query_subtree(tree):
-        op = tree[0]
-        if op == 'findseries':
-            tzexpr.append(tree[1])
-
-        for item in tree[1:]:
-            if isinstance(item, list):
-                find_query_subtree(item)
-
-    find_query_subtree(tree)
-    if not tzexpr:
-        # NOTE: in some not too distant future, maybe raise ?
-        return None
-
-    itrp = interpreter.Interpreter(cn, self, {})
-    tzawares = []
-    for querytree in tzexpr:
-        names = itrp.evaluate(
-            inject_toplevel_bindings(
-                [Symbol('findnames'), querytree],
-                {
-                    'from_value_date': None,
-                    'to_value_date': None,
-                    'revision_date': None
-                }
-            )
-        )
-        if not len(names):
-            raise ValueError(
-                f'Filter expression yields no series. '
-                'We cannot determine its tzaware status.'
-            )
-
-        tzaware = [
-            self.tzaware(cn, sname)
-            for sname in names
-        ]
-        if tzaware.count(tzaware[0]) != len(tzaware):
-            raise ValueError(
-                f'Filter expression uses a mix of tzaware and naive series '
-                'in its query.'
-            )
-
-        tzawares.append(tzaware[0])
-
-    if tzawares.count(tzawares[0]) != len(tzawares):
-        raise ValueError(
-            f'Formula has tzaware vs tznaive series:'
-            f'{",".join("`%s:%s`" % (k, tzlabel(v)) for k, v in zip(tzexpr, tzawares))}'
-        )
-    return tzawares[0]
+            find_tz(self, cn, item, tzmap, path)
 
 
 # thread pool

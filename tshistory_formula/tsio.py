@@ -110,7 +110,7 @@ class timeseries(basets):
         """check that series are timezone-compatible
         """
         metamap = {}
-        helper.find_meta(self, cn, tree, metamap)
+        helper.find_tz(self, cn, tree, metamap)
 
         first_tzaware = None
         if metamap:
@@ -121,17 +121,6 @@ class timeseries(basets):
                         f'Formula `{name}` has tzaware vs tznaive series:'
                         f'{",".join("`%s:%s`" % (k, helper.tzlabel(v)) for k, v in metamap.items())}'
                     )
-
-        querytz = helper.find_tzaware_query(self, cn, tree)
-        if querytz is not None:
-            if first_tzaware:
-                if querytz != first_tzaware:
-                    raise ValueError(
-                        f'Formula `{name}` has {"tzaware" if first_tzaware else "naive"} series '
-                        f'and also {"naive" if not querytz else "tzaware"} dynamic series.'
-                    )
-            else:
-                first_tzaware = querytz
 
         return first_tzaware
 

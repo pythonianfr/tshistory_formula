@@ -455,30 +455,31 @@ def test_dynamic_filters(engine, tsh):
 2023-01-03    7.0
 """, ts)
 
-    # tsh.register_formula(
-    #     engine,
-    #     'found.none',
-    #     '(add (findseries (by.name "no.luck"))))'
-    # )
-    # ts = tsh.get(engine, 'found.none')
-    # assert len(ts) == 0
+    tsh.register_formula(
+        engine,
+        'found.none',
+        '(add (findseries (by.name "no.luck") #:naive #t)))'
+    )
+    ts = tsh.get(engine, 'found.none')
+    assert len(ts) == 0
 
-    # tsh.register_formula(
-    #     engine,
-    #     'combine.add-with-empty',
-    #     '(add (series "found.them") (series "found.none"))'
-    # )
-    # ts = tsh.get(engine, 'combine.add-with-empty')
-    # assert len(ts) == 0
+    tsh.register_formula(
+        engine,
+        'combine.add-with-empty',
+        '(add (series "found.them") (series "found.none"))'
+    )
+    ts = tsh.get(engine, 'combine.add-with-empty')
+    assert len(ts) == 0
 
 
 def test_empty_filter(engine, tsh):
-    with pytest.raises(ValueError):
-        tsh.register_formula(
-            engine,
-            'empty-filter',
-            '(add (findseries (by.name "nope-nope-nope")))'
-        )
+    tsh.register_formula(
+        engine,
+        'empty-filter',
+        '(add (findseries (by.name "nope-nope-nope")))'
+    )
+    ts = tsh.get(engine, 'empty-filter')
+    assert len(ts) == 0
 
 
 def test_filter_bybasket(engine, tsh):
@@ -701,43 +702,26 @@ def test_filter_vs_tzaware(engine, tsh):
         tsh.register_formula(
             engine,
             'bogus',
-            '(add (findseries (by.name "find.me")))'
-        )
-    assert err.value.args[0] == (
-        'Filter expression uses a mix of tzaware and naive series in its query.'
-    )
-
-    with pytest.raises(ValueError) as err:
-        tsh.register_formula(
-            engine,
-            'bogus',
-            '(add (findseries (by.name "NOPE.NOPE.NOPE")))'
-        )
-    assert err.value.args[0] == (
-        'Filter expression yields no series. We cannot determine its tzaware status.'
-    )
-
-    with pytest.raises(ValueError) as err:
-        tsh.register_formula(
-            engine,
-            'bogus',
-            '(add (add (findseries (by.name "find.me.naive")))'
+            '(add (add (findseries (by.name "find.me.naive") #:naive #t))'
             '     (series "find.me.tzaware"))'
         )
     assert err.value.args[0] == (
-        'Formula `find.me.tzaware` has tzaware series and also naive dynamic series.'
+        "Formula `find.me.tzaware` has tzaware vs tznaive series:"
+        "`('(by.name \"find.me.naive\")', ('add, 'add, 'findseries)):tznaive`,"
+        "`('find.me.tzaware', ('add, 'series)):tzaware`"
     )
 
     with pytest.raises(ValueError) as err:
         tsh.register_formula(
             engine,
             'bogus',
-            '(add (add (findseries (by.name "find.me.naive")))'
+            '(add (add (findseries (by.name "find.me.naive") #:naive #t))'
             '     (add (findseries (by.name "find.me.tzaware"))))'
         )
     assert err.value.args[0] == (
-        "Formula has tzaware vs tznaive series:"
-        "`['by.name, 'find.me.naive']:tznaive`,`['by.name, 'find.me.tzaware']:tzaware`"
+        "Formula `(by.name \"find.me.tzaware\")` has tzaware vs tznaive series"
+        ":`('(by.name \"find.me.naive\")', ('add, 'add, 'findseries)):tznaive`,"
+        "`('(by.name \"find.me.tzaware\")', ('add, 'add, 'findseries)):tzaware`"
     )
 
 
