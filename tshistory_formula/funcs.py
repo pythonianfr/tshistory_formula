@@ -5,8 +5,10 @@ import calendar
 from functools import reduce
 import operator
 
+import holidays
 import numpy as np
 import pandas as pd
+import pycountry
 import pytz
 from dateutil.relativedelta import relativedelta
 
@@ -2031,4 +2033,118 @@ def block_staircase_metadata(cn, tsh, tree):
 def block_staircase_finder(cn, tsh, tree):
     return {
         tree[1]: tree
+    }
+
+
+# holidays utils
+
+def set_at_midnight(dt):
+    return datetime(
+        dt.year,
+        dt.month,
+        dt.day
+    )
+
+
+def compatible_date_at_midnight(tzaware, date):
+    tzinfo = date.tzinfo
+    date = set_at_midnight(date)
+    if not tzaware:
+        return date.replace(tzinfo=None)
+
+    if tzaware and tzinfo is None:
+        return date.replace(tzinfo=pytz.utc)
+
+    return date
+
+
+@func('holidays')
+def get_holidays(__interpreter__,
+                 __from_value_date__,
+                 __to_value_date__,
+                 country: str,
+                 naive: Optional[bool]=False) -> pd.Series:
+    """
+    Compute a series whose values will be either 0 or 1 to signal the
+    holydays.
+
+    Takes a string for the 2-letters country code and an optional
+    `naive` keyword (values #t or #f, #f by default) to force a naive
+    series output.
+
+    Example: `(holidays "fr")`
+
+    """
+    ctry = pycountry.countries.get(alpha_2=country.upper())
+    hd = holidays.CountryHoliday(ctry.alpha_2)
+
+    beginyear = datetime(datetime.now().year, 1, 1)
+    endyear = datetime(datetime.now().year + 1, 1, 1)
+
+    from_value_date = __from_value_date__ or beginyear
+    to_value_date = __to_value_date__ or endyear
+    from_value_date = set_at_midnight(from_value_date)
+    to_value_date = set_at_midnight(to_value_date)
+
+    if from_value_date:
+        from_value_date = compatible_date_at_midnight(
+            not naive,
+            from_value_date
+        )
+    if to_value_date:
+        to_value_date = compatible_date_at_midnight(
+            not naive,
+            to_value_date
+        )
+
+    index = pd.date_range(
+        start=from_value_date,
+        end=to_value_date,
+    )
+    if naive:
+        index = index.tz_localize(None)
+    elif index.dtype.tz is None:
+        index = index.tz_localize('UTC')
+
+    # another hack for another behviour of holidays:
+    # their slicing is exclusionnary of the last value :/
+    # it made kind of sense an won't be be corrected upstream
+    to_value_date = to_value_date + timedelta(days=1)
+
+    base = pd.Series([0.] * len(index), index)
+    hol_index = pd.DatetimeIndex(
+        hd[from_value_date:to_value_date]
+    )
+    if not naive:
+        hol_index = hol_index.tz_localize('UTC')
+    base[hol_index] = 1.
+    return base
+
+
+@metadata('holidays')
+def holidays_metadata(cn, tsh, tree):
+    args, kw = buildargs(tree[1:])
+    naive = 'naive' in kw and kw.get('naive') or False
+    if naive:
+        return {
+            'holidays': {
+                'index_dtype': '<M8[ns]',
+                'index_type': 'datetime64[ns]',
+                'tzaware': False,
+                'value_dtype': '<f8',
+                'value_type': 'float64'
+            }
+        }
+    country = args[0]
+    tzones = pytz.country_timezones(country)
+    assert len(tzones) == 1, f'Many available timezones for {country}, cannot compute'
+    tz = tzones[0]
+    return {
+        'holidays': {
+            'tzaware': True,
+            'index_type': 'datetime64[ns, UTC]',
+            'value_type': 'float64',
+            'index_dtype': '|M8[ns]',
+            'value_dtype': '<f8'
+        }
     }

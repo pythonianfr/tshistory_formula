@@ -3626,3 +3626,149 @@ def test_block_staircase_operator(engine, tsh):
 2023-03-06 00:00:00+00:00     1000.1
 2023-03-07 00:00:00+00:00    10000.1
 """, tsh.get(engine, 'backtest-series', from_value_date=pd.Timestamp("2023-03-04")))
+
+
+def test_holidays(engine, tsh):
+    tsh.register_formula(
+        engine,
+        'school-is-off',
+        '(holidays "fr")'
+    )
+
+    # just a check that get is working without argument
+    ts_schooloff = tsh.get(engine, 'school-is-off')
+    assert ts_schooloff is not None
+
+    ts_schooloff = tsh.get(
+        engine,
+        'school-is-off',
+        from_value_date = dt(2015, 1, 1),
+        to_value_date = dt(2016, 1, 1)
+    )
+
+    # 11 off-work days + 1st of january 2016
+    assert 12 == sum(ts_schooloff)
+    assert_df("""
+2015-07-13 00:00:00+00:00    0.0
+2015-07-14 00:00:00+00:00    1.0
+2015-07-15 00:00:00+00:00    0.0
+""", ts_schooloff['2015-07-13': '2015-07-15'])
+
+    meta = tsh.internal_metadata(engine, 'school-is-off')
+    assert meta['tzaware'] == True
+    # Belgium
+    tsh.register_formula(
+        engine, 'time-for-waffle',
+        '(holidays "be" #:naive #t)'
+    )
+
+    ts_joy = tsh.get(
+        engine,
+        'time-for-waffle',
+        from_value_date=dt(2015, 1, 1),
+        to_value_date=dt(2016, 1, 1)
+    )
+    assert 13 == sum(ts_joy)
+    assert_df("""
+2015-07-20    0.0
+2015-07-21    1.0
+2015-07-22    0.0
+""", ts_joy['2015-07-20': '2015-07-22'])
+
+    meta = tsh.internal_metadata(engine, 'time-for-waffle')
+    assert meta['tzaware'] == False
+
+    # UK
+    tsh.register_formula(
+        engine, 'uk-holidays',
+        '(holidays "gb" #:naive #t)'
+    )
+
+    ts_joy = tsh.get(
+        engine,
+        'uk-holidays',
+        from_value_date=dt(2019, 11, 27),
+        to_value_date=dt(2019, 12, 2)
+    )
+    assert 1 == sum(ts_joy)
+    assert_df("""
+2019-11-27    0.0
+2019-11-28    0.0
+2019-11-29    0.0
+2019-11-30    1.0
+2019-12-01    0.0
+2019-12-02    0.0
+""", ts_joy)
+
+    meta = tsh.internal_metadata(engine, 'uk-holidays')
+    assert meta['tzaware'] == False
+
+
+def test_holidays_with_tzaware_queryset(engine, tsh):
+    tsh.register_formula(
+        engine,
+        'fr-holidays',
+        '(holidays "fr" #:naive #t)'
+    )
+
+    # not crashy with tz-aware query parameters
+    tsh.get(
+        engine,
+        'fr-holidays',
+        from_value_date=utcdt(2018, 1, 1),
+        to_value_date=utcdt(2019, 12, 31)
+    )
+
+
+def test_holidays_datetime(engine, tsh):
+    tsh.register_formula(
+        engine, 'fr-holidays',
+        '(holidays "fr" #:naive #t)'
+    )
+
+    ts = tsh.get(
+        engine,
+        'fr-holidays',
+        from_value_date=dt(2021, 3, 2),
+        to_value_date=dt(2021, 5, 1),
+    )
+    assert len(ts)
+
+    ts2 = tsh.get(
+        engine,
+        'fr-holidays',
+        from_value_date=dt(2021, 3, 2, 12, 12, 0),
+        to_value_date=dt(2021, 5, 1, 5, 40, 0),
+    )
+    assert ts.equals(ts2)
+
+    # check with tz aware bounds
+    ts = tsh.get(
+        engine,
+        'fr-holidays',
+        from_value_date=utcdt(2021, 3, 2, 12, 12, 0),
+        to_value_date=utcdt(2021, 5, 1, 5, 40, 0)
+    )
+    assert len(ts)
+
+
+def test_long_holidays(engine, tsh):
+    tsh.register_formula(
+        engine, 'fr-holidays',
+        '(holidays "fr" #:naive #t)'
+    )
+    ts = tsh.get(
+        engine,
+        'fr-holidays',
+        from_value_date=dt(2020, 1, 1),
+        to_value_date=dt(2025, 1, 1)
+    )
+
+    # we look for the date with actual holidays:
+    ts = ts[ts == 1]
+
+    # 11 holidays/year * 5 years + 1st of January 2025
+    assert 56 == len(ts)
+    assert pd.Timestamp('2020-01-01 00:00:00') == ts.index.min()
+    assert pd.Timestamp('2025-01-01 00:00:00') == ts.index.max()
+
