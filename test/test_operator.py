@@ -13,6 +13,7 @@ from tshistory.testutil import (
     assert_hist,
     utcdt
 )
+from tshistory import search
 from tshistory_formula.registry import (
     finder,
     func,
@@ -594,6 +595,13 @@ def test_more_filter(engine, tsh):
 """, ts)
 
     # logical combinators
+    names = tsh.find(
+        engine,
+        search.query.fromexpr(
+            '(or (> "weight" 42) (byname "A"))'
+        )
+    )
+    assert names == ['find.me.A', 'find.me.B']
     tsh.register_formula(
         engine,
         'find.or',
