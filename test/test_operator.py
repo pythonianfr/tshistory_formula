@@ -425,7 +425,7 @@ def test_add(engine, tsh):
 """, ts)
 
 
-def test_serieslist(engine, tsh):
+def test_dynamic_filters(engine, tsh):
     a = pd.Series(
         [1, 2, 3],
         index=pd.date_range(dt(2023, 1, 1), periods=3, freq='D')
@@ -470,6 +470,15 @@ def test_serieslist(engine, tsh):
     )
     ts = tsh.get(engine, 'combine.add-with-empty')
     assert len(ts) == 0
+
+
+def test_empty_filter(engine, tsh):
+    with pytest.raises(ValueError):
+        tsh.register_formula(
+            engine,
+            'empty-filter',
+            '(add (findseries (by.name "nope-nope-nope")))'
+        )
 
 
 def test_filter_bybasket(engine, tsh):
