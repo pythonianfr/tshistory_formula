@@ -436,7 +436,7 @@ def test_dynamic_filters(engine, tsh):
     tsh.register_formula(
         engine,
         'found.them',
-        '(add (findseries (by.name "find.me"))))'
+        '(add (findseries (by.name "find.me") #:naive #t)))'
     )
 
     ts = tsh.get(engine, 'found.them')
@@ -759,7 +759,7 @@ def test_filter_fill(engine, tsh):
     tsh.register_formula(
         engine,
         'formula-filter-no-fill',
-        '(add (findseries (by.name "series-filter-fill")))'
+        '(add (findseries (by.name "series-filter-fill") #:naive #t))'
     )
     tsf = tsh.get(engine, 'formula-filter-no-fill')
     assert_df("""
@@ -770,7 +770,7 @@ def test_filter_fill(engine, tsh):
     tsh.register_formula(
         engine,
         'formula-filter-fill',
-        '(add (findseries (by.name "series-filter-fill") #:fill 0))'
+        '(add (findseries (by.name "series-filter-fill") #:naive #t #:fill 0))'
     )
     tsf = tsh.get(engine, 'formula-filter-fill')
     assert_df("""
@@ -783,7 +783,7 @@ def test_filter_fill(engine, tsh):
     tsh.register_formula(
         engine,
         'formula-filter-ffill',
-        '(add (findseries (by.name "series-filter-fill") #:fill "ffill"))'
+        '(add (findseries (by.name "series-filter-fill") #:naive #t #:fill "ffill"))'
     )
     tsf = tsh.get(engine, 'formula-filter-ffill')
     assert_df("""

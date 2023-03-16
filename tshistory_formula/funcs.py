@@ -244,13 +244,29 @@ def findseries(__interpreter__,
                __to_value_date__,
                __revision_date__,
                q: search.query,
+               naive: bool=False,
                fill: Union[str, Number, NONETYPE]=None) -> List[pd.Series]:
     """Yields a series list out of a metadata/name/... filtering query.
 
-    Example: `(add (findseries (by.value "weight" "<" 43)))`
+    Examples: `(add (findseries (by.value "weight" "<" 43)))`
+
+    It accepts a #:naive keyword, which is #f (false) by default
+    (one only get timezone aware timeseries by default).
 
     """
     i = __interpreter__
+    if naive:
+        q = search.and_(
+            search.not_(
+                search.tzaware()
+            ),
+            q
+        )
+    else:
+        q = search.and_(
+            search.tzaware(),
+            q
+        )
     names = i.tsh.find(i.cn, q)
     return serieslist(
         __interpreter__,
@@ -258,7 +274,7 @@ def findseries(__interpreter__,
         __to_value_date__,
         __revision_date__,
         names,
-        fill,
+        fill
     )
 
 

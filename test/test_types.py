@@ -213,6 +213,7 @@ def test_operators_types():
         'cumsum': {'return': 'Series', 'series': 'Series'},
         'div': {'return': 'Series', 's1': 'Series', 's2': 'Series'},
         'findseries': {'return': 'Series',
+                       'naive': 'Default[bool=False]',
                        'q': 'query',
                        'fill': 'Default[Union[str, Number]=None]'},
         'end-of-month': {'date': 'Timestamp', 'return': 'Timestamp'},
