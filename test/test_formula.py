@@ -1473,9 +1473,11 @@ def test_slice_tzaware(engine, tsh):
     )
     tsh.update(engine, ts, 'whocares', 'test')
 
-
-    formula = '(naive (slice (series "whocares")  #:todate (today)) "CET")'
-    tsh.register_formula(engine, 'slice_tz', formula)
+    tsh.register_formula(
+        engine,
+        'slice_tz',
+        '(naive (slice (series "whocares")  #:todate (today)) "CET")'
+    )
 
     intermediary_utc = begin_tz + timedelta(days=1)
 
@@ -1484,21 +1486,12 @@ def test_slice_tzaware(engine, tsh):
 
     # with naive bound => no error
     tsh.get(engine, 'naive_slice', from_value_date=dt.now().date())
-
-    # with UTC bounds => error
-    with pytest.raises(ValueError) as err:
-        tsh.get(engine, 'slice_tz', from_value_date=intermediary_utc)
-    assert str(err.value) == (
-        'name: "whocares", revdate: None (from "Both dates must have the same UTC offset")'
-    )
+    # with utc bound => no error
+    tsh.get(engine, 'slice_tz', from_value_date=intermediary_utc)
 
     intermediary_cet = intermediary_utc.tz_convert('CET')
-    # with CET bounds => still an error ¯\_(ツ)_/¯
-    with pytest.raises(ValueError) as err:
-        tsh.get(engine, 'slice_tz', from_value_date=intermediary_cet)
-    assert str(err.value) == (
-        'name: "whocares", revdate: None (from "Both dates must have the same UTC offset")'
-    )
+    # with CET bounds => no error
+    tsh.get(engine, 'slice_tz', from_value_date=intermediary_cet)
 
 
 def test_history_autotrophic_nr(engine, tsh):
