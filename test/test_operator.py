@@ -3765,3 +3765,52 @@ def test_long_holidays(engine, tsh):
     assert pd.Timestamp('2020-01-01 00:00:00') == ts.index.min()
     assert pd.Timestamp('2025-01-01 00:00:00') == ts.index.max()
 
+
+def test_round(engine, tsh):
+    # base series
+    ts = pd.Series(
+        [1.0, 2.555, 7.84756, 3],
+        index=pd.date_range(
+            start=utcdt(2023, 3, 16),
+            freq='D',
+            periods=4
+        )
+    )
+    tsh.update(engine, ts, 'series-to-round', 'test')
+
+    tsh.register_formula(
+        engine, 'series-rounded',
+        '(round (series "series-to-round") 2)'
+    )
+
+    ts = tsh.get(
+        engine,
+        'series-rounded'
+    )
+
+    assert_df("""
+2023-03-16 00:00:00+00:00    1.00
+2023-03-17 00:00:00+00:00    2.56
+2023-03-18 00:00:00+00:00    7.85
+2023-03-19 00:00:00+00:00    3.00
+""", ts)
+
+    #with default decimals
+    tsh.register_formula(
+        engine, 'series-rounded',
+        '(round (series "series-to-round"))'
+    )
+
+    ts = tsh.get(
+        engine,
+        'series-rounded'
+    )
+
+    assert_df("""
+2023-03-16 00:00:00+00:00    1.0
+2023-03-17 00:00:00+00:00    3.0
+2023-03-18 00:00:00+00:00    8.0
+2023-03-19 00:00:00+00:00    3.0
+""", ts)
+
+    assert ts.index.tz.zone == 'UTC'

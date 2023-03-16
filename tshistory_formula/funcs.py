@@ -2152,3 +2152,18 @@ def holidays_metadata(cn, tsh, tree):
             'value_dtype': '<f8'
         }
     }
+
+
+@func('round')
+def round(series: pd.Series,
+          decimals: Optional[Number]=0) -> pd.Series:
+    """
+    Round element-wise considering the number of decimals specified (0 by default).
+
+    Example: `(round (series "series-with-decimals") #:decimals 2)`
+    """
+    opts = series.options
+
+    res = series.round(decimals)
+    res.options = opts
+    return res
