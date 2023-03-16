@@ -200,18 +200,12 @@ def series_finder(cn, tsh, stree):
     return {name: stree}
 
 
-@func('serieslist')
 def serieslist(__interpreter__,
                __from_value_date__,
                __to_value_date__,
                __revision_date__,
                names: List[str],
                fill: Union[str, Number, NONETYPE]=None) -> List[pd.Series]:
-    """Yields a list of series names out of list of names.
-
-    Example: `(add (serieslist (findnames (by.value "weight" "<" 43)))`
-
-    """
     poolrun = threadpool(16)
 
     result = []
@@ -240,12 +234,6 @@ def serieslist(__interpreter__,
 @func('findnames')
 def findnames(__interpreter__,
               q: search.query) -> List[str]:
-    """Yields a list of series names out of a metadata/name/... filtering
-    query.
-
-    Example: `(add (serieslist (findnames (by.value "weight" "<" 43)))`
-
-    """
     i = __interpreter__
     return i.tsh.find(i.cn, q)
 
