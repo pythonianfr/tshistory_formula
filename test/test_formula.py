@@ -696,6 +696,34 @@ insertion_date             value_date
 """, h)
 
 
+def test_history_with_spurious_keys(engine, tsh):
+    """
+    in certain case, the formula can produce histories
+    with keys that index empty series
+    """
+    i0 = utcdt(2023, 3, 1)
+    i1 = utcdt(2023, 3, 2)
+    lb = dt(2023, 3, 1)
+    ub = dt(2023, 3, 4)
+    ts = pd.Series(range(4), index=pd.date_range(start=lb, end=ub, periods=4))
+
+    # at date i0, only series-x is defined
+    tsh.update(engine, ts, 'series-x', 'test', insertion_date=i0)
+
+    tsh.update(engine, ts, 'series-y', 'test', insertion_date=i1)
+
+    formula = """(add (series "series-x") (series "series-y"))"""
+    tsh.register_formula(engine, 'simple-addition', formula)
+
+    hist = tsh.history(engine, 'simple-addition')
+    assert len(hist) == 2
+    first_key = list(hist.keys())[0]
+
+    # the first key index an empty series
+    # it should be removed
+    assert len(hist[first_key]) == 0
+
+
 def test_history_bounds(engine, tsh):
     # two series, one with a gap
 
