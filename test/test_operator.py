@@ -3814,3 +3814,34 @@ def test_round(engine, tsh):
 """, ts)
 
     assert ts.index.tz.zone == 'UTC'
+
+
+def test_abs(engine, tsh):
+    # base series
+    ts = pd.Series(
+        [1.0, -2, 0, -3],
+        index=pd.date_range(
+            start=utcdt(2023, 3, 24),
+            freq='D',
+            periods=4
+        )
+    )
+    tsh.update(engine, ts, 'series-with-negative-values', 'test')
+
+    tsh.register_formula(
+        engine,
+        'series-positive',
+        '(abs (series "series-with-negative-values"))'
+    )
+
+    ts = tsh.get(
+        engine,
+        'series-positive'
+    )
+
+    assert_df("""
+2023-03-24 00:00:00+00:00    1.0
+2023-03-25 00:00:00+00:00    2.0
+2023-03-26 00:00:00+00:00    0.0
+2023-03-27 00:00:00+00:00    3.0
+""", ts)

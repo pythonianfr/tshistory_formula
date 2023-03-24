@@ -145,7 +145,7 @@ def test_operators_types():
     opnames = set(
         ('*', '**', '+', '/',
          '<', # '<=', '<>', '==', '>', '>=',
-         'add', 'asof',
+         'abs', 'add', 'asof',
          'by.and', 'by.or',
          'by.name', 'by.metaitem', 'by.metakey', 'by.value',
          'clip', 'constant', 'cumsum', 'div',
@@ -185,6 +185,7 @@ def test_operators_types():
               'return': 'Series',
               'series': 'Series',
               'true_value': 'Default[Number=1]'},
+        'abs': {'return': 'Series', 'series': 'Series'},
         'add': {'return': 'Series', 'serieslist': 'Series'},
         'asof': {'return': 'Series',
                  'revision_date': 'Timestamp',

@@ -2158,3 +2158,17 @@ def round(series: pd.Series,
     res = series.round(decimals)
     res.options = opts
     return res
+
+
+@func('abs')
+def abs(series: pd.Series) -> pd.Series:
+    """
+    Return the absolute value element-wise.
+
+    Example: `(abs (series "series-with-negative-values"))`
+    """
+    opts = series.options
+
+    res = series.abs()
+    res.options = opts
+    return res
