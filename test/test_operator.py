@@ -3845,3 +3845,47 @@ def test_abs(engine, tsh):
 2023-03-26 00:00:00+00:00    0.0
 2023-03-27 00:00:00+00:00    3.0
 """, ts)
+
+
+def test_sub(engine, tsh):
+    # base series
+    ts1 = pd.Series(
+        [1.0, -2, 0, -3],
+        index=pd.date_range(
+            start=utcdt(2023, 3, 24),
+            freq='D',
+            periods=4
+        )
+    )
+    tsh.update(engine, ts1, 'series1', 'test')
+
+    ts2 = pd.Series(
+        [1.0, -2, 0, -3],
+        index=pd.date_range(
+            start=utcdt(2023, 3, 25),
+            freq='D',
+            periods=4
+        )
+    )
+    tsh.update(engine, ts2, 'series2', 'test')
+
+    tsh.register_formula(
+        engine, 'series-sub',
+        '(sub (series "series1")(series "series2"))'
+    )
+
+    ts = tsh.get(
+        engine,
+        'series-sub'
+    )
+
+    assert_df("""
+2023-03-25 00:00:00+00:00   -3.0
+2023-03-26 00:00:00+00:00    2.0
+2023-03-27 00:00:00+00:00   -3.0
+""", ts)
+
+    assert ts.index.tz.zone == 'UTC'
+
+    meta = tsh.internal_metadata(engine, 'series-sub')
+    assert meta['tzaware'] == True

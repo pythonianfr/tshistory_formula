@@ -157,7 +157,7 @@ def test_operators_types():
          'options', 'priority', 'resample', 'rolling', 'round', 'row-max',
          'row-mean', 'row-min', 'series', 'serieslist',
          'shifted', 'slice', 'start-of-month',
-         'std', 'today', 'time-shifted',
+         'std', 'sub', 'today', 'time-shifted',
          'trig.cos', 'trig.arccos', 'trig.sin', 'trig.arcsin',
          'trig.tan', 'trig.arctan', 'trig.row-arctan2',
          'tzaware-tstamp')
@@ -274,6 +274,9 @@ def test_operators_types():
         'std': {'return': 'Series',
                 'serieslist': 'Series',
                 'skipna': 'Default[bool=True]'},
+        'sub': {'return': 'Series',
+                'series1': 'Series',
+                'series2': 'Series'},
         'time-shifted': {'days': 'Default[int=0]',
                          'hours': 'Default[int=0]',
                          'minutes': 'Default[int=0]',

@@ -2172,3 +2172,22 @@ def abs(series: pd.Series) -> pd.Series:
     res = series.abs()
     res.options = opts
     return res
+
+
+@func('sub')
+def sub(series1: pd.Series,
+        series2: pd.Series) -> pd.Series:
+    """
+    Return the substraction of two series element-wise.
+
+    Example: `(sub (series "series1") (series "series2"))`
+    """
+    df = _group_series(series1, series2)
+    if not len(df):
+        return empty_series(
+            tzaware_serie(series1)
+        )
+
+    res = df['0'] - df['1']
+
+    return res.dropna()
