@@ -2555,7 +2555,7 @@ def test_trigo(engine, tsh):
     tsh.register_formula(
         engine,
         'cosinus-round',
-        '(trig.cos (series "trigo-a") #:decimals 14)',
+        '(round (trig.cos (series "trigo-a")) 14)',
     )
 
     tsh.register_formula(

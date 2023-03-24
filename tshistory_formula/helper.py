@@ -416,3 +416,29 @@ class ThreadPoolExecutor:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.shutdown()
         return False
+
+
+def rewrite_trig_formula(tree):
+    if not isinstance(tree, list):
+        return tree
+
+    op = tree[0]
+    if op in ('trig.tan', 'trig.cos', 'trig.sin'):
+        posargs, kwargs = buildargs(tree[1:])
+        if 'decimals' in posargs:
+            decimals = posargs['decimals']
+            tree = tree[:-1]
+        elif 'decimals' in kwargs:
+            decimals = kwargs['decimals']
+            tree = tree[:-2]
+        else:
+            return tree
+        newtree = [
+            Symbol('round'), tree, Keyword('decimals'), decimals
+        ]
+        return newtree
+
+    return [
+        rewrite_trig_formula(item)
+        for item in tree
+    ]

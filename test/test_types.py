@@ -285,18 +285,12 @@ def test_operators_types():
         'trig.arccos': {'return': 'Series', 'series': 'Series'},
         'trig.arcsin': {'return': 'Series', 'series': 'Series'},
         'trig.arctan': {'return': 'Series', 'series': 'Series'},
-        'trig.cos': {'decimals': 'Default[Number=None]',
-                     'return': 'Series',
-                     'series': 'Series'},
+        'trig.cos': {'return': 'Series', 'series': 'Series'},
         'trig.row-arctan2': {'return': 'Series',
                              'series1': 'Series',
                              'series2': 'Series'},
-        'trig.sin': {'decimals': 'Default[Number=None]',
-                     'return': 'Series',
-                     'series': 'Series'},
-        'trig.tan': {'decimals': 'Default[Number=None]',
-                     'return': 'Series',
-                     'series': 'Series'}
+        'trig.sin': {'return': 'Series', 'series': 'Series'},
+        'trig.tan': {'return': 'Series', 'series': 'Series'}
     } == types
 
 

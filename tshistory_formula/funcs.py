@@ -783,17 +783,14 @@ def _group_series(*serieslist):
 # trigonometric functions
 
 @func('trig.cos')
-def trig_cosinus(series: pd.Series,
-                 decimals: Optional[Number]=None) -> pd.Series:
+def trig_cosinus(series: pd.Series) -> pd.Series:
     """
     Cosine element-wise on a degree series.
 
-    Example: `(trig.cos (series "degree-series") #:decimals 14)`
+    Example: `(trig.cos (series "degree-series"))`
     """
     opts = series.options
     res = np.cos(series * (np.pi / 180))
-    if decimals:
-        res = res.round(decimals)
     res.options = opts
     return res
 
@@ -813,18 +810,15 @@ def trig_arccosinus(series: pd.Series) -> pd.Series:
 
 
 @func('trig.sin')
-def trig_sinus(series: pd.Series,
-          decimals: Optional[Number]=None) -> pd.Series:
+def trig_sinus(series: pd.Series) -> pd.Series:
     """
     Trigonometric sine element-wise on a degree series.
 
-    Example: `(trig.sin (series "degree-series") #:decimals 14)`
+    Example: `(trig.sin (series "degree-series"))`
     """
     opts = series.options
 
     res = np.sin(series * (np.pi / 180))
-    if decimals:
-        res = res.round(decimals)
     res.options = opts
     return res
 
@@ -844,18 +838,15 @@ def trig_arcsinus(series: pd.Series) -> pd.Series:
 
 
 @func('trig.tan')
-def trig_tangent(series: pd.Series,
-                 decimals: Optional[Number]=None) -> pd.Series:
+def trig_tangent(series: pd.Series) -> pd.Series:
     """
     Compute tangent element-wise on a degree series.
 
-    Example: `(trig.tan (series "degree-series") #:decimals 14)`
+    Example: `(trig.tan (series "degree-series"))`
     """
     opts = series.options
 
     res = np.tan(series * (np.pi / 180))
-    if decimals:
-        res = res.round(decimals)
     res.options = opts
     return res
 

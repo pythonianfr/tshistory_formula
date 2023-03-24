@@ -35,6 +35,7 @@ from tshistory_formula.helper import (
     name_of_expr,
     rename_operator,
     find_autos,
+    rewrite_trig_formula,
     scan_descendant_nodes,
 )
 from tshistory_formula.interpreter import (
@@ -3363,3 +3364,16 @@ def test_bound_formula_group_crash(engine, tsh):
 
     # we do not go into a recursion error any longer
     tsh.group_get(engine, 'crash-group')
+
+
+# migration helper
+def test_migrate_to_round(engine, tsh):
+    f1 = lisp.parse('(* 2 (trig.cos (series "trig-series")))')
+    assert rewrite_trig_formula(
+        f1
+    ) == f1
+
+    f2 = lisp.parse('(* 2 (trig.cos (series "trig-series") #:decimals 3))')
+    assert rewrite_trig_formula(
+        f2
+    ) == lisp.parse('(* 2 (round (trig.cos (series "trig-series")) #:decimals 3))')

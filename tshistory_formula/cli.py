@@ -13,7 +13,10 @@ from tshistory.util import find_dburi
 
 from tshistory_formula.schema import formula_schema
 from tshistory_formula.tsio import timeseries
-from tshistory_formula.helper import rename_operator
+from tshistory_formula.helper import (
+    rename_operator, 
+    rewrite_trig_formula
+)
 from tshistory_formula.types import typecheck
 from tshistory_formula.interpreter import Interpreter
 
@@ -451,3 +454,41 @@ def shell(db_uri, namespace='tsh'):
     from tshistory.api import timeseries as tsapi
     tsa = tsapi(find_dburi(db_uri), namespace, timeseries)
     import pdb; pdb.set_trace()
+
+
+@click.command(name='migrate-trig-formulas')
+@click.argument('db-uri')
+@click.option('--namespace', default='tsh')
+def migrate_trig_formulas(db_uri, namespace='tsh'):
+    engine = create_engine(find_dburi(db_uri))
+    tsh = timeseries(namespace)
+
+    def reorganise_trig_series(series):
+        rewritten = []
+        print(f'Transforming {len(series)} series.')
+        for idx, (name, internal_metadata) in enumerate(series):
+            print('name', name)
+            print('internal_metadata', internal_metadata)
+            tree0 = parse(internal_metadata['formula'])
+            tree1 = rewrite_trig_formula(tree0)
+            internal_metadata['formula'] = serialize(tree1)
+            rewritten.append(
+                {'name': name, 'internal_metadata': json.dumps(internal_metadata)}
+            )
+
+        with engine.begin() as cn:
+            cn.execute(
+                f'update "{namespace}".registry '
+                f'set internal_metadata = %(internal_metadata)s '
+                f'where name = %(name)s',
+                rewritten
+            )
+
+    series = engine.execute(
+        f'select name, internal_metadata from "{namespace}".registry '
+        'where internal_metadata->\'formula\' is not null'
+    ).fetchall()
+
+
+    if series:
+        reorganise_trig_series(series)
