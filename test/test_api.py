@@ -758,6 +758,43 @@ def test_autotrophic_idates2(tsx):
     ]
 
 
+def test_history_with_spurious_keys(tsx):
+    """
+    in certain case, the formula can produce histories
+    with keys that index empty series
+    """
+    i0 = utcdt(2023, 3, 1)
+    i1 = utcdt(2023, 3, 2)
+    lb = datetime(2023, 3, 1)
+    ub = datetime(2023, 3, 4)
+    ts = pd.Series(
+        range(4),
+        index=pd.date_range(
+            start=lb,
+            end=ub,
+            periods=4
+        )
+    )
+
+    # at date i0, only series-x is defined
+    tsx.update('series-x', ts, 'test', insertion_date=i0)
+    tsx.update('series-y', ts, 'test', insertion_date=i1)
+
+    tsx.register_formula(
+       'simple-addition',
+        '(add (series "series-x") (series "series-y"))'
+    )
+
+    hist = tsx.history('simple-addition')
+    assert len(hist) == 2
+    first_key = list(hist.keys())[0]
+
+    # the first key index an empty series
+    # it should be removed
+    assert len(hist[first_key]) == 0
+
+
+
 # groups
 
 def test_group_formula(tsa):
