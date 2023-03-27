@@ -35,6 +35,7 @@ from tshistory_formula.helper import (
     name_of_expr,
     rename_operator,
     find_autos,
+    rewrite_sub_formula,
     rewrite_trig_formula,
     scan_descendant_nodes,
 )
@@ -3377,3 +3378,31 @@ def test_migrate_to_round(engine, tsh):
     assert rewrite_trig_formula(
         f2
     ) == lisp.parse('(* 2 (round (trig.cos (series "trig-series")) #:decimals 3))')
+
+
+def test_migrate_to_sub(engine, tsh):
+    f1 = lisp.parse('(* -1 (series "series1"))')
+    assert rewrite_sub_formula(
+        f1
+    ) == f1
+
+    f2 = lisp.parse('(add (* -1 (series "series1")) (series "series2"))')
+    assert rewrite_sub_formula(
+        f2
+    ) == lisp.parse('(sub (series "series2") (series "series1"))')
+
+    f3 = lisp.parse('(add (* -1 (series "series1")) (series "series2") (series "series3"))')
+    assert rewrite_sub_formula(
+        f3
+    ) == lisp.parse('(sub (add (series "series2") (series "series3")) (series "series1"))')
+
+    f4 = lisp.parse('(add (series "series1") (series "series2") (* -1 (series "series3"))  (* -1 (series "series4")) )')
+    assert rewrite_sub_formula(
+        f4
+    ) == lisp.parse('(sub (add (series "series1") (series "series2")) (add (series "series3") (series "series4")))')
+
+    f5 = lisp.parse('(add (* -2 (series "series1")) (series "series2"))')
+    assert rewrite_sub_formula(
+        f5
+    ) == f5
+

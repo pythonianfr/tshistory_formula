@@ -442,3 +442,43 @@ def rewrite_trig_formula(tree):
         rewrite_trig_formula(item)
         for item in tree
     ]
+
+
+def rewrite_sub_formula(tree):
+    if not isinstance(tree, list):
+        return tree
+
+    op = tree[0]
+    if op == 'add':
+        posargs, _kwargs = buildargs(tree[1:])
+        positive_elements = []
+        negative_elements = []
+        for element in posargs:
+            if element[0]=='*' and element[1]==-1:
+                negative_elements.append(element[2])
+            else:
+                positive_elements.append(element)
+        if len(negative_elements)==0:
+            return tree
+
+        if len(positive_elements)>1:
+            positive_tree = [Symbol ('add')]
+            positive_tree.extend(positive_elements)
+        else:
+            positive_tree = positive_elements[0]
+
+        if len(negative_elements)>1:
+            negative_tree = [Symbol ('add')]
+            negative_tree.extend(negative_elements)
+        else:
+            negative_tree = negative_elements[0]
+
+        newtree = [
+            Symbol('sub'), positive_tree, negative_tree
+        ]
+        return newtree
+
+    return [
+        rewrite_sub_formula(item)
+        for item in tree
+    ]
