@@ -223,7 +223,7 @@ def test_user_meta(engine, tsh):
         '(+ 2 (series "user_metadata"))',
     )
 
-    tsh.update_metadata(
+    tsh.replace_metadata(
         engine,
         'test_user_meta',
         {'foo': 42}
@@ -455,13 +455,13 @@ def test_base_api(engine, tsh):
     m = tsh.metadata(engine, 'test_product_a')
     assert m == {}
 
-    tsh.update_metadata(engine, 'test_product_a', {'topic': 'spot price'})
+    tsh.replace_metadata(engine, 'test_product_a', {'topic': 'spot price'})
     m = tsh.metadata(engine, 'test_product_a')
     assert m == {
         'topic': 'spot price'
     }
 
-    tsh.update_metadata(
+    tsh.replace_metadata(
         engine, 'test_product_a', {
             'topic': 'Spot Price',
             'unit': '€'
@@ -473,7 +473,7 @@ def test_base_api(engine, tsh):
         'unit': '€',
     }
 
-    tsh.update_metadata(
+    tsh.replace_metadata(
         engine, 'test_product_a', {
             'unit': '€'
         }

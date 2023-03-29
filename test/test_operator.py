@@ -516,7 +516,7 @@ def test_more_filter(engine, tsh):
     )
     tsh.update(engine, a, 'find.me.A', 'Babar')
     tsh.update(engine, a * 2, 'find.me.B', 'Celeste')
-    tsh.update_metadata(
+    tsh.replace_metadata(
         engine,
         'find.me.A',
         {
@@ -525,7 +525,7 @@ def test_more_filter(engine, tsh):
             'something': 'something'
          }
     )
-    tsh.update_metadata(
+    tsh.replace_metadata(
         engine,
         'find.me.B',
         {
