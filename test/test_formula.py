@@ -223,6 +223,29 @@ def test_user_meta(engine, tsh):
         '(+ 2 (series "user_metadata"))',
     )
 
+    tsh.update_metadata(
+        engine,
+        'test_user_meta',
+        {'foo': 42}
+    )
+
+    meta = tsh.metadata(engine, 'test_user_meta')
+    assert meta == {
+        'foo': 42
+    }
+
+    tsh.update_metadata(
+        engine,
+        'test_user_meta',
+        {'user': 'babar'}
+    )
+
+    meta = tsh.metadata(engine, 'test_user_meta')
+    assert meta == {
+        'foo': 42,
+        'user': 'babar'
+    }
+
     tsh.replace_metadata(
         engine,
         'test_user_meta',
@@ -230,7 +253,6 @@ def test_user_meta(engine, tsh):
     )
 
     meta = tsh.metadata(engine, 'test_user_meta')
-    assert meta['foo'] == 42
     assert meta == {
         'foo': 42
     }
