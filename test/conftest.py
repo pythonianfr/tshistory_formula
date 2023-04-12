@@ -45,9 +45,7 @@ def tsa(engine):
         str(engine.url),
         namespace='test-mapi',
         handler=timeseries,
-        sources=[
-            (str(engine.url), 'test-mapi-2')
-        ]
+        sources={'remote': (str(engine.url), 'test-mapi-2')}
     )
 
 
