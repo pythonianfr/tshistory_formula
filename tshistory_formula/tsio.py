@@ -236,7 +236,7 @@ class timeseries(basets):
             # point instead
             L.warning('formula %s has no tzaware info (will be broken)', name)
 
-        coremeta = self.default_meta(tzaware)
+        coremeta = self.default_internal_meta(tzaware)
         meta = self.internal_metadata(cn, name) or {}
         meta = dict(meta, **coremeta)
         meta['formula'] = formula
@@ -244,24 +244,28 @@ class timeseries(basets):
         self._register_formula(cn, name, meta, exists)
         self.register_dependents(cn, name, tree)
 
-    def _register_formula(self, cn, name, seriesmeta, exists):
+    def _register_formula(self, cn, name, internal_meta, exists):
         if exists:
+            # update
             cn.execute(
                 f'update "{self.namespace}".registry '
-                'set internal_metadata = %(meta)s '
+                'set internal_metadata = %(imeta)s '
                 'where name=%(name)s',
                 name=name,
-                meta=json.dumps(seriesmeta)
+                imeta=json.dumps(internal_meta)
             )
-        else:
-            cn.execute(
-                f'insert into "{self.namespace}".registry '
-                '(name, internal_metadata) '
-                'values (%s, %s) '
-                'returning id',
-                name,
-                json.dumps(seriesmeta)
-            )
+            return
+
+        # creation
+        cn.execute(
+            f'insert into "{self.namespace}".registry '
+            '(name, internal_metadata, metadata) '
+            'values (%s, %s, %s) '
+            'returning id',
+            name,
+            json.dumps(internal_meta),
+            json.dumps({})
+        )
 
     def live_content_hash(self, cn, name):
         return hashlib.sha1(
@@ -273,7 +277,7 @@ class timeseries(basets):
             ).encode()
         ).hexdigest()
 
-    def default_meta(self, tzaware):
+    def default_internal_meta(self, tzaware):
         if tzaware:
             return {
                 'tzaware': True,
@@ -1072,7 +1076,7 @@ class timeseries(basets):
         )
 
         tzaware = self.check_group_tz_compatibility(cn, tree)
-        coremeta = self.default_meta(tzaware)
+        coremeta = self.default_internal_meta(tzaware)
         meta = self.group_metadata(cn, name) or {}
         meta = dict(meta, **coremeta)
         self.update_group_metadata(cn, name, meta, internal=True)
