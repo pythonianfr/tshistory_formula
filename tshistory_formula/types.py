@@ -237,6 +237,8 @@ def function_types(func):
         if par.name.startswith('__'):
             continue
         atype = typename(par.annotation)
+        if par.kind.name == 'VAR_POSITIONAL':
+            atype = f'List[{atype}]'
         if par.default is not inspect._empty:
             default = par.default
             if isinstance(default, str):

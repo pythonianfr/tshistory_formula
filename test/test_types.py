@@ -43,6 +43,13 @@ def test_dtypes():
 
 
 def test_function_types():
+    f = FUNCS['add']
+    types = function_types(f)
+    assert types == {
+        'return': 'Series',
+        'serieslist': 'List[Series]'
+    }
+
     f = FUNCS['shifted']
     types = function_types(f)
     assert types == {
@@ -186,15 +193,15 @@ def test_operators_types():
               'series': 'Series',
               'true_value': 'Default[Number=1]'},
         'abs': {'return': 'Series', 'series': 'Series'},
-        'add': {'return': 'Series', 'serieslist': 'Series'},
+        'add': {'return': 'Series', 'serieslist': 'List[Series]'},
         'asof': {'return': 'Series',
                  'revision_date': 'Timestamp',
                  'series': 'Series'},
-        'by.and': {'queries': 'query', 'return': 'query'},
+        'by.and': {'queries': 'List[query]', 'return': 'query'},
         'by.metaitem': {'key': 'str', 'return': 'query', 'value': 'Union[str, Number]'},
         'by.metakey': {'keyquery': 'str', 'return': 'query'},
         'by.name': {'namequery': 'str', 'return': 'query'},
-        'by.or': {'queries': 'query', 'return': 'query'},
+        'by.or': {'queries': 'List[query]', 'return': 'query'},
         'by.value': {'key': 'str',
                      'operator': 'str',
                      'return': 'query',
@@ -225,14 +232,14 @@ def test_operators_types():
                         'flow_name': 'str',
                         'return': 'Series',
                         'stock_name': 'str'},
-        'mul': {'return': 'Series', 'serieslist': 'Series'},
+        'mul': {'return': 'Series', 'serieslist': 'List[Series]'},
         'naive': {'return': 'Series', 'series': 'Series', 'tzone': 'str'},
         'options': {'fill': 'Default[Union[str, Number]=None]',
                     'limit': 'Default[int=None]',
                     'return': 'Series',
                     'series': 'Series',
                     'weight': 'Default[Number=None]'},
-        'priority': {'return': 'Series', 'serieslist': 'Series'},
+        'priority': {'return': 'Series', 'serieslist': 'List[Series]'},
         'resample': {'freq': 'str',
                      'method': 'Default[str="mean"]',
                      'return': 'Series',
@@ -245,13 +252,13 @@ def test_operators_types():
                     'series': 'Series',
                     'window': 'int'},
         'row-max': {'return': 'Series',
-                    'serieslist': 'Series',
+                    'serieslist': 'List[Series]',
                     'skipna': 'Default[bool=True]'},
         'row-mean': {'return': 'Series',
-                     'serieslist': 'Series',
+                     'serieslist': 'List[Series]',
                      'skipna': 'Default[bool=True]'},
         'row-min': {'return': 'Series',
-                    'serieslist': 'Series',
+                    'serieslist': 'List[Series]',
                     'skipna': 'Default[bool=True]'},
         'series': {'fill': 'Default[Union[str, Number]=None]',
                    'limit': 'Default[int=None]',
@@ -272,7 +279,7 @@ def test_operators_types():
                   'todate': 'Default[Timestamp=None]'},
         'start-of-month': {'date': 'Timestamp', 'return': 'Timestamp'},
         'std': {'return': 'Series',
-                'serieslist': 'Series',
+                'serieslist': 'List[Series]',
                 'skipna': 'Default[bool=True]'},
         'sub': {'return': 'Series',
                 'series1': 'Series',
