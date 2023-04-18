@@ -286,6 +286,80 @@ def test_formula_components(tsa):
     assert len(idates) == 3
 
 
+def test_formula_remote_autotrophic(tsa, engine):
+    from tshistory_formula.registry import func, metadata
+    from tshistory_formula.tsio import timeseries as pgseries
+
+    @func('customseries')
+    def customseries() -> pd.Series:
+        return pd.Series(
+            [1.0, 2.0, 3.0],
+            index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
+        )
+
+    @metadata('customseries')
+    def metadata(cn, tsh, tree):
+        return {
+            tree[0]: {
+                'tzaware': True,
+                'index_type': 'datetime64[ns, UTC]',
+                'value_type': 'float64',
+                'index_dtype': '|M8[ns]',
+                'value_dtype': '<f8'
+            }
+        }
+
+    rtsh = pgseries('test-mapi-2')
+    with engine.begin() as cn:
+        rtsh.register_formula(
+            cn,
+            'autotrophic',
+            '(customseries)',
+        )
+
+    tsa.register_formula(
+        'remote-series',
+        '(series "autotrophic")'
+    )
+
+    # bw compat
+    assert tsa.metadata('remote-series', True) == {
+        'contenthash': 'e74bac3752e17245340a7d0cbeb2bdfccdbf3953',
+        'formula': '(series "autotrophic")',
+        'index_dtype': '|M8[ns]',
+        'index_type': 'datetime64[ns, UTC]',
+        'tzaware': True,
+        'value_dtype': '<f8',
+        'value_type': 'float64'
+    }
+
+    assert tsa.metadata('remote-series') == {}
+
+    assert tsa.internal_metadata('remote-series') == {
+        'contenthash': 'e74bac3752e17245340a7d0cbeb2bdfccdbf3953',
+        'formula': '(series "autotrophic")',
+        'index_dtype': '|M8[ns]',
+        'index_type': 'datetime64[ns, UTC]',
+        'tzaware': True,
+        'value_dtype': '<f8',
+        'value_type': 'float64'
+    }
+
+    assert_df("""
+2019-01-01 00:00:00+00:00    1.0
+2019-01-02 00:00:00+00:00    2.0
+2019-01-03 00:00:00+00:00    3.0
+""", tsa.get('remote-series'))
+
+    idates = tsa.insertion_dates('remote-series')
+    # autotrophic series lack an `insertion_dates` protocol
+    assert idates == []
+
+    assert tsa.type('remote-series') == 'formula'
+    assert tsa.othersources.sources[0].tsa.type('autotrophic') == 'formula'
+    assert tsa.type('autotrophic') == 'formula'
+
+
 def test_formula_components_wall(tsa):
     series = pd.Series(
         [1, 2, 3],
