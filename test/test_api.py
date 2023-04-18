@@ -354,7 +354,7 @@ def test_formula_components_wall(tsa):
     }
 
 
-def test_autotrophic_idates(tsa):
+def test_autotrophic_idates(tsx):
     # using the fallback path through .history
 
     @func('autotrophic', auto=True)
@@ -373,16 +373,16 @@ def test_autotrophic_idates(tsa):
             'I HAVE A NAME FOR DISPLAY PURPOSES': tree
         }
 
-    tsa.register_formula(
+    tsx.register_formula(
         'autotrophic-idates',
         '(autotrophic)'
     )
 
-    idates = tsa.insertion_dates('autotrophic-idates')
+    idates = tsx.insertion_dates('autotrophic-idates')
     assert idates == []
 
 
-def test_autotrophic_idates2(tsa):
+def test_autotrophic_idates2(tsx):
     @func('auto2', auto=True)
     def custom(__interpreter__,
                __from_value_date__,
@@ -411,18 +411,18 @@ def test_autotrophic_idates2(tsa):
         todate = to_insertion_date or pd.Timestamp('2100-1-1', tz='UTC')
         return filter(lambda d: fromdate <= d <= todate, dates)
 
-    tsa.register_formula(
+    tsx.register_formula(
         'autotrophic-idates-2',
         '(auto2)'
     )
 
-    idates = tsa.insertion_dates('autotrophic-idates-2')
+    idates = tsx.insertion_dates('autotrophic-idates-2')
     assert idates == [
         pd.Timestamp('2020-1-1', tz='utc'),
         pd.Timestamp('2020-1-2', tz='utc')
     ]
 
-    idates = tsa.insertion_dates(
+    idates = tsx.insertion_dates(
         'autotrophic-idates-2',
         pd.Timestamp('2020-1-2', tz='UTC')
     )
@@ -430,7 +430,7 @@ def test_autotrophic_idates2(tsa):
         pd.Timestamp('2020-1-2', tz='utc')
     ]
 
-    idates = tsa.insertion_dates(
+    idates = tsx.insertion_dates(
         'autotrophic-idates-2',
         to_insertion_date=pd.Timestamp('2020-1-1', tz='UTC')
     )
