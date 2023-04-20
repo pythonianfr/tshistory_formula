@@ -140,7 +140,7 @@ def formula_components(self,
     formulas) will show up in the leaves.
 
     >>> tsa.formula_components('my-series')
-    {'show-components': ['component-a', 'component-b']}
+    {'my-series': ['component-a', 'component-b']}
 
     >>> tsa.formula_components('my-series-2', expanded=True)
     {'my-series-2': [{'sub-component-1': ['component-a', 'component-b']}, 'component-b']}
