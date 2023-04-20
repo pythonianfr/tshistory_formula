@@ -286,6 +286,42 @@ def test_formula_components(tsa):
     assert len(idates) == 3
 
 
+def test_formula_components_findseries(tsa):
+    series = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(pd.Timestamp('2023-1-1', tz='UTC'), freq='D', periods=3)
+    )
+    tsa.update(
+        'comp-findseries-a',
+        series,
+        'Babar'
+    )
+    tsa.update(
+        'comp-findseries-b',
+        series,
+        'Celeste'
+    )
+
+    form = (
+        '(priority '
+        '   (add (findseries (by.name "comp-findseries")))'
+        '   (series "comp-findseries-b"))'
+    )
+    tsa.register_formula(
+        'show-dyn-comp',
+        form
+    )
+
+    components = tsa.formula_components('show-dyn-comp')
+    parsed = lisp.parse(form)
+
+    # let's teach .formula_components to deal with `findseries` !
+    assert components == {
+        'show-dyn-comp': ['comp-findseries-b']
+    }
+
+
+
 def test_formula_remote_autotrophic(tsa, engine):
     from tshistory_formula.registry import func, metadata
     from tshistory_formula.tsio import timeseries as pgseries
