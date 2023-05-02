@@ -493,7 +493,7 @@ def test_filter_bybasket(engine, tsh):
     tsh.register_basket(
         engine,
         'mybasket',
-        '(byname "inbasket")'
+        '(by.name "inbasket")'
     )
     tsh.register_formula(
         engine,
@@ -635,7 +635,7 @@ def test_more_filter(engine, tsh):
     names = tsh.find(
         engine,
         search.query.fromexpr(
-            '(or (> "weight" 42) (byname "me.A"))'
+            '(by.or (> "weight" 42) (by.name "me.A"))'
         )
     )
     assert names == ['find.me.A', 'find.me.B']
