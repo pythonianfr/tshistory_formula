@@ -1060,7 +1060,7 @@ class timeseries(basets):
 
         # build metadata & check compat
         seriesmeta = self.find_metas(cn, tree)
-        if not all(seriesmeta.values()) and reject_unknown:
+        if not all(seriesmeta.values()):
             badseries = [k for k, v in seriesmeta.items() if not v]
             raise ValueError(
                 f'Formula `{name}` refers to unknown series '
