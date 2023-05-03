@@ -17,9 +17,9 @@ from tshistory.util import (
     tx
 )
 
-from tshistory_formula import funcs, gfuncs  # trigger registration
+from tshistory_formula import funcs, gfuncs  # trigger registration  # noqa: F401
 from tshistory_formula import (
-    api,  # trigger extension
+    api,  # trigger extension  # noqa: F401
     interpreter,
     helper,
     types
