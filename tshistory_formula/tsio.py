@@ -650,8 +650,9 @@ class timeseries(basets):
                 )
             }
             if diffmode:
+                # NOTE: this code branch is not tested
                 return self._history_diffs(
-                    cn, name, hist, idates,
+                    cn, name, hist, hist.keys(),
                     from_value_date=None,
                     to_value_date=None,
                     **kw)
