@@ -137,7 +137,10 @@ def test_group_formula(client):
     })
     assert res.json == '(group-add (group "test_group") (group "test_group"))'
 
-    res = client.get('/group/state', {'name': 'group_formula'})
+    res = client.get('/group/state', {
+        'name': 'group_formula',
+        'format': 'tshpack'
+    })
     df2 = util.unpack_group(res.body)
 
     assert df2.equals(df * 2)
@@ -293,7 +296,7 @@ def test_formula(tsx, engine, tsh):
     )
 
 
-def test_group_formula(tsx):
+def test_group_formula_api(tsx):
     df = gengroup(
         n_scenarios=3,
         from_date=dt(2021, 1, 1),
