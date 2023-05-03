@@ -220,6 +220,10 @@ def typename(typespec):
         )
     )
     if len(typespec.__args__) == 1:
+        # NOTE: (for later) we might want to do this the other way
+        # e.g. probably 1 element Union get de-unionized
+        if typespec._name == 'List':
+            return f'List[{typename(typespec.__args__[0])}]'
         return typename(typespec.__args__[0])
     if 'Union' in strtype:
         return normalize_union_types(typespec)

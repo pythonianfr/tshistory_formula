@@ -43,6 +43,15 @@ def test_dtypes():
 
 
 def test_function_types():
+    f = FUNCS['findseries']
+    types = function_types(f)
+    assert types == {
+        'fill': 'Default[Union[str, Number]=None]',
+        'naive': 'Default[bool=False]',
+        'q': 'query',
+        'return': 'List[Series]'
+    }
+
     f = FUNCS['add']
     types = function_types(f)
     assert types == {
@@ -220,7 +229,7 @@ def test_operators_types():
                      'value': 'Number'},
         'cumsum': {'return': 'Series', 'series': 'Series'},
         'div': {'return': 'Series', 's1': 'Series', 's2': 'Series'},
-        'findseries': {'return': 'Series',
+        'findseries': {'return': 'List[Series]',
                        'naive': 'Default[bool=False]',
                        'q': 'query',
                        'fill': 'Default[Union[str, Number]=None]'},
