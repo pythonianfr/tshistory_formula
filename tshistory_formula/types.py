@@ -69,7 +69,7 @@ def assert_typed(func):
     if badargs:
         msg.append(f'arguments {", ".join(badargs)} are untyped')
     if badreturn:
-        msg.append(f'return type is not provided')
+        msg.append('return type is not provided')
 
     raise TypeError(
         f'operator `{func.__name__}` has type issues: {", ".join(msg)}'

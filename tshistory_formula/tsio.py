@@ -6,7 +6,10 @@ import json
 import logging
 
 import pandas as pd
-from psyl.lisp import parse, serialize, Symbol
+from psyl.lisp import (
+    parse,
+    serialize
+)
 from tshistory.tsio import timeseries as basets
 from tshistory.util import (
     diff,
@@ -1023,7 +1026,8 @@ class timeseries(basets):
             return {}
 
         def tzlabel(status):
-            if status is None: return 'unknown'
+            if status is None:
+                return 'unknown'
             return 'tzaware' if status else 'tznaive'
 
         first_tzaware = next(iter(metamap.values()))
