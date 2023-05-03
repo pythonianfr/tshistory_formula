@@ -114,7 +114,7 @@ def formula(self,
 
 
 @extend(altsources)
-def formula(self,
+def formula(self,  # noqa: F811
             name: str,
             display: bool=False,
             expanded: bool=False) -> Optional[str]:
@@ -196,7 +196,7 @@ def formula_components(self,
 
 
 @extend(altsources)
-def formula_components(self,
+def formula_components(self,  # noqa: F811
                        name: str,
                        expanded: bool=False) -> Optional[Dict[str, str]]:
     source = self._findsourcefor(name)

@@ -451,7 +451,7 @@ def migrate_to_formula_patch(db_uri, namespace='tsh'):
 @click.option('--namespace', default='tsh')
 def shell(db_uri, namespace='tsh'):
     from tshistory.api import timeseries as tsapi
-    tsa = tsapi(find_dburi(db_uri), namespace, timeseries)
+    tsa = tsapi(find_dburi(db_uri), namespace, timeseries)  # noqa: F841
     import pdb; pdb.set_trace()
 
 
@@ -460,7 +460,7 @@ def shell(db_uri, namespace='tsh'):
 @click.option('--namespace', default='tsh')
 def migrate_trig_formulas(db_uri, namespace='tsh'):
     engine = create_engine(find_dburi(db_uri))
-    tsh = timeseries(namespace)
+    tsh = timeseries(namespace)  # noqa: F841
 
     def reorganise_trig_series(series):
         rewritten = []
@@ -497,7 +497,7 @@ def migrate_trig_formulas(db_uri, namespace='tsh'):
 @click.option('--namespace', default='tsh')
 def migrate_sub_formulas(db_uri, namespace='tsh'):
     engine = create_engine(find_dburi(db_uri))
-    tsh = timeseries(namespace)
+    tsh = timeseries(namespace)  # noqa: F841
 
     def reorganise_sub_series(series):
         rewritten = []
