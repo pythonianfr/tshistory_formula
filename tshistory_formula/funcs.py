@@ -2071,7 +2071,7 @@ def get_holidays(__interpreter__,
 
     """
     ctry = pycountry.countries.get(alpha_2=country.upper())
-    hd = holidays.CountryHoliday(ctry.alpha_2)
+    hd = holidays.country_holidays(ctry.alpha_2)
 
     beginyear = datetime(datetime.now().year, 1, 1)
     endyear = datetime(datetime.now().year + 1, 1, 1)
