@@ -1,5 +1,4 @@
 from datetime import datetime as dt
-import math
 import pytz
 import pytest
 
@@ -43,7 +42,7 @@ def test_naive_tzone(engine, tsh):
 """, ts)
 
     meta = tsh.internal_metadata(engine, 'to-naive')
-    assert meta['tzaware'] == False
+    assert meta['tzaware'] is False
 
     tsh.update(
         engine,
@@ -123,7 +122,7 @@ Name: naive-series, dtype: float64
 """, ts)
 
     meta = tsh.internal_metadata(engine, 'naive-over-naive')
-    assert meta['tzaware'] == False
+    assert meta['tzaware'] is False
 
 
 def test_naive_registration(engine, tsh):
@@ -135,7 +134,7 @@ def test_naive_registration(engine, tsh):
         )
 
     @metadata('tzaware-autotrophic')
-    def tzauto(cn, tsh, tree):
+    def tzauto_meta(cn, tsh, tree):
         return {
             'tzaware-autotrophic' : {
                 'tzaware': True,
@@ -147,7 +146,7 @@ def test_naive_registration(engine, tsh):
         }
 
     @finder('tzaware-autotrophic')
-    def tzauto(cn, tsh, tree):
+    def tzauto_finder(cn, tsh, tree):
         return {tree[0]: tree}
 
     tsh.update(
@@ -3648,7 +3647,7 @@ def test_holidays(engine, tsh):
 """, ts_schooloff['2015-07-13': '2015-07-15'])
 
     meta = tsh.internal_metadata(engine, 'school-is-off')
-    assert meta['tzaware'] == True
+    assert meta['tzaware'] is True
     # Belgium
     tsh.register_formula(
         engine, 'time-for-waffle',
@@ -3669,7 +3668,7 @@ def test_holidays(engine, tsh):
 """, ts_joy['2015-07-20': '2015-07-22'])
 
     meta = tsh.internal_metadata(engine, 'time-for-waffle')
-    assert meta['tzaware'] == False
+    assert meta['tzaware'] is False
 
     # UK
     tsh.register_formula(
@@ -3694,7 +3693,7 @@ def test_holidays(engine, tsh):
 """, ts_joy)
 
     meta = tsh.internal_metadata(engine, 'uk-holidays')
-    assert meta['tzaware'] == False
+    assert meta['tzaware'] is False
 
 
 def test_holidays_with_tzaware_queryset(engine, tsh):
@@ -3888,4 +3887,4 @@ def test_sub(engine, tsh):
     assert ts.index.tz.zone == 'UTC'
 
     meta = tsh.internal_metadata(engine, 'series-sub')
-    assert meta['tzaware'] == True
+    assert meta['tzaware'] is True

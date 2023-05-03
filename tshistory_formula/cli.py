@@ -1,5 +1,4 @@
 import json
-from pprint import pprint
 import hashlib
 
 import click
@@ -337,7 +336,6 @@ def migrate_to_content_hash(db_uri, namespace='tsh'):
 @click.option('--namespace', default='tsh')
 def rename_operators(db_uri, namespace='tsh'):
     engine = create_engine(find_dburi(db_uri))
-    tsh = timeseries(namespace)
 
     def rename_series(series):
         rewritten = []

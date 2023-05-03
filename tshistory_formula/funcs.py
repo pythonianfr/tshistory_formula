@@ -2133,7 +2133,6 @@ def holidays_metadata(cn, tsh, tree):
     country = args[0]
     tzones = pytz.country_timezones(country)
     assert len(tzones) == 1, f'Many available timezones for {country}, cannot compute'
-    tz = tzones[0]
     return {
         'holidays': {
             'tzaware': True,

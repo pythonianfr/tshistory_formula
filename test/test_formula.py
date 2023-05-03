@@ -1,6 +1,5 @@
 from datetime import datetime as dt, timedelta
 
-from dateutil.relativedelta import relativedelta
 import pandas as pd
 import numpy as np
 import pytest
@@ -18,7 +17,6 @@ from tshistory_formula.registry import (
     func,
     FUNCS,
     finder,
-    HISTORY,
     history,
     metadata,
     gfunc,
@@ -40,7 +38,6 @@ from tshistory_formula.helper import (
     scan_descendant_nodes,
 )
 from tshistory_formula.interpreter import (
-    Interpreter,
     NullIntepreter,
     OperatorHistory,
     GroupInterpreter,
@@ -1727,7 +1724,6 @@ def test_extract_from_expr(engine, tsh):
     assert args[4:] == ['a', 42]
     assert kw == {'bar': 'bar', 'date': '(date "2021-1-1")'}
 
-    it = Interpreter(engine, tsh, {})
     tree = lisp.parse('(extractme "a" 42 #:bar "bar" #:date (date "2021-1-1"))')
     fname, f, args, kw = _extract_from_expr(tree)
     assert fname == 'extractme'
@@ -2080,13 +2076,13 @@ def test_autolike_operator_history_nr(engine, tsh):
         )
 
     @metadata('weird-operator')
-    def weirdo(cn, tsh, tree):
+    def weirdo_meta(cn, tsh, tree):
         return {
             tree[1]: tsh.internal_metadata(cn, tree[1])
         }
 
     @finder('weird-operator')
-    def weirdo(cn, tsh, tree):
+    def weirdo_finder(cn, tsh, tree):
         return {
             tree[1]: tree
         }
@@ -2338,8 +2334,8 @@ def test_diagnose(engine, tsh):
         return ts
 
     @finder('diag-auto-1')
-    def diag1(cn, tsh, tree):
-        return {f'diag-1': tree}
+    def diag1_finder(cn, tsh, tree):
+        return {'diag-1': tree}
 
     @func('diag-auto-2', auto=True)
     def diag2(
@@ -2352,8 +2348,8 @@ def test_diagnose(engine, tsh):
         return ts
 
     @finder('diag-auto-2')
-    def diag2(cn, tsh, tree):
-        return {f'diag-2': tree}
+    def diag2_finder(cn, tsh, tree):
+        return {'diag-2': tree}
 
     formula = '(priority (series "prim-diag-1") (series "prim-diag-2"))'
     tsh.register_formula(engine, 'diag-C', formula)
@@ -2906,7 +2902,7 @@ def test_groups_autotrophic_history(engine, tsh):
     @gmeta('gauto-operator')
     def auto_operator_meta(cn, tsh, tree):
         return {
-            f'gauto-operator': {
+            'gauto-operator': {
                 'index_dtype': '<M8[ns]',
                 'index_type': 'datetime64[ns]',
                 'tzaware': False,

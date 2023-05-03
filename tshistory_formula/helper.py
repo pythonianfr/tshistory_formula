@@ -188,8 +188,8 @@ def update_dict_list(ds0, ds1):
     return ds0
 
 
-def enumlist(l):
-    return [(elt,l.count(elt)) for elt in sorted(set(l))]
+def enumlist(alist):
+    return [(elt, alist.count(elt)) for elt in sorted(set(alist))]
 
 
 def sort_dict_list(dl):
@@ -324,7 +324,8 @@ def _extract_from_expr(expr):
 # tzaware check
 
 def tzlabel(status):
-    if status is None: return 'unknown'
+    if status is None:
+        return 'unknown'
     return 'tzaware' if status else 'tznaive'
 
 

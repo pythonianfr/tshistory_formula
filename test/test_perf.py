@@ -68,5 +68,5 @@ def test_priority(engine, tsh):
     t0 = time()
     with engine.begin():
         for _ in range(300):
-            patched = tsh.get(engine, 'patch')
+            tsh.get(engine, 'patch')
     print('100 patches', time() - t0)

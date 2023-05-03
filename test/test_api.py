@@ -2,7 +2,6 @@ from datetime import datetime
 import pandas as pd
 import pytest
 
-from psyl import lisp
 from tshistory.testutil import (
     assert_df,
     assert_hist,
@@ -14,8 +13,7 @@ from tshistory_formula.tsio import timeseries
 from tshistory_formula.registry import (
     func,
     finder,
-    insertion_dates,
-    metadata
+    insertion_dates
 )
 
 
@@ -208,7 +206,6 @@ def test_formula_components(tsa):
     )
 
     components = tsa.formula_components('show-components')
-    parsed = lisp.parse(form)
     assert components == {
         'show-components': ['component-a', 'component-b']
     }
@@ -313,7 +310,6 @@ def test_formula_components_findseries(tsa):
     )
 
     components = tsa.formula_components('show-dyn-comp')
-    parsed = lisp.parse(form)
 
     # let's teach .formula_components to deal with `findseries` !
     assert components == {
@@ -436,7 +432,7 @@ def test_formula_components_wall(tsa):
 
 
     @finder('opaque-components')
-    def custom(cn, tsh, tree):
+    def custom_finder(cn, tsh, tree):
         return {
             tree[1]: tree,
             tree[2]: tree
@@ -478,7 +474,7 @@ def test_autotrophic_idates(tsx):
         )
 
     @finder('autotrophic')
-    def custom(cn, tsh, tree):
+    def custom_finder(cn, tsh, tree):
         return {
             'I HAVE A NAME FOR DISPLAY PURPOSES': tree
         }
@@ -504,13 +500,13 @@ def test_autotrophic_idates2(tsx):
         )
 
     @finder('auto2')
-    def custom(cn, tsh, tree):
+    def custom_finder(cn, tsh, tree):
         return {
             'I HAVE A NAME FOR DISPLAY PURPOSES': tree
         }
 
     @insertion_dates('auto2')
-    def custom(cn, tsh, tree,
+    def custom_idates(cn, tsh, tree,
                from_insertion_date, to_insertion_date,
                from_value_date, to_value_date):
         dates = [

@@ -35,7 +35,6 @@ for the documentation.
 
 import re
 import sys
-import inspect
 import itertools
 
 from inspect import getfullargspec

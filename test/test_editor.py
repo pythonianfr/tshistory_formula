@@ -106,13 +106,13 @@ def test_editor_new_operator(tsa):
     )
 
     @finder('genrandomseries')
-    def genrandomseries(_cn, _tsh, tree):
+    def genrandomseries_finder(_cn, _tsh, tree):
         return {
             tree[0]: tree
         }
 
     @metadata('genrandomseries')
-    def genrandomseries(_cn, _tsh, tree):
+    def genrandomseries_meta(_cn, _tsh, tree):
         return {
             tree[0]: {
                 'index_dtype': '<M8[ns]',
@@ -229,13 +229,13 @@ def test_autotrophic_operator(tsa):
         )
 
     @finder('auto')
-    def auto(cn, tsh, tree):
+    def auto_finder(cn, tsh, tree):
         return {
             'my-little-constant-series': tree
         }
 
     @metadata('auto')
-    def auto(_cn, _tsh, tree):
+    def auto_meta(_cn, _tsh, tree):
         return {
             tree[0]: {
                 'tzaware': True,

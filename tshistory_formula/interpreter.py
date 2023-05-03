@@ -71,7 +71,7 @@ class Interpreter:
 
     def today(self, naive, tz):
         if naive:
-            assert tz is None, f'date cannot be naive and have a tz'
+            assert tz is None, 'date cannot be naive and have a tz'
         tz = pytz.timezone(tz or 'utc')
         key = ('today', naive, tz)
 
