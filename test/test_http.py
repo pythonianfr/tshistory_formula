@@ -204,16 +204,20 @@ def test_bound_formula(client):
     assert res.status_code == 200
 
     res = client.get('/group/boundformula', {'name': 'bfgroup'})
-    assert res.json == [
-        'hijack-me', [{
-            'group': 'a-group',
-            'family': 'topic',
-            'series': 'a-series'
-        }]
-    ]
+    assert res.json == {
+        'bindings': [
+            {
+                'family': 'topic',
+                'group': 'a-group',
+                'series': 'a-series'
+            }
+        ],
+        'name': 'hijack-me'
+    }
 
     res = client.get('/group/state', {
-        'name': 'bfgroup'
+        'name': 'bfgroup',
+        'format': 'tshpack'
     })
     df2 = util.unpack_group(res.body)
 
@@ -318,7 +322,7 @@ def test_group_formula(tsx):
     assert not tsx.group_exists('test_group_formula')
 
 
-def test_bound_formula(tsx):
+def test_bound_formula_api(tsx):
     temp = pd.Series(
         [12, 13, 14],
         index=pd.date_range(utcdt(2021, 1, 1), freq='D', periods=3)
