@@ -22,6 +22,7 @@ tasks:
       pip install -e tshistory_formula --prefer-binary
   - run-tests: |
       export PATH=$PATH:~/.local/bin:/usr/lib/postgresql/13/bin
-      pip3 install pytest pytest_sa_pg responses
+      pip3 install pytest pytest_sa_pg responses ruff
       cd tshistory_formula
+      ruff check .
       pytest
