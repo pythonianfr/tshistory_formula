@@ -220,11 +220,10 @@ def typename(typespec):
         )
     )
     if len(typespec.__args__) == 1:
-        # NOTE: (for later) we might want to do this the other way
-        # e.g. probably 1 element Union get de-unionized
-        if typespec._name == 'List':
-            return f'List[{typename(typespec.__args__[0])}]'
-        return typename(typespec.__args__[0])
+        if typespec._name == 'Union':
+            # de-unionize unions with a single member !
+            return typename(typespec.__args__[0])
+        return f'{typespec._name}[{typename(typespec.__args__[0])}]'
     if 'Union' in strtype:
         return normalize_union_types(typespec)
     if strtype.startswith('typing.'):
@@ -242,7 +241,7 @@ def function_types(func):
             continue
         atype = typename(par.annotation)
         if par.kind.name == 'VAR_POSITIONAL':
-            atype = f'List[{atype}]'
+            atype = f'Packed[{atype}]'
         if par.default is not inspect._empty:
             default = par.default
             if isinstance(default, str):
