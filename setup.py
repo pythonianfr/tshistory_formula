@@ -1,12 +1,14 @@
 from pathlib import Path
 from setuptools import setup
 
+from tshistory_formula import __version__
+
 
 doc = Path(__file__).parent / 'README.md'
 
 
 setup(name='tshistory_formula',
-      version='0.14.0',
+      version=__version__,
       author='Pythonian',
       author_email='aurelien.campeas@pythonian.fr',
       url='https://hg.sr.ht/~pythonian/tshistory_formula',
