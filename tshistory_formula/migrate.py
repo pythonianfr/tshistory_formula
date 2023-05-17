@@ -25,6 +25,7 @@ def run_migrations(engine, namespace, interactive=False):
 def initial_migration(engine, namespace, interactive):
     print('initial migration')
     migrate_formula_schema(engine, namespace, interactive)
+    migrate_to_formula_patch(engine, namespace, interactive)
 
 
 def migrate_formula_schema(engine, namespace, interactive):
@@ -148,3 +149,19 @@ def migrate_formula_schema(engine, namespace, interactive):
             )
         # goodby formula table !
         cn.execute(f'drop table "{ns}".formula')
+
+
+def migrate_to_formula_patch(engine, namespace, interactive):
+    print('migrate to formula patch')
+    ns_name = f'{namespace}-formula-patch'
+    with engine.begin() as cn:
+        exists = cn.execute(
+            'select 1 from information_schema.schemata where schema_name = %(name)s',
+            name=ns_name
+        ).scalar()
+        if exists:
+            print(f'Schema `{ns_name}` already exists. Nothing to do.')
+            return
+    from tshistory.schema import tsschema
+    schem = tsschema(ns_name)
+    schem.create(engine)
