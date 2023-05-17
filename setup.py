@@ -27,21 +27,26 @@ setup(name='tshistory_formula',
       package_data={'tshistory_formula': [
           'schema.sql'
       ]},
-      entry_points={'tshistory.subcommands': [
-          'typecheck-formula=tshistory_formula.cli:typecheck_formula',
-          'test-formula=tshistory_formula.cli:test_formula',
-          'formula-init-db=tshistory_formula.cli:init_db',
-          'migrate-to-formula-groups=tshistory_formula.cli:migrate_to_groups',
-          'migrate-to-content-cache=tshistory_formula.cli:migrate_to_content_hash',
-          'migrate-to-formula-patch=tshistory_formula.cli:migrate_to_formula_patch',
-          'migrate-formula-schema=tshistory_formula.cli:migrate_formula_schema',
-          'migrate-trig-formulas=tshistory_formula.cli:migrate_trig_formulas',
-          'migrate-sub-formulas=tshistory_formula.cli:migrate_sub_formulas',
-          'rename-operators=tshistory_formula.cli:rename_operators',
-          'migrate-to-dependants=tshistory_formula.cli:migrate_to_dependants',
-          'fix-formula-groups-metadata=tshistory_formula.cli:fix_formula_groups_metadata',
-          'shell=tshistory_formula.cli:shell'
-      ]},
+      entry_points={
+          'tshistory.subcommands': [
+              'typecheck-formula=tshistory_formula.cli:typecheck_formula',
+              'test-formula=tshistory_formula.cli:test_formula',
+              'formula-init-db=tshistory_formula.cli:init_db',
+              'migrate-to-formula-groups=tshistory_formula.cli:migrate_to_groups',
+              'migrate-to-content-cache=tshistory_formula.cli:migrate_to_content_hash',
+              'migrate-to-formula-patch=tshistory_formula.cli:migrate_to_formula_patch',
+              'migrate-formula-schema=tshistory_formula.cli:migrate_formula_schema',
+              'migrate-trig-formulas=tshistory_formula.cli:migrate_trig_formulas',
+              'migrate-sub-formulas=tshistory_formula.cli:migrate_sub_formulas',
+              'rename-operators=tshistory_formula.cli:rename_operators',
+              'migrate-to-dependants=tshistory_formula.cli:migrate_to_dependants',
+              'fix-formula-groups-metadata=tshistory_formula.cli:fix_formula_groups_metadata',
+              'shell=tshistory_formula.cli:shell'
+          ],
+          'tshistory.migrate.run_migrations': [
+              'run_migrations=tshistory_formula.migrate:run_migrations'
+          ]
+      },
       classifiers=[
           'Development Status :: 4 - Beta',
           'Intended Audience :: Developers',
