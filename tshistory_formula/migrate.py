@@ -1,7 +1,14 @@
 import json
+
 from dbcache import api as dbapi
+from psyl.lisp import (
+    parse,
+    serialize
+)
 
 from tshistory.util import read_versions
+
+from tshistory_formula.helper import rewrite_trig_formula
 
 
 def run_migrations(engine, namespace, interactive=False):
@@ -26,6 +33,7 @@ def initial_migration(engine, namespace, interactive):
     print('initial migration')
     migrate_formula_schema(engine, namespace, interactive)
     migrate_to_formula_patch(engine, namespace, interactive)
+    migrate_trig_formulas(engine, namespace, interactive)
 
 
 def migrate_formula_schema(engine, namespace, interactive):
@@ -165,3 +173,38 @@ def migrate_to_formula_patch(engine, namespace, interactive):
     from tshistory.schema import tsschema
     schem = tsschema(ns_name)
     schem.create(engine)
+
+
+def migrate_trig_formulas(engine, namespace, interactive):
+    print('migrate trig formulas')
+    from tshistory_formula.tsio import timeseries
+    tsh = timeseries(namespace)  # noqa: F841
+
+    def reorganise_trig_series(series):
+        rewritten = []
+        print(f'Transforming {len(series)} series.')
+        for idx, (name, internal_metadata) in enumerate(series):
+            print('name', name)
+            print('internal_metadata', internal_metadata)
+            tree0 = parse(internal_metadata['formula'])
+            tree1 = rewrite_trig_formula(tree0)
+            internal_metadata['formula'] = serialize(tree1)
+            rewritten.append(
+                {'name': name, 'internal_metadata': json.dumps(internal_metadata)}
+            )
+
+        with engine.begin() as cn:
+            cn.execute(
+                f'update "{namespace}".registry '
+                f'set internal_metadata = %(internal_metadata)s '
+                f'where name = %(name)s',
+                rewritten
+            )
+
+    series = engine.execute(
+        f'select name, internal_metadata from "{namespace}".registry '
+        'where internal_metadata->\'formula\' is not null'
+    ).fetchall()
+
+    if series:
+        reorganise_trig_series(series)
