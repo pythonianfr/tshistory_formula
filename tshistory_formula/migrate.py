@@ -1,43 +1,30 @@
 import json
 
-from dbcache import api as dbapi
 from psyl.lisp import (
     parse,
     serialize
 )
 
-from tshistory.util import read_versions
+from tshistory.migrate import Migrator as _Migrator
 
+from tshistory_formula import __version__
 from tshistory_formula.helper import (
     rewrite_sub_formula,
     rewrite_trig_formula
 )
 
 
-def run_migrations(engine, namespace, interactive=False):
-    print('Running migrations for tshistory_formula.')
-    # determine versions
-    storens = f'{namespace}-kvstore'
-    stored_version, known_version = read_versions(
-        str(engine.url),
-        namespace,
-        'tshistory-formula-version'
-    )
+class Migrator(_Migrator):
+    _order = 1
+    _known_version = __version__
+    _package = 'tshistory-formula'
 
-    if stored_version is None:
-        # first time
-        from tshistory_formula import __version__ as known_version
-        store = dbapi.kvstore(str(engine.url), namespace=storens)
-        initial_migration(engine, namespace, interactive)
-        store.set('tshistory-formula-version', known_version)
-
-
-def initial_migration(engine, namespace, interactive):
-    print('initial migration')
-    migrate_formula_schema(engine, namespace, interactive)
-    migrate_to_formula_patch(engine, namespace, interactive)
-    migrate_trig_formulas(engine, namespace, interactive)
-    migrate_sub_formulas(engine, namespace, interactive)
+    def initial_migration(self):
+        print('initial migration')
+        migrate_formula_schema(self.engine, self.namespace, self.interactive)
+        migrate_to_formula_patch(self.engine, self.namespace, self.interactive)
+        migrate_trig_formulas(self.engine, self.namespace, self.interactive)
+        migrate_sub_formulas(self.engine, self.namespace, self.interactive)
 
 
 def migrate_formula_schema(engine, namespace, interactive):

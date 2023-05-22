@@ -39,8 +39,8 @@ setup(name='tshistory_formula',
               'fix-formula-groups-metadata=tshistory_formula.cli:fix_formula_groups_metadata',
               'shell=tshistory_formula.cli:shell'
           ],
-          'tshistory.migrate.run_migrations': [
-              'run_migrations=tshistory_formula.migrate:run_migrations'
+          'tshistory.migrate.Migrator': [
+              'migrator=tshistory_formula.migrate:Migrator'
           ]
       },
       classifiers=[
