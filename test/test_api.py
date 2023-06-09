@@ -331,6 +331,27 @@ def test_formula_depth(tsx):
     assert tsx.formula_depth('level-1') == 1
     assert tsx.formula_depth('level-2') == 2
 
+    exp = tsx.formula('level-2', expanded=True, level=0)
+    assert exp == (
+        '(let revision_date nil from_value_date nil to_value_date nil '
+        '(+ 1 (series "level-1"))'
+        ')'
+    )
+    exp = tsx.formula('level-2', expanded=True, level=1)
+    assert exp == (
+        '(let revision_date nil from_value_date nil to_value_date nil '
+        '(+ 1 (+ 1 (series "level-0")))'
+        ')'
+    )
+    exp = tsx.formula('level-2', expanded=True, level=2)
+    assert exp == (
+        '(let revision_date nil from_value_date nil to_value_date nil '
+        '(+ 1 (+ 1 (+ 1 (series "level-base"))))'
+        ')'
+    )
+    exp3 = tsx.formula('level-2', expanded=True, level=3)
+    assert exp3 == exp
+
 
 def test_formula_remote_autotrophic(tsa, engine):
     from tshistory_formula.registry import func, metadata

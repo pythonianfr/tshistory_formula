@@ -38,6 +38,13 @@ formula.add_argument(
 )
 
 formula.add_argument(
+    'level',
+    type=int,
+    default=-1,
+    help='levels of formula expansion'
+)
+
+formula.add_argument(
     'display',
     type=inputs.boolean,
     default=False,
@@ -154,7 +161,8 @@ class formula_httpapi(httpapi):
                 form = tsa.formula(
                     args.name,
                     args.display,
-                    args.expanded
+                    args.expanded,
+                    args.level
                 )
                 return form, 200
 
@@ -310,12 +318,13 @@ class formula_httpapi(httpapi):
 class FormulaClient(Client):
 
     @unwraperror
-    def formula(self, name, display=False, expanded=False):
+    def formula(self, name, display=False, expanded=False, level=-1):
         res = self.session.get(
             f'{self.uri}/series/formula', params={
                 'name': name,
                 'display': display,
-                'expanded': expanded
+                'expanded': expanded,
+                'level': level
             }
         )
         if res.status_code == 200:

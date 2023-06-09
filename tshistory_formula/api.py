@@ -82,7 +82,8 @@ def eval_formula(self,
 def formula(self,
             name: str,
             display: bool=False,
-            expanded: bool=False) -> Optional[str]:
+            expanded: bool=False,
+            level: int=-1) -> Optional[str]:
     """Get the formula associated with a name.
 
     .. highlight:: python
@@ -92,7 +93,11 @@ def formula(self,
       ...
       '(add (series "sales.fr") (series "sales.be"))')
 
+    The expanded parameter takes an integer between 0 and n and will
+    proceed n successive expansions of the formula series expressions.
     """
+    expanded = expanded or level >= 0
+
     form = self.tsh.formula(self.engine, name)
     if form:
         if not expanded:
@@ -101,6 +106,7 @@ def formula(self,
         tree = self.tsh._expanded_formula(
             self.engine,
             form,
+            level=level,
             qargs=None if display else {}
         )
         if tree:
@@ -117,7 +123,7 @@ def formula(self,
 def formula(self,  # noqa: F811
             name: str,
             display: bool=False,
-            expanded: bool=False) -> Optional[str]:
+            expanded: int=-1) -> Optional[str]:
     source = self._findsourcefor(name)
     if source is None:
         return
