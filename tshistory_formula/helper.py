@@ -190,6 +190,37 @@ def expanded(
     return newtree
 
 
+def depth(
+        tsh,
+        cn,
+        tree,
+):
+    # base case: check the current operation
+    op = tree[0]
+    if op == 'series':
+        metas = METAS.get(op)
+        seriesmeta = metas(cn, tsh, tree)
+        name, _ = seriesmeta.popitem()
+        if tsh.type(cn, name) == 'formula':
+            formula = tsh.formula(cn, name)
+            return depth(
+                tsh,
+                cn,
+                parse(formula),
+            ) + 1
+
+        return 0
+
+    depths = []
+    for item in tree:
+        if isinstance(item, list):
+            depths.append(
+                depth(tsh, cn, item)
+            )
+    return max(depths)
+
+
+
 def update_dict_list(ds0, ds1):
     for k, vs in ds1.items():
         if k in ds0:

@@ -408,6 +408,13 @@ class timeseries(basets):
 
         return serialize(tree)
 
+    def depth(self, cn, name):
+        formula = self.formula(cn, name)
+        if formula is None:
+            return
+
+        return helper.depth(self, cn, parse(formula))
+
     @tx
     def iter_revisions(
             self, cn, name,

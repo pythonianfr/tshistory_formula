@@ -2071,6 +2071,10 @@ def test_expanded_level(engine, tsh):
     tsh.register_formula(engine, 'level-1', '(+ 1 (series "level-0"))')
     tsh.register_formula(engine, 'level-2', '(+ 1 (series "level-1"))')
 
+    assert tsh.depth(engine, 'level-0') == 0
+    assert tsh.depth(engine, 'level-1') == 1
+    assert tsh.depth(engine, 'level-2') == 2
+
     exp = tsh.expanded_formula(engine, 'level-2')
     assert exp == (
         '(let revision_date nil from_value_date nil to_value_date nil '
