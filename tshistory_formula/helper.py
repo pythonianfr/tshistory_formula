@@ -107,7 +107,8 @@ def expanded(
         stopnames=(),
         shownames=(),
         scoped=None,
-        scopes=True
+        scopes=True,
+        level=-1
 ):
     # handle scoped parameter (internal memo)
     scoped = set() if scoped is None else scoped
@@ -129,7 +130,7 @@ def expanded(
                     stopnames,
                     shownames,
                     scoped,
-                    scopes,
+                    scopes
                 )
             )
 
@@ -143,7 +144,7 @@ def expanded(
             return tree
         if name in stopnames:
             return tree
-        if tsh.type(cn, name) == 'formula':
+        if tsh.type(cn, name) == 'formula' and level:
             formula = tsh.formula(cn, name)
             options = extract_auto_options(tree)
             if not options:
@@ -154,6 +155,7 @@ def expanded(
                     stopnames,
                     shownames,
                     scopes=scopes,
+                    level=level-1
                 )
             return [
                 Symbol('options'),
@@ -164,6 +166,7 @@ def expanded(
                     stopnames,
                     shownames,
                     scopes=scopes,
+                    level=level-1
                 ),
             ] + options
 
@@ -172,7 +175,15 @@ def expanded(
     for item in tree:
         if isinstance(item, list):
             newtree.append(
-                expanded(tsh, cn, item, stopnames, shownames, scopes=scopes)
+                expanded(
+                    tsh,
+                    cn,
+                    item,
+                    stopnames,
+                    shownames,
+                    scopes=scopes,
+                    level=level
+                )
             )
         else:
             newtree.append(item)

@@ -381,13 +381,14 @@ class timeseries(basets):
         )
         return ts
 
-    def _expanded_formula(self, cn, formula, stopnames=(), qargs=None):
+    def _expanded_formula(self, cn, formula, stopnames=(), level=-1, qargs=None):
         exp = helper.expanded(
             self,
             cn,
             parse(formula),
             stopnames=stopnames,
-            scopes=qargs is not None
+            scopes=qargs is not None,
+            level=level
         )
         if qargs is not None:
             return helper.inject_toplevel_bindings(
@@ -396,12 +397,12 @@ class timeseries(basets):
             )
         return exp
 
-    def expanded_formula(self, cn, name, stopnames=(), **kw):
+    def expanded_formula(self, cn, name, stopnames=(), level=-1, **kw):
         formula = self.formula(cn, name)
         if formula is None:
             return
 
-        tree = self._expanded_formula(cn, formula, stopnames, kw)
+        tree = self._expanded_formula(cn, formula, stopnames, level, kw)
         if tree is None:
             return
 

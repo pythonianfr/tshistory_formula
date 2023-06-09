@@ -2061,6 +2061,44 @@ def test_expanded_shownames(engine, tsh):
     )
 
 
+def test_expanded_level(engine, tsh):
+    ts = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(dt(2022, 1, 1), periods=3, freq='D')
+    )
+    tsh.update(engine, ts, 'level-base', 'Babar')
+    tsh.register_formula(engine, 'level-0', '(+ 1 (series "level-base"))')
+    tsh.register_formula(engine, 'level-1', '(+ 1 (series "level-0"))')
+    tsh.register_formula(engine, 'level-2', '(+ 1 (series "level-1"))')
+
+    exp = tsh.expanded_formula(engine, 'level-2')
+    assert exp == (
+        '(let revision_date nil from_value_date nil to_value_date nil '
+        '(+ 1 (+ 1 (+ 1 (series "level-base"))))'
+        ')'
+    )
+    exp = tsh.expanded_formula(engine, 'level-2', level=0)
+    assert exp == (
+        '(let revision_date nil from_value_date nil to_value_date nil '
+        '(+ 1 (series "level-1"))'
+        ')'
+    )
+    exp = tsh.expanded_formula(engine, 'level-2', level=1)
+    assert exp == (
+        '(let revision_date nil from_value_date nil to_value_date nil '
+        '(+ 1 (+ 1 (series "level-0")))'
+        ')'
+    )
+    exp = tsh.expanded_formula(engine, 'level-2', level=2)
+    assert exp == (
+        '(let revision_date nil from_value_date nil to_value_date nil '
+        '(+ 1 (+ 1 (+ 1 (series "level-base"))))'
+        ')'
+    )
+    exp3 = tsh.expanded_formula(engine, 'level-2', level=3)
+    assert exp3 == exp
+
+
 def test_autolike_operator_history_nr(engine, tsh):
     """ In which we show that an history call of an operator playing with
     interpreter args will NOT crash with a lack of an internal
