@@ -129,6 +129,28 @@ def formula(self,  # noqa: F811
 
 
 @extend(mainsource)
+def formula_depth(self, name: str):
+    """Compute the depth of a formula.
+
+    The depth is the maximum number of formula series sub expressions
+    that have to be traversed to get to the bottom.
+    """
+    depth = self.tsh.depth(self.engine, name)
+    if depth is None:
+        return self.othersources.formula_depth(name)
+
+    return depth
+
+
+@extend(altsources)
+def formula_depth(self, name: str):
+    source = self._findsourcefor(name)
+    if source is None:
+        return
+    return source.tsa.formula_depth(name)
+
+
+@extend(mainsource)
 def formula_components(self,
                        name: str,
                        expanded: bool=False) -> Optional[Dict[str, list]]:

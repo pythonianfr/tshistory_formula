@@ -317,6 +317,20 @@ def test_formula_components_findseries(tsa):
     }
 
 
+def test_formula_depth(tsx):
+    ts = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(utcdt(2022, 1, 1), periods=3, freq='D')
+    )
+    tsx.update('level-base', ts, 'Babar')
+    tsx.register_formula('level-0', '(+ 1 (series "level-base"))')
+    tsx.register_formula('level-1', '(+ 1 (series "level-0"))')
+    tsx.register_formula('level-2', '(+ 1 (series "level-1"))')
+
+    assert tsx.formula_depth('level-0') == 0
+    assert tsx.formula_depth('level-1') == 1
+    assert tsx.formula_depth('level-2') == 2
+
 
 def test_formula_remote_autotrophic(tsa, engine):
     from tshistory_formula.registry import func, metadata

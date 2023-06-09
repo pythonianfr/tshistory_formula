@@ -66,6 +66,8 @@ register_formula.add_argument(
     help='fail if the referenced series do not exist'
 )
 
+formula_depth = base.copy()
+
 eval_formula = reqparse.RequestParser()
 eval_formula.add_argument(
     'text',
@@ -180,6 +182,15 @@ class formula_httpapi(httpapi):
                     raise
 
                 return '', 200 if exists else 201
+
+        @nss.route('/formula_depth')
+        class formula_depth_(Resource):
+
+            @api.expect(formula_depth)
+            @onerror
+            def get(self):
+                args = formula_depth.parse_args()
+                return tsa.formula_depth(args.name)
 
         @nss.route('/eval_formula')
         class eval_formula_(Resource):
@@ -353,6 +364,17 @@ class FormulaClient(Client):
 
         if res.status_code in (200, 204):
             return
+
+        return res
+
+    @unwraperror
+    def formula_depth(self, name):
+        res = self.session.get(
+            f'{self.uri}/series/formula_depth',
+            params={'name': name}
+        )
+        if res.status_code == 200:
+            return res.json()
 
         return res
 
