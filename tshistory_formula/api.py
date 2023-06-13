@@ -95,6 +95,16 @@ def formula(self,
 
     The expanded parameter takes an integer between 0 and n and will
     proceed n successive expansions of the formula series expressions.
+
+    Expanding means replacing all `series` expressions that are
+    formulas with the formula contents.
+
+    It can be all-or-nothing with the expanded parameter or asked for
+    a defined level (stopping the expansion process).
+
+    The maximum level can be obtained through the `formula_depth` api
+    call.
+
     """
     expanded = expanded or level >= 0
 
