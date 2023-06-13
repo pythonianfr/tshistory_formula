@@ -217,7 +217,7 @@ def depth(
             depths.append(
                 depth(tsh, cn, item)
             )
-    return max(depths)
+    return max(depths) if depths else 0
 
 
 
