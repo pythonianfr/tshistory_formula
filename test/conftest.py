@@ -11,6 +11,7 @@ from tshistory.testutil import make_tsx
 from tshistory.schema import tsschema
 
 from tshistory_formula.schema import formula_schema
+from tshistory_formula.testutil import with_http_bridge
 from tshistory_formula.tsio import timeseries
 from tshistory_formula import http
 
@@ -114,10 +115,12 @@ def _initschema(engine):
     formula_schema('tsh').create(engine)
 
 
+
 tsx = make_tsx(
     'http://test.me',
     _initschema,
     timeseries,
     http.formula_httpapi,
-    http.FormulaClient
+    http.FormulaClient,
+    with_http_bridge=with_http_bridge
 )
