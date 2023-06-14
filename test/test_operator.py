@@ -1759,6 +1759,48 @@ def test_resample_boundaries(tsh, engine):
     assert ts.equals(ref)
 
 
+def test_resample_interpolate(tsh, engine):
+    three_hourly = pd.Series(
+        list(range(5)),
+        index=pd.date_range(utcdt(2023, 6, 1), periods=5, freq='3H')
+    )
+
+    tsh.update(
+        engine,
+        three_hourly,
+        'three-hourly-series',
+        'Meteo'
+    )
+
+    tsh.register_formula(
+        engine,
+        '3hourly_interpolated',
+        '(resample (series "three-hourly-series") "H" #:method "interpolate")'
+    )
+
+    assert_df("""
+2023-06-01 00:00:00+00:00    0.000000
+2023-06-01 01:00:00+00:00    0.333333
+2023-06-01 02:00:00+00:00    0.666667
+2023-06-01 03:00:00+00:00    1.000000
+2023-06-01 04:00:00+00:00    1.333333
+""", tsh.get(engine, '3hourly_interpolated')[:5])
+
+    ts = tsh.get(
+        engine,
+        '3hourly_interpolated',
+        from_value_date=pd.Timestamp('2023-06-01 01:00')
+    )[:5]
+
+    assert_df("""
+2023-06-01 03:00:00+00:00    1.000000
+2023-06-01 04:00:00+00:00    1.333333
+2023-06-01 05:00:00+00:00    1.666667
+2023-06-01 06:00:00+00:00    2.000000
+2023-06-01 07:00:00+00:00    2.333333
+""", ts)
+
+
 @pytest.mark.parametrize("tstamp,freq,direction,expected", [
     ('2020-01-01 08:37:56', 'D', 'left', '2020-01-01'),
     ('2020-01-01 08:37:56', 'D', 'right', '2020-01-01 23:59:59.999999'),
