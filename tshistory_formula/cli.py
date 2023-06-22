@@ -1,7 +1,6 @@
 import hashlib
 
 import click
-import pandas as pd
 from sqlalchemy import create_engine
 from psyl.lisp import (
     parse,
