@@ -164,7 +164,7 @@ class formula_httpapi(httpapi):
                     args.expanded,
                     args.level
                 )
-                return form, 200
+                return {'level': args.level, 'formula': form}, 200
 
             @api.expect(register_formula)
             @onerror
@@ -328,7 +328,7 @@ class FormulaClient(Client):
             }
         )
         if res.status_code == 200:
-            return res.json()
+            return res.json()['formula']
         if res.status_code == 418:
             return res
         return  # None is the reasonable api answer

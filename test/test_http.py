@@ -74,7 +74,10 @@ def test_series_formula(client):
 """, series)
 
     res = client.get('/series/formula?name=new-formula')
-    assert res.json == '(+ 3 (series "test-formula"))'
+    assert res.json == {
+        'level': -1,
+        'formula': '(+ 3 (series "test-formula"))'
+    }
 
     # expansion
 
@@ -83,11 +86,13 @@ def test_series_formula(client):
         'text': '(+ 5 (series "new-formula"))'
     })
     res = client.get('/series/formula?name=2-levels-formula&expanded=1')
-    assert res.json == (
-        '(let revision_date nil from_value_date nil to_value_date nil'
-        ' (+ 5 (+ 3 (series "test-formula")))'
-        ')'
-    )
+    assert res.json == {
+        'level': -1,
+        'formula': (
+            '(let revision_date nil from_value_date nil to_value_date nil '
+            '(+ 5 (+ 3 (series "test-formula"))))'
+        )
+    }
 
     res = client.get('/series/insertion_dates', params={
         'name': 'new-formula'
