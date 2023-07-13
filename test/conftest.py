@@ -104,7 +104,7 @@ def client(engine):
             str(engine.url),
             handler=timeseries,
             namespace='tsh',
-            # sources=[(DBURI, 'other')]
+            sources={}
         )
     )
     yield WebTester(wsgi)
