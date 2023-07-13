@@ -41,6 +41,9 @@ setup(name='tshistory_formula',
           ],
           'tshistory.migrate.Migrator': [
               'migrator=tshistory_formula.migrate:Migrator'
+          ],
+          'tshclass': [
+              'tshclass=tshistory_formula.tsio:timeseries'
           ]
       },
       classifiers=[

@@ -41,6 +41,7 @@ L = logging.getLogger('tshistory.tsio')
 
 
 class timeseries(basets):
+    index = 1
 
     def __init__(self, *a, **kw):
         super().__init__(*a, **kw)
