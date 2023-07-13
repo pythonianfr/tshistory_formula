@@ -121,6 +121,6 @@ tsx = make_tsx(
     _initschema,
     timeseries,
     http.formula_httpapi,
-    http.FormulaClient,
+    http.formula_httpclient,
     with_http_bridge=with_http_bridge
 )

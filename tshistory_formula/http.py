@@ -10,7 +10,7 @@ from tshistory.util import (
     series_metadata,
     unpack_series
 )
-from tshistory.http.client import Client, unwraperror
+from tshistory.http.client import httpclient, unwraperror
 from tshistory.http.util import (
     enum,
     onerror,
@@ -315,7 +315,7 @@ class formula_httpapi(httpapi):
                     return '', 200
 
 
-class FormulaClient(Client):
+class formula_httpclient(httpclient):
 
     @unwraperror
     def formula(self, name, display=False, expanded=False, level=-1):

@@ -44,6 +44,9 @@ setup(name='tshistory_formula',
           ],
           'tshclass': [
               'tshclass=tshistory_formula.tsio:timeseries'
+          ],
+          'httpclient': [
+              'httpclient=tshistory_formula.http:formula_httpclient'
           ]
       },
       classifiers=[
