@@ -5,6 +5,10 @@ from tshistory.search import (
 )
 
 
+# rendez-vous object
+IMPORTCALLBACK = None
+
+
 class byformulacontents(query):
     __slots__ = ('query',)
 

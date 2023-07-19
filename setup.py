@@ -47,6 +47,9 @@ setup(name='tshistory_formula',
           ],
           'httpclient': [
               'httpclient=tshistory_formula.http:formula_httpclient'
+          ],
+          'forceimports': [
+              'forceimports=tshistory_formula.search:IMPORTCALLBACK'
           ]
       },
       classifiers=[

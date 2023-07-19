@@ -946,7 +946,6 @@ def test_find(tsx):
         '(integration "base.find" "base.find")'
     )
 
-    from tshistory_formula import search
     names = tsx.find('(by.formulacontents "integration")')
     assert names == ['find.bycontent.integration']
 
