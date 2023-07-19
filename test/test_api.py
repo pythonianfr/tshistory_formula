@@ -925,3 +925,30 @@ def test_more_group_errors(tsx):
         pd.DataFrame([['a', 'b', 'c']], columns=('series', 'group', 'family'))
     )
 
+def test_find(tsx):
+    ts = pd.Series(
+        [1, 2, 3],
+        pd.date_range(utcdt(2023, 1, 1), freq='D', periods=3)
+    )
+    tsx.update(
+        'base.find',
+        ts,
+        'Babar'
+    )
+
+    tsx.register_formula(
+        'find.bycontent.add',
+        '(add (series "base.find") (series "base.find"))'
+    )
+
+    tsx.register_formula(
+        'find.bycontent.integration',
+        '(integration "base.find" "base.find")'
+    )
+
+    from tshistory_formula import search
+    names = tsx.find('(by.formulacontents "integration")')
+    assert names == ['find.bycontent.integration']
+
+    names = tsx.find('(by.formulacontents "add")')
+    assert names == ['find.bycontent.add']
