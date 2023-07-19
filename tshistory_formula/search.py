@@ -33,7 +33,7 @@ class byformulacontents(query):
 class isformula(query):
 
     def __expr__(self):
-        return '(by.isformula)'
+        return '(by.formula)'
 
     @classmethod
     def _fromtree(cls, _):
