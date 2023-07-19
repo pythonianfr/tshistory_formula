@@ -951,3 +951,12 @@ def test_find(tsx):
 
     names = tsx.find('(by.formulacontents "add")')
     assert names == ['find.bycontent.add']
+
+    names = tsx.find('(by.formula)')
+    assert names == [
+        'find.bycontent.add',
+        'find.bycontent.integration'
+    ]
+
+    names = tsx.find('(by.not (by.formula))')
+    assert names == ['base.find']

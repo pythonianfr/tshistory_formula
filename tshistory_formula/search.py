@@ -30,4 +30,19 @@ class byformulacontents(query):
         )
 
 
+class isformula(query):
+
+    def __expr__(self):
+        return '(by.isformula)'
+
+    @classmethod
+    def _fromtree(cls, _):
+        return cls()
+
+    def sql(self):
+        return 'internal_metadata -> \'formula\' is not null', {}
+
+
+
 _OPMAP['by.formulacontents'] = 'byformulacontents'
+_OPMAP['by.formula'] = 'isformula'
