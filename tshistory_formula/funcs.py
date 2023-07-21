@@ -267,7 +267,10 @@ def findseries(__interpreter__,
             search.tzaware(),
             q
         )
-    names = i.tsh.find(i.cn, q)
+    names = [
+        item.name
+        for item in i.tsh.find(i.cn, q)
+    ]
     return serieslist(
         __interpreter__,
         __from_value_date__,
