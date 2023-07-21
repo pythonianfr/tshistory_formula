@@ -22,7 +22,7 @@ class byformulacontents(query):
     def _fromtree(cls, tree):
         return cls(tree[1])
 
-    def sql(self):
+    def sql(self, namespace='tsh'):
         vid = usym('name')
         return (
             f'internal_metadata ->> \'formula\' like %({vid})s',
@@ -39,7 +39,7 @@ class isformula(query):
     def _fromtree(cls, _):
         return cls()
 
-    def sql(self):
+    def sql(self, namespace='tsh'):
         return 'internal_metadata -> \'formula\' is not null', {}
 
 
