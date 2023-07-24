@@ -428,8 +428,12 @@ def test_bound_formula_api(tsx):
     assert tsx.group_metadata('hijacking') == {}
     tsx.update_group_metadata('hijacking', {'foo': 'bar'})
     assert tsx.group_metadata('hijacking') == {'foo': 'bar'}
-    assert tsx.group_metadata('hijacking', all=True) == {
-        'foo': 'bar',
+    assert tsx.group_internal_metadata('hijacking') == {
+        'bindings': (
+            '[{"series":"base-temp","group":"temp-ens","family":"meteo"},'
+            '{"series":"base-wind","group":"wind-ens","family":"meteo"}]'
+        ),
+        'boundseries': 'hijacked',
         'index_dtype': '|M8[ns]',
         'index_type': 'datetime64[ns, UTC]',
         'tzaware': True,

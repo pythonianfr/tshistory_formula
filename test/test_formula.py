@@ -2676,7 +2676,8 @@ def test_group_formula(engine, tsh):
 
     assert tsh.group_type(engine, 'group_formula') == 'formula'
 
-    assert tsh.group_metadata(engine, 'group_formula') == {
+    assert tsh.group_internal_metadata(engine, 'group_formula') == {
+        'formula': '(group "group1")',
         'index_dtype': '<M8[ns]',
         'index_type': 'datetime64[ns]',
         'tzaware': False,
@@ -2685,13 +2686,13 @@ def test_group_formula(engine, tsh):
     }
 
     tsh.update_group_metadata(engine, 'group_formula', {'foo': 'bar'})
-    assert tsh.group_metadata(engine, 'group_formula') == {
+    assert tsh.group_internal_metadata(engine, 'group_formula') == {
+        'formula': '(group "group1")',
         'index_dtype': '<M8[ns]',
         'index_type': 'datetime64[ns]',
         'tzaware': False,
         'value_dtype': '<f8',
-        'value_type': 'float64',
-        'foo': 'bar'
+        'value_type': 'float64'
     }
 
     tsh.group_delete(engine, 'group_formula')
@@ -2998,8 +2999,9 @@ def test_groups_autotrophic_history(engine, tsh):
         formula,
     )
     tsh.group_get(engine, 'higher_level')
-    meta = tsh.group_metadata(engine, 'higher_level')
+    meta = tsh.group_internal_metadata(engine, 'higher_level')
     assert meta == {
+        'formula': '(group-add (group "auto_group") (group "group_d"))',
         'tzaware': False,
         'index_type': 'datetime64[ns]',
         'value_type': 'float64',
@@ -3150,21 +3152,20 @@ def test_group_bound_formula(engine, tsh):
         'hijacking': 'bound'
     }
 
-    assert tsh.group_metadata(engine, 'hijacking') == {
-        'index_dtype': '|M8[ns]',
-        'index_type': 'datetime64[ns, UTC]',
-        'tzaware': True,
-        'value_dtype': '<f8',
-        'value_type': 'float64'
-    }
+    assert tsh.group_metadata(engine, 'hijacking') == {}
     tsh.update_group_metadata(engine, 'hijacking', {'foo': 'bar'})
-    assert tsh.group_metadata(engine, 'hijacking') == {
+    assert tsh.group_metadata(engine, 'hijacking') == {'foo': 'bar'}
+    assert tsh.group_internal_metadata(engine, 'hijacking') == {
+        'bindings': (
+            '[{"series":"base-temp","group":"temp-ens","family":"meteo"},'
+            '{"series":"base-wind","group":"wind-ens","family":"meteo"}]'
+        ),
+        'boundseries': 'hijacked',
         'index_dtype': '|M8[ns]',
         'index_type': 'datetime64[ns, UTC]',
         'tzaware': True,
         'value_dtype': '<f8',
         'value_type': 'float64',
-        'foo': 'bar'
     }
 
     tsh.group_delete(engine, 'hijacking')

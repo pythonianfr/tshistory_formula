@@ -630,8 +630,9 @@ def test_group_formula(tsa):
 """, df)
 
     assert tsa.group_metadata('difference') == {}
-    assert tsa.group_metadata('difference', all=True) == {
+    assert tsa.group_internal_metadata('difference') == {
         'tzaware': False,
+        'formula': '(group-add (group "groupa") (* -1 (series "plain_tsa")))',
         'index_type': 'datetime64[ns]',
         'value_type': 'float64',
         'index_dtype': '<M8[ns]',
@@ -776,7 +777,12 @@ def test_group_bound_formula(tsa):
     assert ('hijacking', 'bound') in cat
 
     assert tsa.group_metadata('hijacking') == {}
-    assert tsa.group_metadata('hijacking', all=True) == {
+    assert tsa.group_internal_metadata('hijacking') == {
+        'bindings': (
+            '[{"series":"base-temp","group":"temp-ens","family":"meteo"},'
+            '{"series":"base-wind","group":"wind-ens","family":"meteo"}]'
+        ),
+        'boundseries': 'hijacked',
         'index_dtype': '|M8[ns]',
         'index_type': 'datetime64[ns, UTC]',
         'tzaware': True,
@@ -785,13 +791,17 @@ def test_group_bound_formula(tsa):
     }
     tsa.update_group_metadata('hijacking', {'foo': 'bar'})
     assert tsa.group_metadata('hijacking') == {'foo': 'bar'}
-    assert tsa.group_metadata('hijacking', all=True) == {
+    assert tsa.group_internal_metadata('hijacking') == {
+        'bindings': (
+            '[{"series":"base-temp","group":"temp-ens","family":"meteo"},'
+            '{"series":"base-wind","group":"wind-ens","family":"meteo"}]'
+        ),
+        'boundseries': 'hijacked',
         'index_dtype': '|M8[ns]',
         'index_type': 'datetime64[ns, UTC]',
         'tzaware': True,
         'value_dtype': '<f8',
-        'value_type': 'float64',
-        'foo': 'bar'
+        'value_type': 'float64'
     }
 
     tsa.group_delete('hijacking')

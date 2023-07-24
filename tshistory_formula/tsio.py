@@ -943,74 +943,14 @@ class timeseries(basets):
 
     @tx
     def group_type(self, cn, name):
-        if self.group_formula(cn, name) is not None:
+        imeta = self.group_internal_metadata(cn, name)
+        if not imeta:
+            return 'primary'
+        if 'formula' in imeta:
             return 'formula'
-        if self.bindings_for(cn, name):
+        if 'bindings' in imeta:
             return 'bound'
-        return super().group_type(cn, name)
-
-    @tx
-    def group_exists(self, cn, name):
-        kind = self.group_type(cn, name)
-        if kind == 'primary':
-            return super().group_exists(cn, name)
-        assert kind in ('formula', 'bound')
-        return True
-
-    @tx
-    def group_metadata(self, cn, name):
-        kind = self.group_type(cn, name)
-        if kind == 'primary':
-            return super().group_metadata(cn, name)
-
-        if kind == 'formula':
-            table, col = 'group_formula', 'name'
-        else:
-            assert kind == 'bound'
-            table, col = 'group_binding', 'groupname'
-
-        meta = cn.execute(
-            f'select metadata from "{self.namespace}".{table} '
-            f'where {col} = %(name)s',
-            name=name
-        ).scalar()
-
-        return meta
-
-    @tx
-    def update_group_metadata(self, cn, name, metadata, internal=True):
-        kind = self.group_type(cn, name)
-        if kind == 'primary':
-            return super().update_group_metadata(cn, name, metadata, internal)
-
-        if kind == 'formula':
-            table, col = 'group_formula', 'name'
-        else:
-            assert kind == 'bound'
-            table, col = 'group_binding', 'groupname'
-
-        meta = self.group_metadata(cn, name) or {}
-        # remove al but internal stuff from the provided metadata
-        if internal:
-            newmeta = metadata
-        else:
-            newmeta = {
-                key: metadata[key]
-                for key in metadata
-                if key not in self.metakeys
-            }
-        newmeta.update(meta)
-
-        sql = (
-            f'update "{self.namespace}".{table} '
-            'set metadata = %(metadata)s '
-            f'where {col} = %(name)s'
-        )
-        cn.execute(
-            sql,
-            metadata=json.dumps(newmeta),
-            name=name
-        )
+        return 'primary'
 
     def check_group_tz_compatibility(self, cn, tree):
         """check that groups are timezone-compatible
@@ -1052,7 +992,8 @@ class timeseries(basets):
     @tx
     def register_group_formula(self, cn,
                                name, formula):
-        if self.group_exists(cn, name) and self.group_type(cn, name) != 'formula':
+        exists = self.group_exists(cn, name)
+        if exists and self.group_type(cn, name) != 'formula':
             raise TypeError(
                 f'cannot register formula `{name}`: already a `{self.group_type(cn, name)}`'
             )
@@ -1077,68 +1018,54 @@ class timeseries(basets):
                 f'{", ".join("`%s`" % s for s in badseries)}'
             )
 
+        tzaware = self.check_group_tz_compatibility(cn, tree)
+        coremeta = self.default_internal_meta(tzaware)
+        coremeta['formula'] = formula
+
+        if exists:
+            # update
+            cn.execute(
+                f'update "{self.namespace}".group_registry '
+                'set internal_metadata = %(imeta)s '
+                'where name=%(name)s',
+                name=name,
+                imeta=json.dumps(coremeta)
+            )
+            return
+
         sql = (
-            f'insert into "{self.namespace}".group_formula (name, text) '
-            'values (%(name)s, %(text)s) '
-            'on conflict (name) do update '
-            'set text = %(text)s'
+            f'insert into "{self.namespace}".group_registry '
+            '             (name, internal_metadata, metadata) '
+            'values (%(name)s, %(imeta)s, %(meta)s) '
         )
         cn.execute(
             sql,
             name=name,
-            text=formula
+            imeta=json.dumps(coremeta),
+            meta=json.dumps({})
         )
-
-        tzaware = self.check_group_tz_compatibility(cn, tree)
-        coremeta = self.default_internal_meta(tzaware)
-        meta = self.group_metadata(cn, name) or {}
-        meta = dict(meta, **coremeta)
-        self.update_group_metadata(cn, name, meta, internal=True)
 
     @tx
     def group_formula(self, cn, groupname):
         res = cn.execute(
-            f'select text from "{self.namespace}".group_formula '
-            'where name = %(name)s',
+            f'select internal_metadata->\'formula\' '
+            f'from "{self.namespace}".group_registry '
+            f'where name = %(name)s',
             name=groupname
         )
         return res.scalar()
 
     @tx
     def list_groups(self, cn):
-        cat = super().list_groups(cn)
-        cat.update({
-            name: 'formula'
-            for name, in cn.execute(
-                    f'select name from "{self.namespace}".group_formula'
+        return {
+            name: 'formula' if formula else 'bound' if bindings else 'primary'
+            for name, formula, bindings in cn.execute(
+                f'select name, '
+                '        internal_metadata->\'formula\', '
+                '        internal_metadata->\'bindings\' '
+                f'from "{self.namespace}".group_registry'
             ).fetchall()
-        })
-        cat.update({
-            name: 'bound'
-            for name, in cn.execute(
-                    f'select groupname from "{self.namespace}".group_binding'
-            ).fetchall()
-        })
-        return cat
-
-    @tx
-    def group_delete(self, cn, name):
-        kind = self.group_type(cn, name)
-        if kind == 'primary':
-            return super().group_delete(cn, name)
-
-        if kind == 'formula':
-            sql = (
-                f'delete from "{self.namespace}".group_formula '
-                'where name = %(name)s'
-            )
-        else:
-            assert kind == 'bound'
-            sql = (
-                f'delete from "{self.namespace}".group_binding '
-                'where groupname = %(name)s'
-            )
-        cn.execute(sql, name=name)
+        }
 
     @tx
     def group_get(self, cn, groupname,
@@ -1329,7 +1256,7 @@ class timeseries(basets):
             for gname in binding.group:
                 assert self.group_exists(cn, gname), f'Group `{gname}` does not exist.'
                 grtzstate.append(
-                    (gname, self.group_metadata(cn, gname)['tzaware'])
+                    (gname, self.group_internal_metadata(cn, gname)['tzaware'])
                 )
             tstzstate = []
             for sname in binding.series:
@@ -1344,43 +1271,54 @@ class timeseries(basets):
             raise ValueError(f'formula `{formulaname}` has an empty binding')
 
         gtype = self.group_type(cn, groupname)
-        if self.group_exists(cn, groupname) and gtype != 'bound':
+        exists = self.group_exists(cn, groupname)
+        if exists and gtype != 'bound':
             raise ValueError(f'cannot bind `{groupname}`: already a {gtype}')
 
+        if exists:
+            imeta = self.group_internal_metadata(cn, groupname)
+            imeta['bindings'] = binding.to_json(orient='records')
+            imeta['boundseries'] = formulaname
+            cn.execute(
+                f'update "{self.namespace}"."group_registry" '
+                f'set internal_metadata = %(imeta)s '
+                f'where name = %(gname)s',
+                gname=groupname,
+                imeta=json.dumps(imeta)
+            )
+            return
+
+        coremeta = self.internal_metadata(cn, formulaname)
+        coremeta.pop('formula')
+        coremeta.pop('contenthash')
+        coremeta['bindings'] = binding.to_json(orient='records')
+        coremeta['boundseries'] = formulaname
         cn.execute(
-            f'insert into "{self.namespace}"."group_binding" (groupname, seriesname, binding) '
-            'values (%(gname)s, %(sname)s, %(binding)s) '
-            'on conflict (groupname) do update '
-            'set seriesname = %(sname)s, '
-            '    binding = %(binding)s',
+            f'insert into "{self.namespace}"."group_registry" '
+            f'            (name, internal_metadata, metadata) '
+            'values (%(gname)s, %(imeta)s, %(meta)s)',
             gname=groupname,
-            sname=formulaname,
-            binding=binding.to_json(orient='records')
+            imeta=json.dumps(coremeta),
+            meta=json.dumps({})
         )
-
-        seriesmeta = {
-            k: v
-            for k, v in self.internal_metadata(cn, formulaname).items()
-            if k in self.metakeys
-        }
-        metadata = self.group_metadata(cn, groupname) or {}
-        # make sure we derive the internals from the series meta
-        metadata.update(seriesmeta)
-
-        self.update_group_metadata(cn, groupname, metadata, internal=True)
 
     @tx
     def bindings_for(self, cn, groupname):
         res = cn.execute(
-            'select seriesname, binding '
-            f'from "{self.namespace}".group_binding '
-            'where groupname = %(gname)s',
+            f'select internal_metadata->\'boundseries\', '
+            f'       internal_metadata->\'bindings\' '
+            f'from "{self.namespace}".group_registry '
+            'where name = %(gname)s',
             gname=groupname
         )
         sname_binding = res.fetchone()
-        if sname_binding is None:
+        if sname_binding[0] is None:
             return
-        binding = pd.DataFrame(sname_binding[1])
+        binding = pd.DataFrame(
+            json.loads(
+                sname_binding[1]
+            )
+        )
         return sname_binding[0], binding
 
     @tx
