@@ -152,6 +152,83 @@ def migrate_formula_schema(engine, namespace, interactive):
         cn.execute(f'drop table "{ns}".formula')
 
 
+def migrate_group_formula_schema(engine, namespace, interactive):
+    print('migrate group formula schema')
+    ns = namespace
+    from tshistory.tsio import timeseries as tshclass
+
+    with engine.begin() as cn:
+        unmigrated = cn.execute(
+            f"select exists (select 1 "
+            f"  from information_schema.columns "
+            f"  where table_schema='{ns}' and "
+            f"        table_name='group_formula'"
+            f")"
+        ).scalar()
+
+        if not unmigrated:
+            print('Already migrated, bailing out.')
+            return
+
+        print('migrating group data.')
+        allmetas = {}
+        metakeys = tshclass.metakeys | {'supervision_status'}
+
+        # collect from group_formula and reinsert
+        for fid, name, formula, imeta, contenthash in cn.execute(
+                'select id, name, text, metadata '
+                f'from "{ns}".group_formula '
+        ).fetchall():
+            umeta = {}
+            for k in list(imeta):
+                if k not in metakeys:
+                    umeta[k] = imeta.pop(k)
+            imeta['formula'] = formula
+            allmetas[name] = (fid, imeta, umeta)
+
+        # store them
+        for name, (fid, imeta, umeta) in allmetas.items():
+            sid = cn.execute(
+                f'insert into "{ns}".group_registry '
+                '(name, internal_metadata, metadata) '
+                'values(%(name)s, %(imeta)s, %(umeta)s) '
+                'returning id',
+                name=name,
+                imeta=json.dumps(imeta),
+                umeta=json.dumps(umeta)
+            ).scalar()
+
+        # collect from group_binding and reinsert
+        allmetas = {}
+        for fid, name, seriesname, bindings, imeta in cn.execute(
+                'select id, groupname, seriesname, binding, metadata '
+                f'from "{ns}".group_binding '
+        ).fetchall():
+            umeta = {}
+            for k in list(imeta):
+                if k not in metakeys:
+                    umeta[k] = imeta.pop(k)
+            imeta['boundseries'] = formula
+            imeta['bindings'] = bindings
+            allmetas[name] = (fid, imeta, umeta)
+
+        # store them
+        for name, (fid, imeta, umeta) in allmetas.items():
+            sid = cn.execute(
+                f'insert into "{ns}".group_registry '
+                '(name, internal_metadata, metadata) '
+                'values(%(name)s, %(imeta)s, %(umeta)s) '
+                'returning id',
+                name=name,
+                imeta=json.dumps(imeta),
+                umeta=json.dumps(umeta)
+            ).scalar()
+
+        # goodby formula/binding tables !
+        cn.execute(f'drop table "{ns}".group_formula')
+        cn.execute(f'drop table "{ns}".group_binding')
+
+
 def migrate_to_formula_patch(engine, namespace, interactive):
     print('migrate to formula patch')
     ns_name = f'{namespace}-formula-patch'
