@@ -1197,12 +1197,6 @@ def slice(series: pd.Series,
 
     Example: `(slice (series "cut-me") #:fromdate (date "2018-01-01"))`
     """
-    if not len(series):
-        return series
-
-    if fromdate is None and todate is None:
-        return series
-
     # the series operator did request with fromdate/todate
     # because of our `scope` hint
     # hence we a little to do
