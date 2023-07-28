@@ -1192,8 +1192,7 @@ def slice(series: pd.Series,
     """
     This allows cutting a series at date points. It takes one
     positional parameter (the series) and two optional keywords
-    `fromdate` and `todate` which must be strings in the
-    iso8601 format.
+    `fromdate` and `todate`.
 
     Example: `(slice (series "cut-me") #:fromdate (date "2018-01-01"))`
     """
