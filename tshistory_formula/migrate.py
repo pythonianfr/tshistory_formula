@@ -49,7 +49,7 @@ def migrate_formula_schema(engine, namespace, interactive):
 
         print('migrating data.')
         allmetas = {}
-        metakeys = tshclass.metakeys | {'supervision_status'}
+        metakeys = tshclass.metakeys
         for fid, name, formula, imeta, contenthash in cn.execute(
                 'select id, name, text, metadata, contenthash '
                 f'from "{ns}".formula '
@@ -172,7 +172,7 @@ def migrate_group_formula_schema(engine, namespace, interactive):
 
         print('migrating group data.')
         allmetas = {}
-        metakeys = tshclass.metakeys | {'supervision_status'}
+        metakeys = tshclass.metakeys
 
         # collect from group_formula and reinsert
         for fid, name, formula, imeta, contenthash in cn.execute(
