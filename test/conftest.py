@@ -8,7 +8,6 @@ from click.testing import CliRunner
 
 from tshistory import cli as command, api
 from tshistory.testutil import make_tsx
-from tshistory.schema import tsschema
 
 from tshistory_formula.schema import formula_schema
 from tshistory_formula.testutil import with_http_bridge
@@ -29,8 +28,7 @@ def engine(request):
 
 @pytest.fixture(scope='session', params=[1, 16])
 def tsh(request, engine):
-    tsschema().create(engine, reset=True)
-    formula_schema().create(engine)
+    formula_schema().create(engine, reset=True)
     tsh = timeseries()
     tsh.concurrency = request.param
     yield tsh
@@ -38,10 +36,8 @@ def tsh(request, engine):
 
 @pytest.fixture(scope='session')
 def tsa(engine):
-    tsschema('test-mapi').create(engine, reset=True)
-    formula_schema('test-mapi').create(engine)
-    tsschema('test-mapi-2').create(engine, reset=True)
-    formula_schema('test-mapi-2').create(engine)
+    formula_schema('test-mapi').create(engine, reset=True)
+    formula_schema('test-mapi-2').create(engine, reset=True)
     return api.timeseries(
         str(engine.url),
         namespace='test-mapi',
@@ -97,8 +93,7 @@ class WebTester(webtest.TestApp):
 
 @pytest.fixture(scope='session')
 def client(engine):
-    tsschema().create(engine, reset=True)
-    formula_schema().create(engine)
+    formula_schema().create(engine, reset=True)
     wsgi = make_app(
         api.timeseries(
             str(engine.url),
@@ -111,9 +106,7 @@ def client(engine):
 
 
 def _initschema(engine):
-    tsschema('tsh').create(engine, reset=True)
-    formula_schema('tsh').create(engine)
-
+    formula_schema('tsh').create(engine, reset=True)
 
 
 tsx = make_tsx(
