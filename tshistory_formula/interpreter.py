@@ -11,7 +11,7 @@ from psyl.lisp import (
 )
 
 from tshistory.util import empty_series
-from tshistory_formula.evaluator import pevaluate
+from tshistory_formula.evaluator import pevaluate, cache_pevaluate
 
 from tshistory_formula import (
     helper,
@@ -66,8 +66,12 @@ class Interpreter:
         # it comes back as a parameter there
         return self.tsh.get(self.cn, name, **getargs)
 
-    def evaluate(self, tree):
-        return pevaluate(tree, self.env, self.auto, self.tsh.concurrency)
+    def evaluate(self, tree, cache=True):
+        # return pevaluate(tree, self.env, self.auto, self.tsh.concurrency)
+        if cache:
+            return cache_pevaluate(tree, self.env, self.auto, self.tsh.concurrency)
+        else:
+            return pevaluate(tree, self.env, self.auto, self.tsh.concurrency)
 
     def today(self, naive, tz):
         if naive:
@@ -111,14 +115,12 @@ class OperatorHistory(Interpreter):
             OperatorHistory.FUNCS = {**registry.FUNCS, **registry.HISTORY}
         return OperatorHistory.FUNCS
 
-    def evaluate_history(self, tree):
-        return pevaluate(
-            tree,
-            self.env,
-            self.auto,
-            self.tsh.concurrency,
-            hist=True
-        )
+    def evaluate_history(self, tree, cache=True):
+        # return pevaluate(tree, self.env, self.auto, self.tsh.concurrency)
+        if cache:
+            return cache_pevaluate(tree, self.env, self.auto, self.tsh.concurrency, hist=True)
+        else:
+            return pevaluate(tree, self.env, self.auto, self.tsh.concurrency, hist=True)
 
 
 class HistoryInterpreter(Interpreter):
@@ -171,12 +173,15 @@ class HistoryInterpreter(Interpreter):
         assert idate
         return self._find_by_nearest_idate(name, idate)
 
-    def evaluate(self, tree, idate, name):
+    def evaluate(self, tree, idate, name, cache=True):
         # provide ammo to .today
         self.getargs['revision_date'] = idate
         self.env['__name__'] = name
         self.env['__idate__'] = idate
-        ts = pevaluate(tree, self.env, self.auto, self.tsh.concurrency, hist=True)
+        if cache:
+            ts = cache_pevaluate(tree, self.env, self.auto, self.tsh.concurrency, hist=True)
+        else:
+            ts = pevaluate(tree, self.env, self.auto, self.tsh.concurrency, hist=True)
         ts.name = name
         return ts
 
