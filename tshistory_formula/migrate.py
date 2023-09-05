@@ -27,6 +27,7 @@ class Migrator(_Migrator):
         migrate_trig_formulas(self.engine, self.namespace, self.interactive)
         migrate_sub_formulas(self.engine, self.namespace, self.interactive)
         fix_formula_groups_metadata(self.engine, self.namespace, self.interactive)
+        migrate_group_formula_schema(self.engine, self.namespace, self.interactive)
 
 
 def migrate_formula_schema(engine, namespace, interactive):
@@ -208,12 +209,16 @@ def migrate_group_formula_schema(engine, namespace, interactive):
             for k in list(imeta):
                 if k not in metakeys:
                     umeta[k] = imeta.pop(k)
-            imeta['boundseries'] = formula
-            imeta['bindings'] = bindings
+            imeta['boundseries'] = seriesname
+            imeta['bindings'] = json.dumps(bindings)
             allmetas[name] = (fid, imeta, umeta)
 
         # store them
         for name, (fid, imeta, umeta) in allmetas.items():
+            # cn.execute(
+            #     f'delete from "{ns}".group_registry where name=%(name)s',
+            #     name=name
+            # )
             sid = cn.execute(
                 f'insert into "{ns}".group_registry '
                 '(name, internal_metadata, metadata) '
