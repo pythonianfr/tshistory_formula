@@ -316,6 +316,7 @@ class formula_httpapi(httpapi):
 
 
 class formula_httpclient(httpclient):
+    index = 1
 
     @unwraperror
     def formula(self, name, display=False, expanded=False, level=-1):
