@@ -14,6 +14,7 @@ from tshistory.tsio import timeseries as basets
 from tshistory.util import (
     diff,
     patch,
+    ts,
     tx
 )
 
@@ -938,6 +939,23 @@ class timeseries(basets):
         if self.patch.exists(cn, oldname):
             self.patch.rename(cn, oldname, newname)
         super().rename(cn, oldname, newname)
+
+
+    # find override
+
+    _find_items = ['name', 'internal_metadata->\'formula\'']
+
+    def _finish_find(self, cn, q, meta, source):
+        if not meta:
+            return [
+                ts(name, source=source, kind='formula' if formula else 'primary')
+                for name, formula in q.do(cn).fetchall()
+            ]
+
+        return [
+            ts(name, imeta, umeta, source, kind='formula' if formula else 'primary')
+            for name, formula, imeta, umeta in q.do(cn).fetchall()
+        ]
 
     # groups
 

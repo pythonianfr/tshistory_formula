@@ -956,11 +956,17 @@ def test_find(tsx):
         '(integration "base.find" "base.find")'
     )
 
+    assert tsx.find('(by.name "base.find")')[0].kind == 'primary'
+    assert tsx.find('(by.name "base.find")', meta=True)[0].kind == 'primary'
+
     names = tsx.find('(by.formulacontents "integration")')
     assert names == ['find.bycontent.integration']
 
     names = tsx.find('(by.formulacontents "add")')
     assert names == ['find.bycontent.add']
+    assert names[0].kind == 'formula'
+    names = tsx.find('(by.formulacontents "add")', meta=True)
+    assert names[0].kind == 'formula'
 
     names = tsx.find('(by.formula)')
     assert names == [
