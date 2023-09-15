@@ -189,7 +189,7 @@ def migrate_group_formula_schema(engine, namespace, interactive):
 
         # store them
         for name, (fid, imeta, umeta) in allmetas.items():
-            sid = cn.execute(
+            cn.execute(
                 f'insert into "{ns}".group_registry '
                 '(name, internal_metadata, metadata) '
                 'values(%(name)s, %(imeta)s, %(umeta)s) '
@@ -215,11 +215,7 @@ def migrate_group_formula_schema(engine, namespace, interactive):
 
         # store them
         for name, (fid, imeta, umeta) in allmetas.items():
-            # cn.execute(
-            #     f'delete from "{ns}".group_registry where name=%(name)s',
-            #     name=name
-            # )
-            sid = cn.execute(
+            cn.execute(
                 f'insert into "{ns}".group_registry '
                 '(name, internal_metadata, metadata) '
                 'values(%(name)s, %(imeta)s, %(umeta)s) '

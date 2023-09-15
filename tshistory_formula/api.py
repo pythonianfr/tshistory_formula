@@ -159,7 +159,7 @@ def formula_depth(self, name: str):
 
 
 @extend(altsources)
-def formula_depth(self, name: str):
+def formula_depth(self, name: str):  # noqa
     source = self._findsourcefor(name)
     if source is None:
         return
