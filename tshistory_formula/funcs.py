@@ -246,12 +246,21 @@ def findseries(__interpreter__,
                q: search.query,
                naive: bool=False,
                fill: Union[str, Number, NONETYPE]=None) -> List[pd.Series]:
-    """Yields a series list out of a metadata/name/... filtering query.
+    """
+    Yields a series list out of a metadata/name/... filtering query.
 
     Examples: `(add (findseries (by.value "weight" "<" 43)))`
 
-    It accepts a #:naive keyword, which is #f (false) by default
-    (one only get timezone aware timeseries by default).
+    The `findseries` operator accepts two keywords:
+
+    * `naive` (defaults to #f) to filter on tzaware or naive series
+      (we don't want to mix those there; this is an important
+      difference with the `find` API point).
+
+    * `fill` to specify a filling policy to avoid `nans` when the
+      series will be `add`ed with others; accepted values are
+      `"ffill"` (forward-fill), `"bfill"` (backward-fill) or any
+      floating value.
 
     """
     i = __interpreter__
