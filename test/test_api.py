@@ -659,6 +659,11 @@ def test_group_formula(tsa):
     assert df_roundtrip.equals(df_original)
 
 
+def test_no_group(tsa):
+    with pytest.raises(TypeError):
+        tsa.group_get('nope')
+
+
 def test_group_bound_formula(tsa):
     temp = pd.Series(
         [12, 13, 14],
