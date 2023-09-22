@@ -660,8 +660,8 @@ def test_group_formula(tsa):
 
 
 def test_no_group(tsa):
-    with pytest.raises(TypeError):
-        tsa.group_get('nope')
+    tsa.group_get('nope')
+    # didn't crash ;)
 
 
 def test_group_bound_formula(tsa):

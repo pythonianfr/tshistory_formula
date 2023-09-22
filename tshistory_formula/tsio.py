@@ -1330,7 +1330,7 @@ class timeseries(basets):
             gname=groupname
         )
         sname_binding = res.fetchone()
-        if sname_binding[0] is None:
+        if sname_binding is None or sname_binding[0] is None:
             return
         binding = pd.DataFrame(
             json.loads(
