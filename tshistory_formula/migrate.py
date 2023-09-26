@@ -176,7 +176,7 @@ def migrate_group_formula_schema(engine, namespace, interactive):
         metakeys = tshclass.metakeys
 
         # collect from group_formula and reinsert
-        for fid, name, formula, imeta, contenthash in cn.execute(
+        for fid, name, formula, imeta in cn.execute(
                 'select id, name, text, metadata '
                 f'from "{ns}".group_formula '
         ).fetchall():
