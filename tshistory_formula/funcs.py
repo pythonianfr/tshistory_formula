@@ -772,7 +772,7 @@ def _group_series(*serieslist):
         if ts.options.get('fill') is None and not len(ts):
             # at least one series without fill policy and no data
             # entails an empty result
-            return pd.DataFrame(dtype='float64')
+            return ts.to_frame()
 
         ts.name = f'{idx}'  # do something unique
         opts[ts.name] = ts.options

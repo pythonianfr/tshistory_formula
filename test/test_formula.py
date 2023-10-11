@@ -2331,7 +2331,7 @@ def test_fill_and_clip(engine, tsh):
     # everything is fine, now. The equilibrium is restored ^-^
 
 
-def test_priority_tzaware_empty_serie(engine, tsh):
+def test_priority_tzaware_empty_series(engine, tsh):
     ts = pd.Series(
         range(4),
         pd.date_range(
@@ -2378,16 +2378,12 @@ def test_priority_tzaware_empty_serie(engine, tsh):
         to_value_date=pd.Timestamp('2023-10-03', tz='CET')
     )
 
-    # this formula lost its timezone awareness
+    # this formula keeps its timezone awareness
     assert_df("""
-2023-10-02    1.0""", ts)
+2023-10-02 00:00:00+00:00    1.0
+""", ts)
 
-    assert ts.index[0].tz is None
-
-    # this bug is the combination of 2 micros bugs
-
-    # 1) The "add" operator does not properly qualify its index
-    #    when returning an empty series
+    assert ts.index[0].tz is not None
 
     ts_empty = tsh.get(
         engine,
@@ -2403,11 +2399,15 @@ def test_priority_tzaware_empty_serie(engine, tsh):
         from_value_date=pd.Timestamp("2023-10-02", tz='CET'),
         to_value_date=pd.Timestamp("2023-10-03", tz='CET'),
     )
-    assert str(ts_empty.index) == "Index([], dtype='object')"
+    assert ts_empty.index.tz is not None
 
     # 2) In patchmany, if there are more than 2 series,
     #    and the first one is empty and has no tz, the result will
     #    be tz-naive whatever tz-status of the other series
+
+    # NOTE: this is not a bug => patchmany assumes all series are
+    #       tzaware or naive
+    # (be careful with what you send)
 
     ts = pd.Series(
         range(4),
