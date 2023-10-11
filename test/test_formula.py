@@ -11,6 +11,7 @@ from tshistory.testutil import (
     gengroup,
     utcdt
 )
+from tshistory.util import patchmany
 
 from tshistory_formula.decorator import decorate
 from tshistory_formula.registry import (
@@ -2328,6 +2329,106 @@ def test_fill_and_clip(engine, tsh):
     assert tsh.get(engine, 'without-clip').equals(tsh.get(engine, 'with-clip'))
 
     # everything is fine, now. The equilibrium is restored ^-^
+
+
+def test_priority_tzaware_empty_serie(engine, tsh):
+    ts = pd.Series(
+        range(4),
+        pd.date_range(
+            dt(2023, 10, 1),
+            periods=4,
+            freq='D',
+            tz='UTC'
+        )
+    )
+    tsh.update(engine, ts, 'base-tz-aware', 'test')
+
+    ts = pd.Series(
+        ts.values * 10,
+        pd.date_range(
+            dt(2023, 10, 4),
+            periods=4,
+            freq='D',
+            tz='UTC'
+        )
+    )
+    tsh.update(engine, ts, 'delayed-tz-aware', 'test')
+
+    tsh.register_formula(
+        engine,
+        'tz-sum',
+        '(add (series "delayed-tz-aware"))'
+    )
+
+    tsh.register_formula(
+        engine,
+        'prio-tz',
+        '(priority '
+        '  (series "base-tz-aware")'
+        '  (series "base-tz-aware")'
+        '  (series "tz-sum")))'
+    )
+
+    # let's request this series where the last component
+    # of the priority is not defined
+    ts = tsh.get(
+        engine,
+        'prio-tz',
+        from_value_date=pd.Timestamp('2023-10-02', tz='CET'),
+        to_value_date=pd.Timestamp('2023-10-03', tz='CET')
+    )
+
+    # this formula lost its timezone awareness
+    assert_df("""
+2023-10-02    1.0""", ts)
+
+    assert ts.index[0].tz is None
+
+    # this bug is the combination of 2 micros bugs
+
+    # 1) The "add" operator does not properly qualify its index
+    #    when returning an empty series
+
+    ts_empty = tsh.get(
+        engine,
+        'delayed-tz-aware',
+        from_value_date=pd.Timestamp("2023-10-02", tz='CET'),
+        to_value_date=pd.Timestamp("2023-10-03", tz='CET'),
+    )
+    assert str(ts_empty.index.tz) == 'UTC'
+
+    ts_empty = tsh.eval_formula(
+        engine,
+        '(add (series "delayed-tz-aware"))',
+        from_value_date=pd.Timestamp("2023-10-02", tz='CET'),
+        to_value_date=pd.Timestamp("2023-10-03", tz='CET'),
+    )
+    assert str(ts_empty.index) == "Index([], dtype='object')"
+
+    # 2) In patchmany, if there are more than 2 series,
+    #    and the first one is empty and has no tz, the result will
+    #    be tz-naive whatever tz-status of the other series
+
+    ts = pd.Series(
+        range(4),
+        pd.date_range(
+            dt(2023, 10, 1),
+            periods=4,
+            freq='D',
+            tz='UTC'
+        )
+    )
+
+    empty_ts = pd.Series()
+    l_series = [ts, ts, empty_ts]
+    l_series.reverse()
+    patched = patchmany(l_series)
+    assert_df("""
+2023-10-01    0.0
+2023-10-02    1.0
+2023-10-03    2.0
+2023-10-04    3.0
+""", patched)
 
 
 def test_diagnose(engine, tsh):
