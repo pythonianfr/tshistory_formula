@@ -255,8 +255,6 @@ def migrate_trig_formulas(engine, namespace, interactive):
         rewritten = []
         print(f'Transforming {len(series)} series.')
         for idx, (name, internal_metadata) in enumerate(series):
-            print('name', name)
-            print('internal_metadata', internal_metadata)
             tree0 = parse(internal_metadata['formula'])
             tree1 = rewrite_trig_formula(tree0)
             internal_metadata['formula'] = serialize(tree1)
@@ -290,8 +288,6 @@ def migrate_sub_formulas(engine, namespace, interactive):
         rewritten = []
         print(f'Transforming {len(series)} series.')
         for idx, (name, internal_metadata) in enumerate(series):
-            print('name', name)
-            print('internal_metadata', internal_metadata)
             tree0 = parse(internal_metadata['formula'])
             tree1 = rewrite_sub_formula(tree0)
             internal_metadata['formula'] = serialize(tree1)
@@ -317,6 +313,7 @@ def migrate_sub_formulas(engine, namespace, interactive):
 
 
 def fix_formula_groups_metadata(engine, namespace, interactive):
+    print('Fixing formula groups metadata.')
     from tshistory_formula.tsio import timeseries
     tsh = timeseries(namespace)
 
