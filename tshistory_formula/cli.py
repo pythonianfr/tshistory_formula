@@ -242,12 +242,3 @@ create index if not exists "ix_{ns}_dependant_needs" on "{ns}".dependant (needs)
 
     for name, text in series:
         tsh.register_dependants(engine, name, parse(text))
-
-
-@click.command(name='shell')
-@click.argument('db-uri')
-@click.option('--namespace', default='tsh')
-def shell(db_uri, namespace='tsh'):
-    from tshistory.api import timeseries as tsapi
-    tsa = tsapi(find_dburi(db_uri), namespace, timeseries)  # noqa: F841
-    import pdb; pdb.set_trace()
