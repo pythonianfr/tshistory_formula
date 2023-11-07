@@ -56,6 +56,11 @@ def migrate_formula_schema(engine, namespace, interactive):
                 f'from "{ns}".formula '
         ).fetchall():
             umeta = {}
+
+            if imeta is None:
+                print(f'Skipping corrupt {name} series. You should remove it.')
+                continue
+
             for k in list(imeta):
                 if k not in metakeys:
                     umeta[k] = imeta.pop(k)
