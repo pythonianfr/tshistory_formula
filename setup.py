@@ -19,7 +19,7 @@ setup(name='tshistory_formula',
       packages=['tshistory_formula'],
       zip_safe=False,
       install_requires=[
-          'tshistory >= 0.19.2',
+          'tshistory >= 0.19.4',
           'holidays == 0.23',
           'pycountry >= 22.3.5',
           'psyl >= 0.8'
