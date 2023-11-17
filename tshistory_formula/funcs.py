@@ -21,6 +21,7 @@ from tshistory.util import (
     compatible_date,
     empty_series,
     ensuretz,
+    infer_freq,
     patch,
     patchmany,
     threadpool,
@@ -1333,6 +1334,27 @@ def resample_adjusted_stamp(
     )
 
 
+@func('_infer_freq')
+def _infer_freq(series: pd.Series,
+                resample_freq: str) -> pd.Timedelta:
+    if len(series) < 2:
+        return resample_freq
+
+    ifreq, _ = infer_freq(series)
+    # convert the resample_freq to timedelta
+    dates = pd.date_range(
+        pd.Timestamp('2000-1-1'),
+        periods=2,
+        freq=resample_freq
+    )
+    resample_delta = dates[1] - dates[0]
+
+    if ifreq < resample_delta:
+        return resample_delta
+
+    return ifreq
+
+
 def resample_transform(tree):
     """Enlarge the from_value_date <-> to_value_date range to get
     consistent resampling data
@@ -1357,30 +1379,41 @@ def resample_transform(tree):
     moved from '08:37' to '08:00' for an hourly resampling.
 
     """
-    _posargs, kwargs = buildargs(tree[1:])
-    freq = _posargs[1]
+    posargs, kwargs = buildargs(tree[1:])
     top = [
         Symbol('let'),
-        Symbol('from_value_date'), [
-            Symbol('resample_adjusted_stamp'),
-            Symbol('from_value_date'),
-            freq,
-            'left',
+        Symbol('needed_freq'), [
+            Symbol('_infer_freq'),
+            posargs[0],
+            posargs[1],
         ],
-        Symbol('to_value_date'), [
-            Symbol('resample_adjusted_stamp'),
-            Symbol('to_value_date'),
-            freq,
-            'right',
-        ],
+        [
+            Symbol('let'),
+            Symbol('from_value_date'), [
+                Symbol('resample_adjusted_stamp'),
+                Symbol('from_value_date'),
+                Symbol('needed_freq'),
+                'left',
+            ],
+            Symbol('to_value_date'), [
+                Symbol('resample_adjusted_stamp'),
+                Symbol('to_value_date'),
+                Symbol('needed_freq'),
+                'right',
+            ],
+            tree
+        ]
     ]
-    top.append(tree)
     return top
 
 
 @func('resample')
 @argscope('resample', resample_transform)
-def resample(series: pd.Series,
+def resample(__interpreter__,
+             __revision_date__,
+             __from_value_date__,
+             __to_value_date__,
+             series: pd.Series,
              freq: str,
              method: str='mean') -> pd.Series:
     """
