@@ -278,11 +278,6 @@ def test_naive_tz_boundaries(engine, tsh):
         to_value_date=pd.Timestamp('2022-2-3', tz='EST')
     )
     assert_df("""
-2022-02-02 00:00:00    29.0
-2022-02-02 01:00:00    30.0
-2022-02-02 02:00:00    31.0
-2022-02-02 03:00:00    32.0
-2022-02-02 04:00:00    33.0
 2022-02-02 05:00:00    34.0
 2022-02-02 06:00:00    35.0
 2022-02-02 07:00:00    36.0
@@ -1726,12 +1721,10 @@ def test_resample_boundaries(tsh, engine):
         formula_name,
         from_value_date=dt(2023, 1, 4, 12)
     )
-    ref = pd.Series(
-        [24., 24., 24.],
-        index=pd.date_range(dt(2023, 1, 4), freq='D', periods=3)
-    )
-
-    assert ts.equals(ref)
+    assert_df("""
+2023-01-05    24.0
+2023-01-06    24.0
+""", ts)
 
     ts = tsh.get(
         engine,
@@ -3774,7 +3767,7 @@ def test_holidays_datetime(engine, tsh):
         from_value_date=dt(2021, 3, 2, 12, 12, 0),
         to_value_date=dt(2021, 5, 1, 5, 40, 0),
     )
-    assert ts.equals(ts2)
+    assert ts[1:].equals(ts2)
 
     # check with tz aware bounds
     ts = tsh.get(

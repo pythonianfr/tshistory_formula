@@ -366,6 +366,12 @@ class timeseries(basets):
                 if not len(ts_patch):
                     return ts
                 ts = patch(ts, ts_patch)
+            # preserve the options
+            opts = getattr(ts, 'options', {})
+            ts = ts.loc[
+                kw.get('from_value_date'):kw.get('to_value_date')
+            ]
+            ts.options = opts
             return ts
 
         ts = super().get(cn, name, **kw)

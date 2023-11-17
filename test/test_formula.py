@@ -997,7 +997,6 @@ def test_ifunc(engine, tsh):
         to_value_date=dt(2019, 1, 4)
     )
     assert_df("""
-2019-01-02    2.0
 2019-01-03    3.0
 """, ts)
 
