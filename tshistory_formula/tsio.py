@@ -1,5 +1,4 @@
 from collections import defaultdict
-from datetime import timedelta
 import hashlib
 import itertools
 import json
@@ -12,7 +11,6 @@ from psyl.lisp import (
 )
 from tshistory.tsio import timeseries as basets
 from tshistory.util import (
-    diff,
     patch,
     ts,
     tx
@@ -28,7 +26,6 @@ from tshistory_formula import (
 from tshistory_formula.registry import (
     FINDERS,
     FUNCS,
-    HISTORY,
     IDATES,
     METAS,
     GFINDERS,
@@ -97,19 +94,6 @@ class timeseries(basets):
                 newops = self.find_operators(cn, item)
                 ops.update(newops)
         return ops
-
-    def has_asof(self, cn, tree):
-        op = tree[0]
-
-        if op == 'asof':
-            return True
-
-        for item in tree[1:]:
-            if isinstance(item, list):
-                if self.has_asof(cn, item):
-                    return True
-
-        return False
 
     def check_tz_compatibility(self, cn, tree):
         """check that series are timezone-compatible
@@ -444,306 +428,12 @@ class timeseries(basets):
                 to_value_date=to_value_date
             )
 
-    def _custom_history_sites(self, cn, tree):
-        return [
-            call
-            for sname in HISTORY
-            for call in self.find_callsites(cn, sname, tree)
-        ]
-
     def _custom_idates_sites(self, cn, tree):
         return [
             call
             for sname in IDATES
             for call in self.find_callsites(cn, sname, tree)
         ]
-
-    def _auto_history(self, cn, tree,
-                      from_insertion_date=None,
-                      to_insertion_date=None,
-                      from_value_date=None,
-                      to_value_date=None,
-                      diffmode=False,
-                      _keep_nans=False,
-                      **kw):
-        assert tree
-        i = interpreter.OperatorHistory(
-            cn, self, {
-                'from_value_date': from_value_date,
-                'to_value_date': to_value_date,
-                'from_insertion_date': from_insertion_date,
-                'to_insertion_date': to_insertion_date,
-                'diffmode': diffmode,
-                '_keep_nans': _keep_nans
-            }
-        )
-        return i.evaluate_history(tree)
-
-    def _precompute_auto_histories(
-            self, cn, hi, basetree,
-            from_insertion_date=None,
-            to_insertion_date=None,
-            from_value_date=None,
-            to_value_date=None,
-            diffmode=False,
-            _keep_nans=False,
-            **kw):
-        """
-        Path of precomputation of the autotrophic operators histories.
-
-        Two notable aspects there:
-        * the embedded autotrophic operators are not associated with a
-          name (that helps anchoring the results), so we must forge
-          one
-        * we store the final histories into the .histories of the
-          history interpreter (pure side effect)
-
-        """
-        trees = self._custom_history_sites(cn, basetree)
-        for idx, tree in enumerate(trees):
-            chist = self._auto_history(
-                cn,
-                tree,
-                from_insertion_date=from_insertion_date,
-                to_insertion_date=to_insertion_date,
-                from_value_date=from_value_date,
-                to_value_date=to_value_date,
-                **kw
-            ) or {}
-            cname = helper.name_of_expr(tree)
-            hi.namecache[serialize(tree)] = cname
-            hi.histories.update({
-                cname: chist
-            })
-
-
-    def _complete_histories_start(
-            self, cn, histmap, tree,
-            from_value_date=None,
-            to_value_date=None,
-            **kw):
-        """
-        Complete the potentially missing entries of the collected histories.
-
-        Takes an `history map` and returns an `history map` with
-        possibly more entries.
-
-        Indeed, when `from_insertion_date` is provided to .history, we
-        can have this situation:
-
-        #    ^  h0      h1
-        #    |
-        #  i2| xxx     xxx
-        #  i1| xxx
-        #  i0| xxx     xxx
-
-        Here, we have three insertion dates (i0, i1, i2), but while
-        history of the first series `h0` has values for all the
-        idates, the history of the second series `h1` has a gap.
-
-        If we get asked for the formula history starting from `i1`, we
-        actually want `h1` to contain something for `i1` also, and
-        only by digging further in the past can we provide it.
-
-        """
-        mins = [
-            min(hist.keys())
-            for hist in histmap.values()
-            if len(hist)
-        ]
-        if not len(mins):
-            return histmap
-
-        mindate = min(mins)
-        for name, hist in histmap.items():
-            if mindate not in hist:
-                ts_mindate = self.get(
-                    cn,
-                    name,
-                    revision_date=mindate,
-                    from_value_date=from_value_date,
-                    to_value_date=to_value_date,
-                    **kw
-                )
-                if ts_mindate is not None and len(ts_mindate):
-                    # the history must be ordered by key
-                    base = {mindate: ts_mindate}
-                    base.update(hist)
-                    histmap[name] = base
-
-        return histmap
-
-
-    def _history_diffs(
-            self,
-            cn, name, hist, idates,
-            from_value_date=None,
-            to_value_date=None,
-            **kw):
-        """
-        Computes the diff mode of an history.
-
-        This is needed to honor the `diffmode` parameter of .history.
-
-        """
-        iteridates = iter(idates)
-        firstidate = next(iteridates)
-        basets = self.get(
-            cn,
-            name,
-            from_value_date=from_value_date,
-            to_value_date=to_value_date,
-            revision_date=firstidate - timedelta(seconds=1),
-            **kw
-        )
-        dhist = {}
-        for idate in idates:
-            dhist[idate] = diff(basets, hist[idate])
-            basets = hist[idate]
-
-        return dhist
-
-    @tx
-    def history(self, cn, name,
-                from_insertion_date=None,
-                to_insertion_date=None,
-                from_value_date=None,
-                to_value_date=None,
-                diffmode=False,
-                _keep_nans=False,
-                **kw):
-
-        if self.type(cn, name) != 'formula':
-            hist = super().history(
-                cn, name,
-                from_insertion_date=from_insertion_date,
-                to_insertion_date=to_insertion_date,
-                from_value_date=from_value_date,
-                to_value_date=to_value_date,
-                diffmode=diffmode,
-                _keep_nans=_keep_nans,
-                **kw
-            )
-
-            # alternative source ?
-            if hist is None and self.othersources:
-                hist = self.othersources.history(
-                    name,
-                    from_value_date=from_value_date,
-                    to_value_date=to_value_date,
-                    from_insertion_date=from_insertion_date,
-                    to_insertion_date=to_insertion_date,
-                    _keep_nans=_keep_nans,
-                    **kw
-                )
-            return hist
-
-        formula = self.formula(cn, name)
-        tree = self._expanded_formula(
-            cn, formula,
-            qargs={
-                'from_value_date': from_value_date,
-                'to_value_date': to_value_date
-            }
-        )
-
-        if self.has_asof(cn, tree):
-            # formula with an "asof" expression
-            # in this case we completely switch to the simpler
-            # (but potentially slower) path, using iter_revisions
-            # in this mode, the "asof" logic is already taken care by
-            # the asof rewriter + __revision_date__ parameter in series
-            # and other auto operators
-            hist = {
-                idate: value
-                for idate, value in self.iter_revisions(
-                        cn, name,
-                        from_value_date=from_value_date,
-                        to_value_date=to_value_date,
-                        from_insertion_date=from_insertion_date,
-                        to_insertion_date=to_insertion_date,
-                        **kw
-                )
-            }
-            if diffmode:
-                # NOTE: this code branch is not tested
-                return self._history_diffs(
-                    cn, name, hist, hist.keys(),
-                    from_value_date=None,
-                    to_value_date=None,
-                    **kw)
-            return hist
-
-        # normal history: compute the union of the histories
-        # of all underlying series
-        series = self.find_series(cn, tree)
-        histmap = {
-            name: self.history(
-                cn, name,
-                from_insertion_date=from_insertion_date,
-                to_insertion_date=to_insertion_date,
-                from_value_date=from_value_date,
-                to_value_date=to_value_date,
-                **kw
-            ) or {}
-            for name in series
-        }
-
-        # complete the history with a value for the first idate
-        # (we might be missing this because of the query from_insertion_date)
-        if histmap and from_insertion_date:
-            histmap = self._complete_histories_start(
-                cn, histmap, tree,
-                from_value_date=from_value_date,
-                to_value_date=to_value_date,
-                **kw
-            )
-
-        # prepare the history interpreter using the histories
-        # collected so far
-        hi = interpreter.HistoryInterpreter(
-            name, cn, self, {
-                'from_value_date': from_value_date,
-                'to_value_date': to_value_date
-            },
-            histories=histmap
-        )
-
-        # delegate work for the autotrophic operator histories
-        # this was not done in the previous step because
-        # auto operators have their own full-blown protocol to deal
-        # with histories
-        self._precompute_auto_histories(
-            cn, hi, tree,
-            from_insertion_date=from_insertion_date,
-            to_insertion_date=to_insertion_date,
-            from_value_date=from_value_date,
-            to_value_date=to_value_date,
-            **kw
-        )
-
-        # evaluate the formula using the prepared histories
-        idates = sorted({
-            idate
-            for hist in histmap.values()
-            for idate in hist
-        })
-
-        # build the final history dict
-        hist = {
-            idate: hi.evaluate(tree, idate, name)
-            for idate in idates
-        }
-
-        if diffmode and idates:
-            hist = self._history_diffs(
-                cn, name, hist, idates,
-                from_value_date=from_value_date,
-                to_value_date=to_value_date,
-                **kw
-            )
-
-        return hist
 
     @tx
     def insertion_dates(self, cn, name,
@@ -813,22 +503,6 @@ class timeseries(basets):
             if revs:
                 allrevs += revs
 
-        # last resort: get the idates from a full history
-        # not great wrt performance ...
-        for site in self._custom_history_sites(cn, tree):
-            if site in isites:
-                continue  # we're already good
-            hist = self._auto_history(
-                cn,
-                site,
-                from_insertion_date=from_insertion_date,
-                to_insertion_date=to_insertion_date,
-                from_value_date=from_value_date,
-                to_value_date=to_value_date
-            )
-            if hist:
-                allrevs += list(hist.keys())
-
         # /auto
 
         return sorted(set(allrevs))
@@ -848,7 +522,6 @@ class timeseries(basets):
             return self.insertion_dates(cn, name)[0]
 
         return super().first_insertion_date(cn, name)
-
 
     @tx
     def staircase(self, cn, name, delta,

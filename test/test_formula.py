@@ -18,7 +18,7 @@ from tshistory_formula.registry import (
     func,
     FUNCS,
     finder,
-    history,
+    insertion_dates,
     metadata,
     gfunc,
     gfinder,
@@ -40,7 +40,6 @@ from tshistory_formula.helper import (
 )
 from tshistory_formula.interpreter import (
     NullIntepreter,
-    OperatorHistory,
     GroupInterpreter,
 )
 
@@ -1000,6 +999,10 @@ def test_ifunc(engine, tsh):
         from_value_date=dt(2019, 1, 3),
         to_value_date=dt(2019, 1, 4)
     )
+    # yes, this is a stupid operator, don't do that
+    # in real life (the 4 is missing because of the -1 day
+    # shift on to_value_date, and the 2 is missing because
+    # it is chopped to honour the original from_value_date)
     assert_df("""
 2019-01-03    3.0
 """, ts)
@@ -1021,11 +1024,10 @@ def test_ifunc(engine, tsh):
     assert_hist("""
 insertion_date             value_date
 2019-01-01 00:00:00+00:00  2019-01-01    1.0
-                           2019-01-02    1.0
-                           2019-01-03    2.0
-                           2019-01-04    3.0
-                           2019-01-05    4.0
-                           2019-01-06    5.0
+                           2019-01-02    2.0
+                           2019-01-03    3.0
+                           2019-01-04    4.0
+                           2019-01-05    5.0
 2019-01-02 00:00:00+00:00  2019-01-01    1.0
                            2019-01-02    1.0
                            2019-01-03    2.0
@@ -1041,10 +1043,8 @@ insertion_date             value_date
     )
     assert_hist("""
 insertion_date             value_date
-2019-01-01 00:00:00+00:00  2019-01-02    1.0
-                           2019-01-03    2.0
-2019-01-02 00:00:00+00:00  2019-01-02    1.0
-                           2019-01-03    2.0
+2019-01-01 00:00:00+00:00  2019-01-03    3.0
+2019-01-02 00:00:00+00:00  2019-01-03    2.0
 """, hist)
 
     # cleanup
@@ -1273,15 +1273,16 @@ def test_custom_history(engine, tsh):
             }
         }
 
-    @history('made-up-series')
-    def madeup_history(__interpreter__, base, coeff=1.):
-        hist = {}
+    @insertion_dates('made-up-series')
+    def madeup_idates(cn, tsh, tree,
+                      from_insertion_date, to_insertion_date,
+                      from_value_date, to_value_date):
+        idates = []
         for i in (1, 2, 3):
-            hist[pd.Timestamp(f'2020-1-{i}', tz='utc')] = pd.Series(
-                np.array([base + i, base + i + 1, base + i + 2]) * coeff,
-                index=pd.date_range(dt(2019, 1, i), periods=3, freq='D')
+            idates.append(
+                pd.Timestamp(f'2020-1-{i}', tz='utc')
             )
-        return hist
+        return idates
 
     tsh.register_formula(
         engine,
@@ -1297,15 +1298,15 @@ def test_custom_history(engine, tsh):
 
     assert_hist("""
 insertion_date             value_date
-2020-01-01 00:00:00+00:00  2019-01-01    1.0
-                           2019-01-02    2.0
-                           2019-01-03    3.0
-2020-01-02 00:00:00+00:00  2019-01-02    2.0
-                           2019-01-03    3.0
-                           2019-01-04    4.0
-2020-01-03 00:00:00+00:00  2019-01-03    3.0
-                           2019-01-04    4.0
-                           2019-01-05    5.0
+2020-01-01 00:00:00+00:00  2019-01-01    0.0
+                           2019-01-02    1.0
+                           2019-01-03    2.0
+2020-01-02 00:00:00+00:00  2019-01-01    0.0
+                           2019-01-02    1.0
+                           2019-01-03    2.0
+2020-01-03 00:00:00+00:00  2019-01-01    0.0
+                           2019-01-02    1.0
+                           2019-01-03    2.0
 """, tsh.history(engine, 'made-up-history'))
 
     idates = tsh.insertion_dates(engine, 'made-up-history')
@@ -1330,15 +1331,15 @@ insertion_date             value_date
     hist = tsh.history(engine, 'made-up-composite')
     assert_hist("""
 insertion_date             value_date
-2020-01-01 00:00:00+00:00  2019-01-01     8.5
-                           2019-01-02    11.0
-                           2019-01-03    13.5
-2020-01-02 00:00:00+00:00  2019-01-02    11.0
-                           2019-01-03    13.5
-                           2019-01-04    16.0
-2020-01-03 00:00:00+00:00  2019-01-03    13.5
-                           2019-01-04    16.0
-                           2019-01-05    18.5
+2020-01-01 00:00:00+00:00  2019-01-01     6.0
+                           2019-01-02     8.5
+                           2019-01-03    11.0
+2020-01-02 00:00:00+00:00  2019-01-01     6.0
+                           2019-01-02     8.5
+                           2019-01-03    11.0
+2020-01-03 00:00:00+00:00  2019-01-01     6.0
+                           2019-01-02     8.5
+                           2019-01-03    11.0
 """, hist)
 
 
@@ -1549,13 +1550,6 @@ def test_slice_tzaware(engine, tsh):
 
 
 def test_history_autotrophic_nr(engine, tsh):
-    # reset this to be sure it contains our _very late_ new operators definitions
-    OperatorHistory.FUNCS = None
-
-    ts1 = pd.Series(
-        [1.0] * 24,
-        index=pd.date_range(utcdt(2020, 1, 1), periods=24, freq='H')
-    )
     ts2 = pd.Series(
         [10] * 24,
         index=pd.date_range(utcdt(2020, 1, 1), periods=24, freq='H')
@@ -1580,12 +1574,14 @@ def test_history_autotrophic_nr(engine, tsh):
             }
         }
 
-    @history('hist-nr2-1')
-    def histnr21history(__interpreter__):
-        return {
-            utcdt(2020, 1, 1): ts1,
-            utcdt(2020, 1, 2): ts2
-        }
+    @insertion_dates('hist-nr2-1')
+    def histnr21idates(cn, tsh, tree,
+                       from_insertion_date, to_insertion_date,
+                       from_value_date, to_value_date):
+        return [
+            utcdt(2020, 1, 1),
+            utcdt(2020, 1, 2)
+        ]
 
     @func('hist-nr2-2', auto=True)
     def histnr22(__interpreter__,
@@ -1606,12 +1602,14 @@ def test_history_autotrophic_nr(engine, tsh):
             }
         }
 
-    @history('hist-nr2-2')
-    def histnr22history(__interpreter__):
-        return {
-            utcdt(2020, 1, 1, 1): ts1 + 1,
-            utcdt(2020, 1, 2, 1): ts2 + 1
-        }
+    @insertion_dates('hist-nr2-2')
+    def histnr22hidates(cn, tsh, tree,
+                        from_insertion_date, to_insertion_date,
+                        from_value_date, to_value_date):
+        return [
+            utcdt(2020, 1, 1, 1),
+            utcdt(2020, 1, 2, 1)
+        ]
 
     tsh.register_formula(
         engine,
@@ -1629,24 +1627,18 @@ def test_history_autotrophic_nr(engine, tsh):
     hist = tsh.history(engine, 'hist-nr-form2')
     assert_hist("""
 insertion_date             value_date
-2020-01-01 00:00:00+00:00  2020-01-01     1.0
-                           2020-01-02     1.0
-2020-01-01 01:00:00+00:00  2020-01-01     1.5
-                           2020-01-02     1.5
-2020-01-02 00:00:00+00:00  2020-01-01     6.0
-                           2020-01-02     6.0
+2020-01-01 00:00:00+00:00  2020-01-01    10.5
+                           2020-01-02    10.5
+2020-01-01 01:00:00+00:00  2020-01-01    10.5
+                           2020-01-02    10.5
+2020-01-02 00:00:00+00:00  2020-01-01    10.5
+                           2020-01-02    10.5
 2020-01-02 01:00:00+00:00  2020-01-01    10.5
                            2020-01-02    10.5
 """, hist)
 
 
 def test_history_auto_nr(engine, tsh):
-    OperatorHistory.FUNCS = None
-
-    ts1 = pd.Series(
-        [1.0] * 24,
-        index=pd.date_range(utcdt(2020, 1, 1), periods=24, freq='H')
-    )
     ts2 = pd.Series(
         [10] * 24,
         index=pd.date_range(utcdt(2020, 1, 1), periods=24, freq='H')
@@ -1675,12 +1667,14 @@ def test_history_auto_nr(engine, tsh):
     def auto_operator_finder(cn, tsh, tree):
         return {'auto-operator': tree}
 
-    @history('auto-operator')
-    def auto_operator_history(__interpreter__):
-        return {
-            utcdt(2020, 1, 1): ts1,
-            utcdt(2020, 1, 2): ts2
-        }
+    @insertion_dates('auto-operator')
+    def auto_operator_idates(cn, tsh, tree,
+                             from_insertion_date, to_insertion_date,
+                             from_value_date, to_value_date):
+        return [
+            utcdt(2020, 1, 1),
+            utcdt(2020, 1, 2)
+        ]
 
     tsh.register_formula(engine, 'auto_series', '(auto-operator)')
     tsh.get(engine, 'auto_series')
@@ -1745,7 +1739,6 @@ def test_extract_from_expr(engine, tsh):
 
 def test_history_auto_name_issue(engine, tsh):
     # reset this to be sure it contains our _very late_ new operators definitions
-    OperatorHistory.FUNCS = None
     ts = pd.Series(
         [1.0, 2.0, 3.0],
         index=pd.date_range(utcdt(2020, 1, 1), periods=3, freq='D')
@@ -1785,12 +1778,14 @@ def test_history_auto_name_issue(engine, tsh):
             }
         }
 
-    @history('hist-auto-name')
-    def histautoname_history(__interpreter__, a:int=0):
-        return {
-            utcdt(2020, 1, 1): ts + a,
-            utcdt(2020, 1, 2): (ts + a) * 2
-        }
+    @insertion_dates('hist-auto-name')
+    def histautoname_idates(cn, tsh, tree,
+                            from_insertion_date, to_insertion_date,
+                            from_value_date, to_value_date):
+        return [
+            utcdt(2020, 1, 1),
+            utcdt(2020, 1, 2)
+        ]
 
     tsh.register_formula(
         engine,
@@ -1809,9 +1804,9 @@ def test_history_auto_name_issue(engine, tsh):
     hist = tsh.history(engine, 'good-auto-history')
     assert_hist("""
 insertion_date             value_date               
-2020-01-01 00:00:00+00:00  2020-01-01 00:00:00+00:00     3.0
-                           2020-01-02 00:00:00+00:00     5.0
-                           2020-01-03 00:00:00+00:00     7.0
+2020-01-01 00:00:00+00:00  2020-01-01 00:00:00+00:00     6.0
+                           2020-01-02 00:00:00+00:00    10.0
+                           2020-01-03 00:00:00+00:00    14.0
 2020-01-02 00:00:00+00:00  2020-01-01 00:00:00+00:00     6.0
                            2020-01-02 00:00:00+00:00    10.0
                            2020-01-03 00:00:00+00:00    14.0
@@ -1820,7 +1815,6 @@ insertion_date             value_date
 
 def test_history_auto_name_subexpr(engine, tsh):
     # reset this to be sure it contains our _very late_ new operators definitions
-    OperatorHistory.FUNCS = None
     ts = pd.Series(
         [1.0, 2.0, 3.0],
         index=pd.date_range(utcdt(2020, 1, 1), periods=3, freq='D')
@@ -1832,6 +1826,8 @@ def test_history_auto_name_subexpr(engine, tsh):
                      __to_value_date__,
                      __revision_date__,
                      date: pd.Timestamp) -> pd.Series:
+        if __revision_date__ and __revision_date__ > utcdt(2020, 1, 1):
+            return ts + 1
         return ts
 
     @metadata('hist-auto-subexpr')
@@ -1846,12 +1842,14 @@ def test_history_auto_name_subexpr(engine, tsh):
             }
         }
 
-    @history('hist-auto-subexpr')
-    def histautoname_history(__interpreter__, date: pd.Timestamp):
-        return {
-            utcdt(2020, 1, 1): ts,
-            utcdt(2020, 1, 2): ts + 1
-        }
+    @insertion_dates('hist-auto-subexpr')
+    def histautoname_idates(cn, tsh, tree,
+                            from_insertion_date, to_insertion_date,
+                            from_value_date, to_value_date):
+        return [
+            utcdt(2020, 1, 1),
+            utcdt(2020, 1, 2)
+        ]
 
     tsh.register_formula(
         engine,
@@ -2454,7 +2452,6 @@ def test_diagnose(engine, tsh):
             - operator a            (2)
             - operator b            (1)
     """
-    OperatorHistory.FUNCS = None
     # series
     ts = pd.Series(
         [2] * 4,
@@ -2468,8 +2465,6 @@ def test_diagnose(engine, tsh):
     tsh.update(engine, ts, 'prim-diag-2', 'test')
 
     # autotrophics
-    OperatorHistory.FUNCS = None
-
     @func('diag-auto-1', auto=True)
     def diag1(
             __interpreter__,

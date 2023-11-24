@@ -52,7 +52,7 @@ def resolve(atom, env):
     return atom
 
 
-def _evaluate(tree, env, funcids=(), pool=None, hist=False):
+def _evaluate(tree, env, funcids=(), pool=None):
     if not isinstance(tree, list):
         # we've got an atom
         # we do this very late rather than upfront
@@ -63,18 +63,18 @@ def _evaluate(tree, env, funcids=(), pool=None, hist=False):
     if tree[0] == 'let':
         newtree, newenv = let(
             env, tree[1:],
-            partial(_evaluate, funcids=funcids, pool=pool, hist=hist)
+            partial(_evaluate, funcids=funcids, pool=pool)
         )
         # the env grows new bindigs
         # the tree has lost its let-definition
-        return _evaluate(newtree, newenv, funcids, pool, hist)
+        return _evaluate(newtree, newenv, funcids, pool)
 
     # a functional expression
     # the recursive evaluation will
     # * dereference the symbols -> functions
     # * evaluate the sub-expressions -> values
     exps = [
-        _evaluate(exp, env, funcids, pool, hist)
+        _evaluate(exp, env, funcids, pool)
         for exp in tree
     ]
     # since some calls are evaluated asynchronously (e.g. series) we
@@ -93,11 +93,6 @@ def _evaluate(tree, env, funcids=(), pool=None, hist=False):
     else:
         func = proc
 
-    # for autotrophic operators: prepare to pass the tree if present
-    funkey = funcid(func)
-    if hist and funkey in funcids:
-        kwargs['__tree__'] = tree
-
     signature = inspect.getfullargspec(func)
     if signature.varargs:
         if len(posargs) == 1 and isinstance(posargs[0], list):
@@ -108,9 +103,9 @@ def _evaluate(tree, env, funcids=(), pool=None, hist=False):
         if arg in QARGS
     ] + posargs
 
-
     # an async function, e.g. series, being I/O oriented
     # can be deferred to a thread
+    funkey = funcid(func)
     if funkey in funcids and pool:
         return pool.submit(proc, *posargs, **kwargs)
 
@@ -119,15 +114,14 @@ def _evaluate(tree, env, funcids=(), pool=None, hist=False):
     return proc(*posargs, **kwargs)
 
 
-def pevaluate(tree, env, asyncfuncs=(), concurrency=16, hist=False):
+def pevaluate(tree, env, asyncfuncs=(), concurrency=16):
     if concurrency > 1:
         with ThreadPoolExecutor(concurrency) as pool:
             val = _evaluate(
                 tree,
                 env,
                 {funcid(func) for func in asyncfuncs},
-                pool,
-                hist
+                pool
             )
             if isinstance(val, Future):
                 val = val.result()
@@ -137,6 +131,5 @@ def pevaluate(tree, env, asyncfuncs=(), concurrency=16, hist=False):
         tree,
         env,
         {funcid(func) for func in asyncfuncs},
-        None,
-        hist
+        None
     )

@@ -31,7 +31,6 @@ from tshistory import search
 from tshistory_formula.registry import (
     finder,
     func,
-    history,
     insertion_dates,
     metadata,
     argscope
@@ -635,18 +634,6 @@ def constant_metadata(cn, tsh, tree):
         'value_dtype': '<f8'
         }
     }
-
-
-@history('constant')
-def constant_history(__interpreter__, value, fromdate, todate, freq, revdate):
-    series = _constant(
-        __interpreter__, __interpreter__.getargs, value, fromdate, todate, freq, revdate
-    )
-    if len(series):
-        return {
-            revdate: series
-        }
-    return {}
 
 
 @insertion_dates('constant')

@@ -7,7 +7,6 @@ from tshistory_formula.decorator import decorate
 
 
 FUNCS = {}
-HISTORY = {}
 IDATES = {}
 METAS = {}
 FINDERS = {}
@@ -25,32 +24,17 @@ def _ensure_options(obj):
 def func(name, auto=False):
     # work around the circular import
     from tshistory_formula.types import assert_typed
-    from tshistory_formula.interpreter import HistoryInterpreter
 
     def decorator(func):
         assert_typed(func)
 
         def operator(func, *a, **kw):
-            tree = kw.pop('__tree__', None)
-            if name in HISTORY:
-                # Autotrophic operator with an history:
-                # we redirect from a get call without even evaluating the func
-                # because we already have the histories ...
-                # (the .histories predicate below indicates we got through
-                # the @history protocol just before)
-                # To return the right historical pieces we will forge a name
-                # made from func signature and actual args.
-                if a and isinstance(a[0], HistoryInterpreter) and a[0].histories:
-                    return _ensure_options(
-                        a[0].get_auto(tree)
-                    )
-
             res = func(*a, **kw)
             return _ensure_options(
                 res
             )
 
-        dec = decorate(func, operator, extrakw={'__tree__': None})
+        dec = decorate(func, operator)
 
         FUNCS[name] = dec
         if auto:
@@ -73,9 +57,9 @@ def func(name, auto=False):
 def history(name):
 
     def decorator(func):
-        assert name in AUTO, f'operator {name} is not declared as "auto"'
-        HISTORY[name] = func
-        return func
+        raise ValueError(
+            'The @history decorator is gone. You should use @insertion_dates'
+        )
 
     return decorator
 

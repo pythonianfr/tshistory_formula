@@ -10,11 +10,9 @@ from psyl.lisp import (
     parse
 )
 
-from tshistory.util import empty_series
 from tshistory_formula.evaluator import pevaluate
 
 from tshistory_formula import (
-    helper,
     types,
     registry
 )
@@ -33,7 +31,7 @@ def jsontypes(all=False):
 
 
 class Interpreter:
-    __slots__ = ('env', 'cn', 'tsh', 'getargs', 'histories', 'vcache', 'auto')
+    __slots__ = ('env', 'cn', 'tsh', 'getargs', 'vcache', 'auto')
     FUNCS = None
 
     @property
@@ -56,7 +54,6 @@ class Interpreter:
         funcs['#f'] = False
         funcs['nil'] = None
         self.env = Env(funcs)
-        self.histories = {}
         self.vcache = {}
         self.auto = set(registry.AUTO.values())
 
@@ -101,88 +98,7 @@ class Interpreter:
         return val
 
 
-class OperatorHistory(Interpreter):
-    __slots__ = ('env', 'cn', 'tsh', 'getargs')
-    FUNCS = None
-
-    @property
-    def operators(self):
-        if OperatorHistory.FUNCS is None:
-            OperatorHistory.FUNCS = {**registry.FUNCS, **registry.HISTORY}
-        return OperatorHistory.FUNCS
-
-    def evaluate_history(self, tree):
-        return pevaluate(
-            tree,
-            self.env,
-            self.auto,
-            self.tsh.concurrency,
-            hist=True
-        )
-
-
-class HistoryInterpreter(Interpreter):
-    __slots__ = 'env', 'cn', 'tsh', 'getargs', 'histories', 'tzaware', 'namecache', 'vcache'
-
-    def __init__(self, name, *args, histories):
-        super().__init__(*args)
-        self.histories = histories
-        # a callsite -> name mapping
-        self.namecache = {}
-        self.tzaware = self.tsh.internal_metadata(self.cn, name)['tzaware']
-
-    def _find_by_nearest_idate(self, name, idate):
-        hist = self.histories[name]
-        tzaware = idate.tzinfo is not None
-        for date in reversed(list(hist.keys())):
-            compdate = date
-            if not tzaware:
-                compdate = date.replace(tzinfo=None)
-            if idate >= compdate:
-                return hist[date]
-
-        ts = empty_series(
-            self.tzaware,
-            name=name
-        )
-        return ts
-
-    def get(self, name, _getargs):
-        # getargs is moot there because histories
-        # have been precomputed
-        # get the nearest inferior or equal for the given
-        # insertion date
-        assert self.histories
-        return self._find_by_nearest_idate(
-            name,
-            self.getargs['revision_date']
-        )
-
-    def get_auto(self, tree):
-        """ helper for autotrophic series that have pre built their
-        history and are asked for one element
-        (necessary since they bypass the above .get)
-        """
-        name = self.namecache.get(id(tree))
-        if name is None:
-            name = helper.name_of_expr(tree)
-            self.namecache[id(tree)] = name
-        idate = self.env.get('__idate__')
-        assert idate
-        return self._find_by_nearest_idate(name, idate)
-
-    def evaluate(self, tree, idate, name):
-        # provide ammo to .today
-        self.getargs['revision_date'] = idate
-        self.env['__name__'] = name
-        self.env['__idate__'] = idate
-        ts = pevaluate(tree, self.env, self.auto, self.tsh.concurrency, hist=True)
-        ts.name = name
-        return ts
-
-
 # staircase fast path
-
 
 def has_compatible_operators(cn, tsh, tree, good_operators):
     operators = [tree[0]]
@@ -236,7 +152,7 @@ class NullIntepreter(Interpreter):
 
 
 class GroupInterpreter(Interpreter):
-    __slots__ = 'env', 'cn', 'tsh', 'getargs', 'histories', 'vcache', 'auto'
+    __slots__ = 'env', 'cn', 'tsh', 'getargs', 'vcache', 'auto'
     FUNCS = None
 
     @property
@@ -250,7 +166,7 @@ class BridgeInterpreter(Interpreter):
     """Intepreter that creates a bridge between the group world and the
     series world
     """
-    __slots__ = ('env', 'cn', 'tsh', 'getargs', 'histories', 'vcache', 'auto',
+    __slots__ = ('env', 'cn', 'tsh', 'getargs', 'vcache', 'auto',
                  'groups', 'binding', 'memory_cache')
 
     def __init__(self, *args, groups, binding):
