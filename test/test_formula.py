@@ -940,20 +940,24 @@ def test_ifunc(engine, tsh):
 
     @func('shifter', auto=True)
     def shifter(__interpreter__,
-               __from_value_date__,
-               __to_value_date__,
-               __revision_date__,
+                __from_value_date__,
+                __to_value_date__,
+                __revision_date__,
                 name: str,
                 days: int=0) -> pd.Series:
-        args = __interpreter__.getargs.copy()
-        fromdate = args.get('from_value_date')
-        todate = args.get('to_value_date')
-        if fromdate:
-            args['from_value_date'] = fromdate + timedelta(days=days)
-        if todate:
-            args['to_value_date'] = todate + timedelta(days=days)
+        if __from_value_date__:
+            __from_value_date__ += timedelta(days=days)
+        if __to_value_date__:
+            __to_value_date__ += timedelta(days=days)
 
-        return __interpreter__.get(name, args)
+        i = __interpreter__
+        return i.tsh.get(
+            i.cn,
+            name,
+            revision_date=__revision_date__,
+            from_value_date=__from_value_date__,
+            to_value_date=__to_value_date__
+        )
 
     @metadata('shifter')
     def shifter_metadata(cn, tsh, stree):
@@ -1017,10 +1021,11 @@ def test_ifunc(engine, tsh):
     assert_hist("""
 insertion_date             value_date
 2019-01-01 00:00:00+00:00  2019-01-01    1.0
-                           2019-01-02    2.0
-                           2019-01-03    3.0
-                           2019-01-04    4.0
-                           2019-01-05    5.0
+                           2019-01-02    1.0
+                           2019-01-03    2.0
+                           2019-01-04    3.0
+                           2019-01-05    4.0
+                           2019-01-06    5.0
 2019-01-02 00:00:00+00:00  2019-01-01    1.0
                            2019-01-02    1.0
                            2019-01-03    2.0
@@ -1036,10 +1041,10 @@ insertion_date             value_date
     )
     assert_hist("""
 insertion_date             value_date
-2019-01-01 00:00:00+00:00  2019-01-03    3.0
-                           2019-01-04    4.0
-2019-01-02 00:00:00+00:00  2019-01-03    2.0
-                           2019-01-04    3.0
+2019-01-01 00:00:00+00:00  2019-01-02    1.0
+                           2019-01-03    2.0
+2019-01-02 00:00:00+00:00  2019-01-02    1.0
+                           2019-01-03    2.0
 """, hist)
 
     # cleanup
