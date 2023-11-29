@@ -542,8 +542,8 @@ def test_autotrophic_idates2(tsx):
 
     @insertion_dates('auto2')
     def custom_idates(cn, tsh, tree,
-               from_insertion_date, to_insertion_date,
-               from_value_date, to_value_date):
+                      from_insertion_date, to_insertion_date,
+                      from_value_date, to_value_date):
         dates = [
             pd.Timestamp('2020-1-1', tz='utc'),
             pd.Timestamp('2020-1-2', tz='utc')
