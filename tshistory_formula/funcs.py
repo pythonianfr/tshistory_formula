@@ -787,6 +787,9 @@ def _group_series(*serieslist):
 
     return df
 
+@func('group_series')
+def group_series(*serieslist:pd.Series) -> pd.Series: # Notice the wrong type being provided for the return obj, very hacky, must be improved
+    return _group_series(*serieslist)
 
 # trigonometric functions
 
@@ -885,7 +888,8 @@ def trig_arctangent2(series1: pd.Series,
         return empty_series(
             tzaware_serie(series1)
         )
-    res = np.arctan2(df['0'], df['1']) * (180 / np.pi)
+    # Why using columns names ? this is not really a supported property in saturn
+    res = np.arctan2(df.iloc[:,0], df.iloc[:, 1]) * (180 / np.pi)
     return res.dropna()
 
 
