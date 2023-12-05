@@ -21,7 +21,7 @@ def test_series_formula(client):
         'series': util.tojson(series),
         'author': 'Babar',
         'insertion_date': utcdt(2020, 1, 1, 10),
-        'tzaware': util.tzaware_serie(series)
+        'tzaware': util.tzaware_series(series)
     })
 
     assert res.status_code == 201
@@ -158,14 +158,14 @@ def test_bound_formula(client):
         'series': util.tojson(ts),
         'author': 'Babar',
         'insertion_date': utcdt(2021, 1, 1, 10),
-        'tzaware': util.tzaware_serie(ts)
+        'tzaware': util.tzaware_series(ts)
     })
     res = client.patch('/series/state', {
         'name': 'another-series',
         'series': util.tojson(ts),
         'author': 'Babar',
         'insertion_date': utcdt(2021, 1, 1, 10),
-        'tzaware': util.tzaware_serie(ts)
+        'tzaware': util.tzaware_series(ts)
     })
 
     assert res.status_code == 201

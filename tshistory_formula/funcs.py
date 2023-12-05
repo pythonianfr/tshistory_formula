@@ -25,7 +25,7 @@ from tshistory.util import (
     patch,
     patchmany,
     threadpool,
-    tzaware_serie
+    tzaware_series
 )
 from tshistory import search
 from tshistory_formula.registry import (
@@ -460,7 +460,7 @@ def naive(series: pd.Series, tzone: str) -> pd.Series:
     if not len(series):
         return empty_series(False)
 
-    if not tzaware_serie(series):
+    if not tzaware_series(series):
         return dedupe(series)
 
     series.index = series.index.tz_convert(tzone).tz_localize(None)
@@ -871,7 +871,7 @@ def trig_arctangent2(series1: pd.Series,
     df = _group_series(series1, series2)
     if not len(df):
         return empty_series(
-            tzaware_serie(series1)
+            tzaware_series(series1)
         )
     res = np.arctan2(df['0'], df['1']) * (180 / np.pi)
     return res.dropna()
@@ -893,7 +893,7 @@ def _comparator(
         # hence we restrict each series to their commmon part
         intersect = series.index.intersection(num_or_series.index)
         if not len(intersect):
-            return empty_series(tzaware_serie(series))
+            return empty_series(tzaware_series(series))
         series = series[intersect]
         num_or_series = num_or_series[intersect]
 
@@ -1065,7 +1065,7 @@ def series_multiply(*serieslist: pd.Series) -> pd.Series:
     df = _group_series(*serieslist)
     if not len(df):
         return empty_series(
-            tzaware_serie(serieslist[0])
+            tzaware_series(serieslist[0])
         )
 
     res = None
@@ -1088,7 +1088,7 @@ def series_div(s1: pd.Series, s2: pd.Series) -> pd.Series:
     df = _group_series(*(s1, s2))
     if not len(df) or len(df.columns) < 2:
         return empty_series(
-            tzaware_serie(s1)
+            tzaware_series(s1)
         )
 
     c1, c2 = df.columns
@@ -2205,7 +2205,7 @@ def sub(series1: pd.Series,
     df = _group_series(series1, series2)
     if not len(df):
         return empty_series(
-            tzaware_serie(series1)
+            tzaware_series(series1)
         )
 
     res = df['0'] - df['1']
