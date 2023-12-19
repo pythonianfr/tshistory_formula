@@ -168,6 +168,10 @@ def test_metadata(engine, tsh):
         'value_type': 'float64'
     }
 
+    ival = tsh.interval(engine, 'test_meta')
+    assert ival.left == pd.Timestamp('2019-01-01 00:00:00')
+    assert ival.right == pd.Timestamp('2019-01-03 00:00:00')
+
     aware = pd.Series(
         [1, 2, 3],
         index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
@@ -1046,6 +1050,10 @@ insertion_date             value_date
 2019-01-01 00:00:00+00:00  2019-01-03    3.0
 2019-01-02 00:00:00+00:00  2019-01-03    2.0
 """, hist)
+
+    ival = tsh.interval(engine, 'shifting')
+    assert ival.left == pd.Timestamp('2019-01-01 00:00:00')
+    assert ival.right == pd.Timestamp('2019-01-06 00:00:00')
 
     # cleanup
     FUNCS.pop('shifter')

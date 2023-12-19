@@ -366,6 +366,24 @@ class timeseries(basets):
 
         return ts
 
+    def interval(self, cn, name, notz=False):
+        formula = self.formula(cn, name)
+        if not formula:
+            return super().interval(cn, name, notz)
+
+        tree = parse(formula)
+        series = self.find_series(cn, tree)
+        tz = 'utc' if self.tzaware(cn, name) else None
+        mindate = pd.Timestamp('2262-1-1', tz=tz)
+        maxdate = pd.Timestamp('1677-09-23', tz=tz)
+
+        for name in series:
+            ival = self.interval(cn, name, notz)
+            mindate = min(ival.left, mindate)
+            maxdate = max(ival.right, maxdate)
+
+        return pd.Interval(mindate, maxdate)
+
     def eval_formula(self, cn, formula, **kw):
         i = kw.get('__interpreter__') or interpreter.Interpreter(cn, self, kw)
         ts = i.evaluate(
