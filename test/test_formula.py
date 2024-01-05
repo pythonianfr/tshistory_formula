@@ -1539,7 +1539,7 @@ def test_slice_tzaware(engine, tsh):
     tsh.register_formula(
         engine,
         'slice_tz',
-        '(naive (slice (series "whocares")  #:todate (today)) "CET")'
+        '(naive (slice (series "whocares")  #:todate (now)) "CET")'
     )
 
     intermediary_utc = begin_tz + timedelta(days=1)
@@ -1862,7 +1862,7 @@ def test_history_auto_name_subexpr(engine, tsh):
     tsh.register_formula(
         engine,
         'auto-history-sub',
-        '(add (hist-auto-subexpr (today)) '
+        '(add (hist-auto-subexpr (now)) '
         '     (hist-auto-subexpr #:date (date "2020-1-2")))'
     )
 

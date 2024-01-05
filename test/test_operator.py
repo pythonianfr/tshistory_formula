@@ -1042,7 +1042,7 @@ def test_asof_history(engine, tsh):
     tsh.register_formula(
         engine,
         'asof-history',
-        '(asof (shifted (today) #:days -1) (series "test-asof-hist"))'
+        '(asof (shifted (now) #:days -1) (series "test-asof-hist"))'
     )
 
     v0 = tsh.get(engine, 'asof-history', revision_date=utcdt(2022, 1, 1))
@@ -1517,12 +1517,12 @@ def test_shifted(engine, tsh):
 
 
 def test_today(engine, tsh):
-    e1 = '(today)'
-    e2 = '(today #:naive #t)'
-    e3 = '(today #:naive #t #:tz "Europe/Moscow")'
-    e4 = '(today #:naive #f)'
-    e5 = '(today #:naive #f #:tz "Europe/Moscow")'
-    e6 = '(today #:tz "Gondwana/Chandrapore")'
+    e1 = '(now)'
+    e2 = '(now #:naive #t)'
+    e3 = '(now #:naive #t #:tz "Europe/Moscow")'
+    e4 = '(now #:naive #f)'
+    e5 = '(now #:naive #f #:tz "Europe/Moscow")'
+    e6 = '(now #:tz "Gondwana/Chandrapore")'
 
     i = Interpreter(engine, tsh, {})
     a = lisp.evaluate(e1, i.env)
@@ -1564,8 +1564,8 @@ def test_more_today(engine, tsh):
         engine,
         'sliced-base',
         '(slice (series "today-base") '
-        '       #:fromdate (today)'
-        '       #:todate (shifted (today) #:days 10))'
+        '       #:fromdate (now)'
+        '       #:todate (shifted (now) #:days 10))'
     )
 
     # last version: as of today + 1 day
@@ -1577,7 +1577,7 @@ def test_more_today(engine, tsh):
 
     # last version: as of today + 1 day (explicit revision_date)
     # the cutoff is not the same since we look into tomorrow
-    # and (today) will be bound to it
+    # and (now) will be bound to it
     ts_2 = tsh.get(
         engine,
         'sliced-base',
@@ -2165,7 +2165,7 @@ def test_asof_today(engine, tsh):
     tsh.register_formula(
         engine,
         'test-asof-yesterday',
-        '(asof (shifted (today) #:days -1) (series "asof-base"))'
+        '(asof (shifted (now) #:days -1) (series "asof-base"))'
     )
 
     exp = tsh.expanded_formula(
@@ -2174,8 +2174,8 @@ def test_asof_today(engine, tsh):
     )
     assert exp == (
         '(let revision_date nil from_value_date nil to_value_date nil'
-        ' (let revision_date (shifted (today) #:days -1)'
-        ' (asof (shifted (today) #:days -1)'
+        ' (let revision_date (shifted (now) #:days -1)'
+        ' (asof (shifted (now) #:days -1)'
         ' (series "asof-base"))))'
     )
 
@@ -2569,7 +2569,7 @@ insertion_date             value_date
     tsh.register_formula(
         engine,
         'constant-3',
-        '(constant 3. (date "2020-1-1") (today) "D" (date "2020-2-1"))'
+        '(constant 3. (date "2020-1-1") (now) "D" (date "2020-2-1"))'
     )
 
     # no crash wrt naive revision_date
@@ -2582,7 +2582,7 @@ def test_constant_today_timetravel(engine, tsh):
     tsh.register_formula(
         engine,
         'constant-with-today',
-        '(constant 1. (date "2021-1-1") (today) "D" (date "2020-2-1"))'
+        '(constant 1. (date "2021-1-1") (now) "D" (date "2020-2-1"))'
     )
 
     ts = tsh.get(

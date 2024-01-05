@@ -6,10 +6,14 @@ from psyl.lisp import (
     serialize
 )
 
-from tshistory.migrate import Migrator as _Migrator
+from tshistory.migrate import (
+    Migrator as _Migrator,
+    version
+)
 
 from tshistory_formula import __version__
 from tshistory_formula.helper import (
+    rename_operator,
     rewrite_sub_formula,
     rewrite_trig_formula
 )
@@ -28,6 +32,36 @@ class Migrator(_Migrator):
         migrate_sub_formulas(self.engine, self.namespace, self.interactive)
         fix_formula_groups_metadata(self.engine, self.namespace, self.interactive)
         migrate_group_formula_schema(self.engine, self.namespace, self.interactive)
+
+
+@version('tshistory-formula', '0.16.0')
+def rename_today_operator(engine, namespace, interactive):
+    formulas = engine.execute(
+        f'select name, internal_metadata '
+        f'from "{namespace}".registry '
+        'where internal_metadata->\'formula\' is not null'
+    ).fetchall()
+
+    for name, imeta in formulas:
+        text = imeta['formula']
+        if '(today)' in text:
+            print(f' renaming `today` -> `now` for {name}')
+        else:
+            continue
+        tree = rename_operator(
+            parse(text),
+            'today',
+            'now'
+        )
+        imeta['formula'] = serialize(tree)
+        with engine.begin() as cn:
+            cn.execute(
+                f'update "{namespace}".registry '
+                'set internal_metadata = %(metadata)s '
+                'where name = %(name)s',
+                metadata=json.dumps(imeta),
+                name=name
+            )
 
 
 def migrate_formula_schema(engine, namespace, interactive):

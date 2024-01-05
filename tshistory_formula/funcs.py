@@ -411,7 +411,7 @@ def asof(revision_date: pd.Timestamp,
     """
     Fetch the series in the asof scope with the specified revision date.
 
-    Example: `(asof (shifted (today) #:days -1) (series "i-have-many-versions"))`
+    Example: `(asof (shifted (now) #:days -1) (series "i-have-many-versions"))`
 
     """
     return series
@@ -512,23 +512,23 @@ def shifted(date: pd.Timestamp,
     )
 
 
-@func('today')
-def today(__interpreter__,
-          naive: Optional[bool]=False,
-          tz: Optional[str]=None) -> pd.Timestamp:
+@func('now')
+def now(__interpreter__,
+        naive: Optional[bool]=False,
+        tz: Optional[str]=None) -> pd.Timestamp:
     """
-    Produces a timezone-aware timestamp as of today
+    Produces a timezone-aware timestamp as of now
 
     The `naive` keyword forces production of a naive timestamp.
     The `tz` keyword allows to specify an alternate time zone
     (if unpecified and not naive).
     Both `tz` and `naive` keywords are mutually exlcusive.
 
-    Example: `(today)`
+    Example: `(now)`
     """
     # impl. note: if not naive and tz is none,
     # tz will be utc
-    return __interpreter__.today(naive, tz)
+    return __interpreter__.now(naive, tz)
 
 
 @func('start-of-month')

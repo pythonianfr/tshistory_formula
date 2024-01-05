@@ -66,7 +66,7 @@ class Interpreter:
     def evaluate(self, tree):
         return pevaluate(tree, self.env, self.auto, self.tsh.concurrency)
 
-    def today(self, naive, tz):
+    def now(self, naive, tz):
         if naive:
             assert tz is None, 'date cannot be naive and have a tz'
         tz = pytz.timezone(tz or 'utc')
