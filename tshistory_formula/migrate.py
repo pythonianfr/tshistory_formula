@@ -17,7 +17,7 @@ from tshistory_formula.helper import (
 
 class Migrator(_Migrator):
     _order = 1
-    _known_version = __version__
+    _package_version = __version__
     _package = 'tshistory-formula'
 
     def initial_migration(self):
