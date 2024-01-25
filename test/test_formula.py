@@ -27,6 +27,7 @@ from tshistory_formula.registry import (
 )
 from tshistory_formula.types import constant_fold
 from tshistory_formula.helper import (
+    BadKeyword,
     _extract_from_expr,
     expanded,
     has_names,
@@ -107,12 +108,22 @@ def test_incomplete_kw(engine, tsh):
         index=pd.date_range(dt(2024, 1, 1), periods=3, freq='D')
     )
     tsh.update(engine, ts, 'baaad', author='Babar')
-    tsh.register_formula(
-        engine,
-        'bad-kw',
-        '(add (series "baaad" #:ffill))'
-    )
-    assert tsh.formula(engine, 'bad-kw') == '(add (series "baaad" #:ffill))'
+
+    with pytest.raises(BadKeyword) as err:
+        tsh.register_formula(
+            engine,
+            'bad-kw',
+            '(add (series "baaad" #:ffill))'
+        )
+    assert err.value.args[0] == 'keyword `#:ffill` not followed by a value'
+
+    with pytest.raises(BadKeyword) as err:
+        tsh.register_formula(
+            engine,
+            'bad-kw',
+            '(add (series "baaad" #:celeste #:babar))'
+        )
+    assert err.value.args[0] == 'keyword `#:celeste` not followed by a value'
 
 
 def test_finder(engine, tsh):

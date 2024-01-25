@@ -23,6 +23,27 @@ class seriesname(str):
     pass
 
 
+class BadKeyword(Exception): pass
+
+
+def validate(tree):
+    if not isinstance(tree, list):
+        return
+
+    kw = None
+    for item in tree:
+        validate(item)
+        if isinstance(item, Keyword):
+            if kw is not None:
+                # two consecutive keywords ?
+                raise BadKeyword(f'keyword `#:{kw}` not followed by a value')
+            kw = item
+        else:
+            kw = None
+    if kw is not None:
+        raise BadKeyword(f'keyword `#:{kw}` not followed by a value')
+
+
 def rename_operator(tree, oldname, newname):
     if not isinstance(tree, list):
         return tree

@@ -179,6 +179,7 @@ class timeseries(basets):
 
         # basic syntax check
         tree = parse(formula)
+        helper.validate(tree)
         # this normalizes the formula
         formula = serialize(tree)
 
