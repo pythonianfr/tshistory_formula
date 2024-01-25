@@ -1816,6 +1816,31 @@ def test_resample_interpolate(tsh, engine):
 """, ts)
 
 
+def test_upsample(engine, tsh):
+    ts1 = pd.Series(
+        [0, 10, 20],
+        index=[
+            pd.Timestamp('2022-12-31T23:00:00'),
+            pd.Timestamp('2023-12-31T23:00:00'),
+            pd.Timestamp('2024-12-31T23:00:00')
+        ]
+    )
+    tsh.update(engine, ts1, 'upsample-yearly', 'Babar')
+
+    tsh.register_formula(
+        engine,
+        'upsample-bug',
+        '(resample (series "upsample-yearly") "H")'
+    )
+    ts2 = tsh.get(engine, 'upsample-bug')
+
+    # Hey ! How about we get an hourly series there ?
+    assert_df("""
+2022-12-31 23:00:00     0.0
+2023-12-31 23:00:00    10.0
+2024-12-31 23:00:00    20.0
+""", ts2)
+
 
 @pytest.mark.parametrize("tstamp,freq,direction,expected", [
     ('2020-01-01 08:37:56', 'D', 'left', '2020-01-01'),
