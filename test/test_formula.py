@@ -101,6 +101,20 @@ def test_bad_name(engine, tsh):
         )
 
 
+def test_incomplete_kw(engine, tsh):
+    ts = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(dt(2024, 1, 1), periods=3, freq='D')
+    )
+    tsh.update(engine, ts, 'baaad', author='Babar')
+    tsh.register_formula(
+        engine,
+        'bad-kw',
+        '(add (series "baaad" #:ffill))'
+    )
+    assert tsh.formula(engine, 'bad-kw') == '(add (series "baaad" #:ffill))'
+
+
 def test_finder(engine, tsh):
     naive = pd.Series(
         [1, 2, 3],
