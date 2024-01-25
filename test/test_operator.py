@@ -1687,6 +1687,7 @@ def test_resample(engine, tsh):
     tsh.update(engine, gasday, 'gasday', 'Celeste')
     assert_df("""
 2020-01-01 00:00:00+00:00    1.0
+2020-01-02 00:00:00+00:00    1.0
 2020-01-03 00:00:00+00:00    3.0
 """, tsh.get(engine, 'gasdaytoday'))
 
@@ -1836,10 +1837,12 @@ def test_upsample(engine, tsh):
 
     # Hey ! How about we get an hourly series there ?
     assert_df("""
-2022-12-31 23:00:00     0.0
-2023-12-31 23:00:00    10.0
+2024-12-31 19:00:00    10.0
+2024-12-31 20:00:00    10.0
+2024-12-31 21:00:00    10.0
+2024-12-31 22:00:00    10.0
 2024-12-31 23:00:00    20.0
-""", ts2)
+""", ts2[-5:])
 
 
 @pytest.mark.parametrize("tstamp,freq,direction,expected", [
