@@ -14,6 +14,7 @@ from tshistory.http.client import httpclient, unwraperror
 from tshistory.http.util import (
     enum,
     onerror,
+    required_roles,
     series_response,
     utcdt
 )
@@ -155,6 +156,7 @@ class formula_httpapi(httpapi):
             })
             @api.expect(formula)
             @onerror
+            @required_roles('admin', 'rw', 'ro')
             def get(self):
                 """returns a formula
 
@@ -185,6 +187,7 @@ class formula_httpapi(httpapi):
             })
             @api.expect(register_formula)
             @onerror
+            @required_roles('admin', 'rw')
             def patch(self):
                 """register a fomula (computed series)
 
@@ -220,6 +223,7 @@ class formula_httpapi(httpapi):
             @api.doc(responses={200: 'Got content', 404: 'Does not exist'})
             @api.expect(formula_depth)
             @onerror
+            @required_roles('admin', 'rw', 'ro')
             def get(self):
                 """return the depth of a formula
 
@@ -240,6 +244,7 @@ class formula_httpapi(httpapi):
             @api.doc(responses={200: 'Got content', 400: 'Invalid formula'})
             @api.expect(eval_formula)
             @onerror
+            @required_roles('admin', 'rw', 'ro')
             def post(self):
                 """evaluate a formula expression
 
@@ -275,6 +280,8 @@ class formula_httpapi(httpapi):
         class timeseries_formula_components(Resource):
 
             @api.expect(formula_components)
+            @onerror
+            @required_roles('admin', 'rw', 'ro')
             def get(self):
                 args = formula_components.parse_args()
 
@@ -292,6 +299,7 @@ class formula_httpapi(httpapi):
 
             @api.expect(groupformula)
             @onerror
+            @required_roles('admin', 'rw', 'ro')
             def get(self):
                 args = groupformula.parse_args()
                 if not tsa.group_exists(args.name):
@@ -305,6 +313,7 @@ class formula_httpapi(httpapi):
 
             @api.expect(register_group_formula)
             @onerror
+            @required_roles('admin', 'rw')
             def put(self):
                 args = register_group_formula.parse_args()
 
@@ -332,6 +341,7 @@ class formula_httpapi(httpapi):
 
                 @api.expect(boundformula)
                 @onerror
+                @required_roles('admin', 'rw', 'ro')
                 def get(self):
                     args = boundformula.parse_args()
                     if not tsa.group_exists(args.name):
@@ -348,6 +358,7 @@ class formula_httpapi(httpapi):
 
                 @api.expect(boundformula)
                 @onerror
+                @required_roles('admin', 'rw')
                 def put(self):
                     args = boundformula.parse_args()
                     bindings = pd.read_json(args.bindings)

@@ -7,6 +7,7 @@ from pytest_sa_pg import db
 from click.testing import CliRunner
 
 from tshistory import cli as command, api
+from tshistory.http.util import nosecurity
 from tshistory.testutil import make_tsx
 
 from tshistory_formula.schema import formula_schema
@@ -94,12 +95,14 @@ class WebTester(webtest.TestApp):
 @pytest.fixture(scope='session')
 def client(engine):
     formula_schema().create(engine, reset=True)
-    wsgi = make_app(
-        api.timeseries(
-            str(engine.url),
-            handler=timeseries,
-            namespace='tsh',
-            sources={}
+    wsgi = nosecurity(
+        make_app(
+            api.timeseries(
+                str(engine.url),
+                handler=timeseries,
+                namespace='tsh',
+                sources={}
+            )
         )
     )
     yield WebTester(wsgi)
