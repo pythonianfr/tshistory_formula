@@ -93,9 +93,6 @@ def formula(self,
       ...
       '(add (series "sales.fr") (series "sales.be"))')
 
-    The expanded parameter takes an integer between 0 and n and will
-    proceed n successive expansions of the formula series expressions.
-
     Expanding means replacing all `series` expressions that are
     formulas with the formula contents.
 
