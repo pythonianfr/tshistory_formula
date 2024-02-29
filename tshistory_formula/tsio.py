@@ -214,7 +214,7 @@ class timeseries(basets):
             )
 
         tzaware = self.check_tz_compatibility(cn, tree)
-        etree = self._expanded_formula(cn, formula)
+        etree = self._expanded_formula(cn, formula, remote=False)
         ch = hashlib.sha1(
             serialize(etree).encode()
         ).hexdigest()
@@ -261,7 +261,8 @@ class timeseries(basets):
             serialize(
                 self._expanded_formula(
                     cn,
-                    self.formula(cn, name)
+                    self.formula(cn, name),
+                    remote=False  # bw compat
                 )
             ).encode()
         ).hexdigest()
@@ -391,13 +392,15 @@ class timeseries(basets):
         )
         return ts
 
-    def _expanded_formula(self, cn, formula, stopnames=(), level=-1, display=True, qargs=None):
+    def _expanded_formula(self, cn, formula, stopnames=(), level=-1,
+                          display=True, remote=False, qargs=None):
         exp = helper.expanded(
             self,
             cn,
             parse(formula),
             stopnames=stopnames,
             scopes=qargs is not None,
+            remote=remote,
             level=level
         )
         if not display:
@@ -407,12 +410,13 @@ class timeseries(basets):
             )
         return exp
 
-    def expanded_formula(self, cn, name, stopnames=(), display=True, level=-1, **kw):
+    def expanded_formula(self, cn, name, stopnames=(), display=True, remote=False,
+                         level=-1, **kw):
         formula = self.formula(cn, name)
         if formula is None:
             return
 
-        tree = self._expanded_formula(cn, formula, stopnames, level, display, kw)
+        tree = self._expanded_formula(cn, formula, stopnames, level, display, remote, kw)
         if tree is None:
             return
 

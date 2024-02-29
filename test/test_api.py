@@ -204,9 +204,12 @@ def test_formula_remote_expansion(tsa):
     f = tsa.formula('test-localformula-remote-expansion')
     assert f == '(+ 1 (series "remote-formula"))'
 
-    f = tsa.formula('test-localformula-remote-expansion', expanded=True, display=True)
-    # well, the remote formula was not expanded
+    f = tsa.formula('test-localformula-remote-expansion', expanded=True, display=True, remote=False)
+    # the remote formula was not expanded
     assert f == '(+ 1 (series "remote-formula"))'
+
+    f = tsa.formula('test-localformula-remote-expansion', expanded=True, display=True)
+    assert f == '(+ 1 (+ 1 (series "remote-base-series")))'
 
 
 def test_formula_components(tsa):

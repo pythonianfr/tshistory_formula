@@ -121,6 +121,19 @@ def has_names(tsh, cn, tree, names, stopnames):
     return False
 
 
+def formula(tsh, cn, name, remote):
+    f = tsh.formula(cn, name)
+    if f is not None:
+        return f
+
+    if remote and tsh.othersources:
+        f = tsh.othersources.formula(name)
+        if f is not None:
+            return f
+
+    return None
+
+
 def expanded(
         tsh,
         cn,
@@ -129,9 +142,12 @@ def expanded(
         shownames=(),
         scoped=None,
         scopes=True,
+        remote=False,
         level=-1
 ):
     # handle scoped parameter (internal memo)
+    if tree[0] == 'let':
+        import ipdb; ipdb.set_trace()
     scoped = set() if scoped is None else scoped
 
     # base case: check the current operation
@@ -151,7 +167,8 @@ def expanded(
                     stopnames,
                     shownames,
                     scoped,
-                    scopes
+                    scopes,
+                    remote=remote
                 )
             )
 
@@ -165,17 +182,18 @@ def expanded(
             return tree
         if name in stopnames:
             return tree
-        if tsh.type(cn, name) == 'formula' and level:
-            formula = tsh.formula(cn, name)
+        form = formula(tsh, cn, name, remote)
+        if form and level:
             options = extract_auto_options(tree)
             if not options:
                 return expanded(
                     tsh,
                     cn,
-                    parse(formula),
+                    parse(form),
                     stopnames,
                     shownames,
                     scopes=scopes,
+                    remote=remote,
                     level=level-1
                 )
             return [
@@ -183,10 +201,11 @@ def expanded(
                 expanded(
                     tsh,
                     cn,
-                    parse(formula),
+                    parse(form),
                     stopnames,
                     shownames,
                     scopes=scopes,
+                    remote=remote,
                     level=level-1
                 ),
             ] + options
@@ -203,6 +222,7 @@ def expanded(
                     stopnames,
                     shownames,
                     scopes=scopes,
+                    remote=remote,
                     level=level
                 )
             )

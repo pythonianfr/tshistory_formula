@@ -37,19 +37,23 @@ formula.add_argument(
     default=False,
     help='return the recursively expanded formula'
 )
-
 formula.add_argument(
     'level',
     type=int,
     default=-1,
     help='levels of formula expansion'
 )
-
 formula.add_argument(
     'display',
     type=inputs.boolean,
     default=True,
     help='return undecorated formula (for display purposes)'
+)
+formula.add_argument(
+    'remote',
+    type=inputs.boolean,
+    default=True,
+    help='if expanded, perform expansion also for the remote formulas'
 )
 
 formula_components = base.copy()
@@ -175,6 +179,7 @@ class formula_httpapi(httpapi):
                     args.name,
                     args.display,
                     args.expanded,
+                    args.remote,
                     args.level
                 )
                 return {'level': args.level, 'formula': form}, 200
@@ -375,12 +380,13 @@ class formula_httpclient(httpclient):
     index = 1
 
     @unwraperror
-    def formula(self, name, display=True, expanded=False, level=-1):
+    def formula(self, name, display=True, expanded=False, remote=True, level=-1):
         res = self.session.get(
             f'{self.uri}/series/formula', params={
                 'name': name,
                 'display': display,
                 'expanded': expanded,
+                'remote': remote,
                 'level': level
             }
         )

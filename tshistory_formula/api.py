@@ -83,6 +83,7 @@ def formula(self,
             name: str,
             display: bool=True,
             expanded: bool=False,
+            remote: bool=True,
             level: int=-1) -> Optional[str]:
     """Get the formula associated with a name.
 
@@ -114,11 +115,13 @@ def formula(self,
             self.engine,
             form,
             level=level,
-            display=display
+            display=display,
+            remote=remote
         )
         if tree:
             return serialize(tree)
 
+    # NOTE: pass levels and remote
     return self.othersources.formula(
         name,
         display=display,
