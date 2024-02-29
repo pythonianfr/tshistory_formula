@@ -180,6 +180,37 @@ insertion_date             value_date
     )
 
 
+def test_formula_remote_expansion(tsa):
+    rtsh = timeseries('remote')
+    rtsh.update(
+        tsa.engine,
+        pd.Series(
+            [1, 2, 3],
+            index=pd.date_range(pd.Timestamp('2024-1-1'), periods=3, freq='H'),
+        ),
+        'remote-base-series',
+        'Babar',
+        insertion_date=pd.Timestamp('2024-1-1', tz='UTC')
+    )
+    rtsh.register_formula(
+        tsa.engine,
+        'remote-formula',
+        '(+ 1 (series "remote-base-series"))'
+    )
+
+    tsa.register_formula(
+        'test-localformula-remote-expansion',
+        '(+ 1 (series "remote-formula"))'
+    )
+
+    f = tsa.formula('test-localformula-remote-expansion')
+    assert f == '(+ 1 (series "remote-formula"))'
+
+    f = tsa.formula('test-localformula-remote-expansion', expanded=True, display=True)
+    # well, the remote formula was not expanded
+    assert f == '(+ 1 (series "remote-formula"))'
+
+
 def test_formula_components(tsa):
     series = pd.Series(
         [1, 2, 3],
