@@ -164,16 +164,14 @@ insertion_date             value_date
 2020-01-01 02:00:00    8.0
 """, ts)
 
-    expanded = tsa.formula('remote-formula-local-formula', expanded=True)
+    expanded = tsa.formula('remote-formula-local-formula', expanded=True, display=False)
     assert expanded == (
         '(let revision_date nil from_value_date nil to_value_date nil'
         ' (+ 3 (+ 2 (series "remote-series")))'
         ')'
     )
     expanded = tsa.formula(
-        'remote-formula-local-formula',
-        display=True,
-        expanded=True
+        'remote-formula-local-formula', expanded=True
     )
     assert expanded == (
         '(+ 3 (+ 2 (series "remote-series")))'
@@ -361,25 +359,25 @@ def test_formula_depth(tsx):
     assert tsx.formula_depth('level-1') == 1
     assert tsx.formula_depth('level-2') == 2
 
-    exp = tsx.formula('level-2', expanded=True, level=0)
+    exp = tsx.formula('level-2', expanded=True, level=0, display=False)
     assert exp == (
         '(let revision_date nil from_value_date nil to_value_date nil '
         '(+ 1 (series "level-1"))'
         ')'
     )
-    exp = tsx.formula('level-2', expanded=True, level=1)
+    exp = tsx.formula('level-2', expanded=True, level=1, display=False)
     assert exp == (
         '(let revision_date nil from_value_date nil to_value_date nil '
         '(+ 1 (+ 1 (series "level-0")))'
         ')'
     )
-    exp = tsx.formula('level-2', expanded=True, level=2)
+    exp = tsx.formula('level-2', expanded=True, level=2, display=False)
     assert exp == (
         '(let revision_date nil from_value_date nil to_value_date nil '
         '(+ 1 (+ 1 (+ 1 (series "level-base"))))'
         ')'
     )
-    exp3 = tsx.formula('level-2', expanded=True, level=3)
+    exp3 = tsx.formula('level-2', expanded=True, level=3, display=False)
     assert exp3 == exp
 
 

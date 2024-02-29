@@ -48,7 +48,7 @@ formula.add_argument(
 formula.add_argument(
     'display',
     type=inputs.boolean,
-    default=False,
+    default=True,
     help='return undecorated formula (for display purposes)'
 )
 
@@ -375,7 +375,7 @@ class formula_httpclient(httpclient):
     index = 1
 
     @unwraperror
-    def formula(self, name, display=False, expanded=False, level=-1):
+    def formula(self, name, display=True, expanded=False, level=-1):
         res = self.session.get(
             f'{self.uri}/series/formula', params={
                 'name': name,

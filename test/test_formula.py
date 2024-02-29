@@ -1123,7 +1123,7 @@ def test_newop_expansion(engine, tsh):
         False
     )
 
-    exp = tsh.expanded_formula(engine, 'combinator')
+    exp = tsh.expanded_formula(engine, 'combinator', display=False)
     assert exp == (
         '(let revision_date nil from_value_date nil to_value_date nil'
         ' (combine "comb-a" "comb-b")'
@@ -1133,6 +1133,7 @@ def test_newop_expansion(engine, tsh):
     exp = tsh.expanded_formula(
         engine,
         'combinator',
+        display=False,
         revision_date=pd.Timestamp('2022-1-1'),
         to_value_date=pd.Timestamp('2030-1-1', tz='UTC')
     )
@@ -1440,7 +1441,7 @@ def test_expanded(engine, tsh):
         False
     )
 
-    exp = tsh.expanded_formula(engine, 'expandme')
+    exp = tsh.expanded_formula(engine, 'expandme', display=False)
     assert exp == (
         '(let revision_date nil from_value_date nil to_value_date nil'
         ' (add'
@@ -2111,31 +2112,31 @@ def test_expanded_level(engine, tsh):
     assert tsh.depth(engine, 'level-1') == 1
     assert tsh.depth(engine, 'level-2') == 2
 
-    exp = tsh.expanded_formula(engine, 'level-2')
+    exp = tsh.expanded_formula(engine, 'level-2', display=False)
     assert exp == (
         '(let revision_date nil from_value_date nil to_value_date nil '
         '(+ 1 (+ 1 (+ 1 (series "level-base"))))'
         ')'
     )
-    exp = tsh.expanded_formula(engine, 'level-2', level=0)
+    exp = tsh.expanded_formula(engine, 'level-2', level=0, display=False)
     assert exp == (
         '(let revision_date nil from_value_date nil to_value_date nil '
         '(+ 1 (series "level-1"))'
         ')'
     )
-    exp = tsh.expanded_formula(engine, 'level-2', level=1)
+    exp = tsh.expanded_formula(engine, 'level-2', level=1, display=False)
     assert exp == (
         '(let revision_date nil from_value_date nil to_value_date nil '
         '(+ 1 (+ 1 (series "level-0")))'
         ')'
     )
-    exp = tsh.expanded_formula(engine, 'level-2', level=2)
+    exp = tsh.expanded_formula(engine, 'level-2', level=2, display=False)
     assert exp == (
         '(let revision_date nil from_value_date nil to_value_date nil '
         '(+ 1 (+ 1 (+ 1 (series "level-base"))))'
         ')'
     )
-    exp3 = tsh.expanded_formula(engine, 'level-2', level=3)
+    exp3 = tsh.expanded_formula(engine, 'level-2', level=3, display=False)
     assert exp3 == exp
 
 

@@ -85,7 +85,7 @@ def test_series_formula(client):
         'name': '2-levels-formula',
         'text': '(+ 5 (series "new-formula"))'
     })
-    res = client.get('/series/formula?name=2-levels-formula&expanded=1')
+    res = client.get('/series/formula?name=2-levels-formula&expanded=1&display=false')
     assert res.json == {
         'level': -1,
         'formula': (
@@ -287,10 +287,10 @@ def test_formula(tsx, engine, tsh):
         '2-levels',
         '(+ 5 (series "new-formula"))'
     )
-    assert tsx.formula('2-levels', display=True, expanded=True) == (
+    assert tsx.formula('2-levels', expanded=True) == (
         '(+ 5 (+ 3 (series "in-a-formula")))'
     )
-    assert tsx.formula('2-levels', expanded=True) == (
+    assert tsx.formula('2-levels', expanded=True, display=False) == (
         '(let revision_date nil from_value_date nil to_value_date nil'
         ' (+ 5 (+ 3 (series "in-a-formula")))'
         ')'

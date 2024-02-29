@@ -301,7 +301,9 @@ def test_naive_tz_boundaries(engine, tsh):
 """, ts)
 
     exp = tsh.expanded_formula(
-        engine, 'naive-boundaries',
+        engine,
+        'naive-boundaries',
+        display=False,
         from_value_date=pd.Timestamp('2022-2-2', tz='EST')
     )
     assert exp == (
@@ -314,7 +316,9 @@ def test_naive_tz_boundaries(engine, tsh):
     )
 
     exp = tsh.expanded_formula(
-        engine, 'naive-boundaries',
+        engine,
+        'naive-boundaries',
+        display=False,
         from_value_date=pd.Timestamp('2022-2-2')
     )
     assert exp == (
@@ -1920,7 +1924,8 @@ def test_time_shifted(engine, tsh):
 
     exp = tsh.expanded_formula(
         engine,
-        'test-shift'
+        'test-shift',
+        display=False
     )
     assert exp == (
         '(let revision_date nil from_value_date nil to_value_date nil'
@@ -2198,7 +2203,8 @@ def test_asof_today(engine, tsh):
 
     exp = tsh.expanded_formula(
         engine,
-        'test-asof-yesterday'
+        'test-asof-yesterday',
+        display=False
     )
     assert exp == (
         '(let revision_date nil from_value_date nil to_value_date nil'

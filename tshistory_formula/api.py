@@ -81,7 +81,7 @@ def eval_formula(self,
 @extend(mainsource)
 def formula(self,
             name: str,
-            display: bool=False,
+            display: bool=True,
             expanded: bool=False,
             level: int=-1) -> Optional[str]:
     """Get the formula associated with a name.
@@ -114,7 +114,7 @@ def formula(self,
             self.engine,
             form,
             level=level,
-            qargs=None if display else {}
+            display=display
         )
         if tree:
             return serialize(tree)
@@ -129,11 +129,12 @@ def formula(self,
 @extend(altsources)
 def formula(self,  # noqa: F811
             name: str,
-            display: bool=False,
+            display: bool=True,
             expanded: int=-1) -> Optional[str]:
     source = self._findsourcefor(name)
     if source is None:
         return
+
     return source.tsa.formula(
         name,
         display=display,
