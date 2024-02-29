@@ -214,10 +214,9 @@ class timeseries(basets):
             )
 
         tzaware = self.check_tz_compatibility(cn, tree)
+        etree = self._expanded_formula(cn, formula)
         ch = hashlib.sha1(
-            serialize(
-                self._expanded_formula(cn, formula)
-            ).encode()
+            serialize(etree).encode()
         ).hexdigest()
 
         if tzaware is None:
