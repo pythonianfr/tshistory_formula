@@ -96,7 +96,7 @@ def test_bogus_formula(tsx):
 
 
 def test_local_formula_remote_series(tsa):
-    rtsh = timeseries('test-mapi-2')
+    rtsh = timeseries('remote')
     rtsh.update(
         tsa.engine,
         pd.Series(
@@ -148,7 +148,6 @@ insertion_date             value_date
 2020-01-01 01:00:00    4.0
 2020-01-01 02:00:00    5.0
 """, tsa.get('remote-formula-remote-series'))
-
 
     rtsh.register_formula(
         tsa.engine,
@@ -231,7 +230,7 @@ def test_formula_components(tsa):
     }
 
     # formula referencing a remote formula
-    rtsh = timeseries('test-mapi-2')
+    rtsh = timeseries('remote')
     rtsh.update(
         tsa.engine,
         series,
@@ -376,7 +375,7 @@ def test_formula_remote_autotrophic(tsa, engine):
             }
         }
 
-    rtsh = pgseries('test-mapi-2')
+    rtsh = pgseries('remote')
     with engine.begin() as cn:
         rtsh.register_formula(
             cn,

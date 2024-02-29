@@ -37,13 +37,13 @@ def tsh(request, engine):
 
 @pytest.fixture(scope='session')
 def tsa(engine):
-    formula_schema('test-mapi').create(engine, reset=True)
-    formula_schema('test-mapi-2').create(engine, reset=True)
+    formula_schema().create(engine, reset=True)
+    formula_schema('remote').create(engine, reset=True)
     return api.timeseries(
         str(engine.url),
-        namespace='test-mapi',
+        namespace='tsh',
         handler=timeseries,
-        sources={'remote': (str(engine.url), 'test-mapi-2')}
+        sources={'remote': (str(engine.url), 'remote')}
     )
 
 
