@@ -30,7 +30,6 @@ class Migrator(_Migrator):
         migrate_to_formula_patch(self.engine, self.namespace, self.interactive)
         migrate_trig_formulas(self.engine, self.namespace, self.interactive)
         migrate_sub_formulas(self.engine, self.namespace, self.interactive)
-        fix_formula_groups_metadata(self.engine, self.namespace, self.interactive)
         migrate_group_formula_schema(self.engine, self.namespace, self.interactive)
 
 
@@ -349,64 +348,3 @@ def migrate_sub_formulas(engine, namespace, interactive):
 
     if series:
         reorganise_sub_series(series)
-
-
-def fix_formula_groups_metadata(engine, namespace, interactive):
-    print('Fixing formula groups metadata.')
-    from tshistory_formula.tsio import timeseries
-    tsh = timeseries(namespace)
-
-    formulas = []
-    bound = []
-
-    for name, kind in tsh.list_groups(engine).items():
-        if kind == 'primary':
-            continue
-
-        if kind == 'formula':
-            formulas.append(
-                (name, tsh.group_formula(engine, name))
-            )
-            continue
-
-        assert kind == 'bound'
-        sname, bindings = engine.execute(
-            f'select seriesname, binding '
-            f'from "{namespace}".group_binding '
-            'where groupname = %(name)s',
-            name=name
-        ).fetchone()
-
-        bound.append(
-            (name, sname, bindings)
-        )
-
-    print(f'collected {len(formulas)} formulas to migrate')
-    print(f'collected {len(bound)} bindings to migrate')
-
-    for name, formula in formulas:
-        with engine.begin() as cn:
-            tsh.group_delete(cn, name)
-            tsh.register_group_formula(cn, name, formula)
-
-    invalid = []
-    for name, sname, bindings in bound:
-        with engine.begin() as cn:
-            tsh.group_delete(cn, name)
-            try:
-                tsh.register_formula_bindings(
-                    cn,
-                    name,
-                    sname,
-                    pd.DataFrame(bindings),
-                    nockeck=True
-                )
-            except Exception as err:
-                invalid.append(
-                    (name, err)
-                )
-
-    if invalid:
-        print('Invalid bound groups could not be fixed:')
-        for name, err in invalid:
-            print(f'{name}: {err}')
