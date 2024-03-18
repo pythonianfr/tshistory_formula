@@ -250,6 +250,13 @@ def depth(
                 cn,
                 parse(formula),
             ) + 1
+        elif not tsh.exists(cn, name):
+            # ah, not a local formula,
+            # we must cross the chasm
+            if tsh.othersources is not None:
+                d = tsh.othersources.formula_depth(name)
+                if d is not None:
+                    return d + 1
 
         return 0
 

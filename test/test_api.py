@@ -203,6 +203,8 @@ def test_formula_remote_expansion(tsa):
 
     f = tsa.formula('test-localformula-remote-expansion')
     assert f == '(+ 1 (series "remote-formula"))'
+    d = tsa.formula_depth('test-localformula-remote-expansion')
+    assert d == 1
 
     f = tsa.formula('test-localformula-remote-expansion', expanded=True, display=True, remote=False)
     # the remote formula was not expanded
