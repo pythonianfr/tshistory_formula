@@ -214,6 +214,61 @@ def test_formula_remote_expansion(tsa):
     assert f == '(+ 1 (+ 1 (series "remote-base-series")))'
 
 
+def test_formula_remote_double_expansion(tsa):
+    rtsh = timeseries('remote')
+    rtsh.update(
+        tsa.engine,
+        pd.Series(
+            [1, 2, 3],
+            index=pd.date_range(pd.Timestamp('2024-1-1'), periods=3, freq='H'),
+        ),
+        'remote-primary-series',
+        'Babar',
+        insertion_date=pd.Timestamp('2024-1-1', tz='UTC')
+    )
+    rtsh.register_formula(
+        tsa.engine,
+        'remote-formula-2',
+        '(+ 2 (series "remote-primary-series"))'
+    )
+    rtsh.register_formula(
+        tsa.engine,
+        'remote-formula-1',
+        '(+ 1 (series "remote-formula-2"))'
+    )
+
+    tsa.register_formula(
+        'test-remote-formula-double-expansion',
+        '(+ 1 (series "remote-formula-1"))'
+    )
+
+    f = tsa.formula('test-remote-formula-double-expansion')
+    assert f == '(+ 1 (series "remote-formula-1"))'
+    d = tsa.formula_depth('test-remote-formula-double-expansion')
+    assert d == 2
+
+    f = tsa.formula(
+        'test-remote-formula-double-expansion',
+        expanded=True, display=True, remote=False
+    )
+    # the remote formula was not expanded
+    assert f == '(+ 1 (series "remote-formula-1"))'
+
+    # try levels
+    f = tsa.formula(
+        'test-remote-formula-double-expansion',
+        display=True, level=0
+    )
+    assert f == '(+ 1 (series "remote-formula-1"))'
+
+    f = tsa.formula(
+        'test-remote-formula-double-expansion',
+        expanded=True, display=True, level=1
+    )
+    assert f == '(+ 1 (+ 1 (+ 2 (series "remote-primary-series"))))'
+
+
+
 def test_formula_components(tsa):
     series = pd.Series(
         [1, 2, 3],
