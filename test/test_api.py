@@ -971,6 +971,7 @@ def test_more_group_errors(tsx):
         pd.DataFrame([['a', 'b', 'c']], columns=('series', 'group', 'family'))
     )
 
+
 def test_find(tsx):
     ts = pd.Series(
         [1, 2, 3],

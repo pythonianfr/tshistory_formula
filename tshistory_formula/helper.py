@@ -23,7 +23,8 @@ class seriesname(str):
     pass
 
 
-class BadKeyword(Exception): pass
+class BadKeyword(Exception):
+    pass
 
 
 def validate(tree):

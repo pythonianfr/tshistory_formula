@@ -1,6 +1,5 @@
 import json
 
-import pandas as pd
 from psyl.lisp import (
     parse,
     serialize
