@@ -133,7 +133,8 @@ def formula(self,
 def formula(self,  # noqa: F811
             name: str,
             display: bool=True,
-            expanded: int=-1) -> Optional[str]:
+            expanded: bool=False,
+            level: int=-1) -> Optional[str]:
     source = self._findsourcefor(name)
     if source is None:
         return
@@ -141,7 +142,8 @@ def formula(self,  # noqa: F811
     return source.tsa.formula(
         name,
         display=display,
-        expanded=expanded
+        expanded=expanded,
+        level=level
     )
 
 

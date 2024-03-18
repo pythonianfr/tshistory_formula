@@ -265,8 +265,13 @@ def test_formula_remote_double_expansion(tsa):
         'test-remote-formula-double-expansion',
         expanded=True, display=True, level=1
     )
-    assert f == '(+ 1 (+ 1 (+ 2 (series "remote-primary-series"))))'
+    assert f == '(+ 1 (+ 1 (series "remote-formula-2")))'
 
+    f = tsa.formula(
+        'test-remote-formula-double-expansion',
+        expanded=True, display=True, level=2
+    )
+    assert f == '(+ 1 (+ 1 (+ 2 (series "remote-primary-series"))))'
 
 
 def test_formula_components(tsa):
