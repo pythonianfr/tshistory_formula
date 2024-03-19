@@ -546,21 +546,22 @@ def rewrite_sub_formula(tree):
         positive_elements = []
         negative_elements = []
         for element in posargs:
-            if element[0]=='*' and element[1]==-1:
+            if element[0] == '*' and element[1] == -1:
                 negative_elements.append(element[2])
             else:
                 positive_elements.append(element)
-        if len(negative_elements)==0:
+
+        if len(negative_elements) == 0:
             return tree
 
-        if len(positive_elements)>1:
-            positive_tree = [Symbol ('add')]
+        if len(positive_elements) > 1:
+            positive_tree = [Symbol('add')]
             positive_tree.extend(positive_elements)
         else:
             positive_tree = positive_elements[0]
 
-        if len(negative_elements)>1:
-            negative_tree = [Symbol ('add')]
+        if len(negative_elements) > 1:
+            negative_tree = [Symbol('add')]
             negative_tree.extend(negative_elements)
         else:
             negative_tree = negative_elements[0]
