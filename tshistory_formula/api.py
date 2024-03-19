@@ -134,6 +134,7 @@ def formula(self,  # noqa: F811
             name: str,
             display: bool=True,
             expanded: bool=False,
+            remote: bool=True,
             level: int=-1) -> Optional[str]:
     source = self._findsourcefor(name)
     if source is None:
@@ -143,6 +144,10 @@ def formula(self,  # noqa: F811
         name,
         display=display,
         expanded=expanded,
+        # NOTE: we don't know how to actually test this
+        # as testing for a local -> remote1 -> remote2
+        # is not cracked yet.
+        remote=remote,
         level=level
     )
 
