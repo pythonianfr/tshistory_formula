@@ -141,9 +141,11 @@ def series(__interpreter__,
     * `weight` to provide a weight (float) value to be used by other
       operators like e.g. `row-mean`
 
-    For instance in `(add (series "a" #:fill 0) (series "b")` will
-    make sure that series `a`, if shorter than series `b` will get
-    zeroes instead of nans where `b` provides values.
+    Example: `(add (series "a" #:fill 0) (series "b"))`
+
+    In the example, we make sure that series `a`, if shorter than
+    series `b` will get zeroes instead of nans where `b` provides
+    values.
 
     """
     i = __interpreter__
@@ -288,7 +290,8 @@ def findseries(__interpreter__,
 
 @func('by.name')
 def byname(namequery: str) -> search.query:
-    """Yields a query filter operating on series names.
+    """
+    Yields a query filter operating on series names.
 
     Example: `(add (findseries (by.name "fr capacity")))`
 
@@ -305,7 +308,8 @@ def bybasket(__interpreter__,
              __to_value_date__,
              __revision_date__,
              basketname: str) -> search.query:
-    """Yields a query filter operating on series names.
+    """
+    Yields a query filter operating on series names.
 
     Example: `(add (findseries (by.basket "fr.powerplants")))`
 
@@ -319,7 +323,8 @@ def bybasket(__interpreter__,
 
 @func('by.metakey')
 def bymetakey(keyquery: str) -> search.query:
-    """Yields a query filter operating on metadata key.
+    """
+    Yields a query filter operating on metadata key.
 
     Example: `(add (findseries (by.metakey "plant_status")))`
 
@@ -332,7 +337,8 @@ def bymetakey(keyquery: str) -> search.query:
 
 @func('by.metaitem')
 def bymetaitems(key: str, value: Union[str, Number]) -> search.query:
-    """Yields a query filter operating on metadata items.
+    """
+    Yields a query filter operating on metadata items.
 
     Example: `(add (findseries (by.metaitem "plant_status" "running")))`
 
@@ -345,7 +351,8 @@ def bymetaitems(key: str, value: Union[str, Number]) -> search.query:
 
 @func('by.value')
 def byvalue(key: str, operator: str, value: Union[str, Number]) -> search.query:
-    """Yields a query filter operating on metadata items.
+    """
+    Yields a query filter operating on metadata items.
 
     Example: `(add (findseries (by.value "weigth" "<=" 42)))`
 
@@ -365,7 +372,8 @@ def byvalue(key: str, operator: str, value: Union[str, Number]) -> search.query:
 
 @func('by.not')
 def bynot(query: search.query) -> search.query:
-    """Yields a query filter negating its input query filter.
+    """
+    Yields a query filter negating its input query filter.
 
     Example: `(add (findseries (by.not (by.name "capacity"))))`
 
@@ -377,7 +385,8 @@ def bynot(query: search.query) -> search.query:
 
 @func('by.and')
 def byand(*queries: search.query) -> search.query:
-    """Yields a query filter doing a logical AND to its input query
+    """
+    Yields a query filter doing a logical AND to its input query
     filters.
 
     Example: `(add (findseries (by.and (by.name "capacity") (by.metakey "plant"))))`
@@ -388,7 +397,8 @@ def byand(*queries: search.query) -> search.query:
 
 @func('by.or')
 def byor(*queries: search.query) -> search.query:
-    """Yields a query filter doing a logical OR to its input query
+    """
+    Yields a query filter doing a logical OR to its input query
     filters.
 
     Example: `(add (findseries (by.or (by.name "capacity") (by.metakey "plant"))))`
