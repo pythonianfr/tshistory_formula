@@ -776,6 +776,16 @@ def test_filter_fill(engine, tsh):
 """, tsf)
 
 
+def test_filter_loop(engine, tsh):
+    tsh.register_formula(
+        engine,
+        'filter-loop',
+        '(add (findseries (by.name "filter-loop")))'
+    )
+    # This creates a never ending slow mem-leak
+    # tsh.get(engine, 'filter-loop')
+
+
 def test_scalar_div(engine, tsh):
     a = pd.Series(
         [1, 2, 3],
