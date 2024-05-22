@@ -782,8 +782,24 @@ def test_filter_loop(engine, tsh):
         'filter-loop',
         '(add (findseries (by.name "filter-loop")))'
     )
-    # This creates a never ending slow mem-leak
-    # tsh.get(engine, 'filter-loop')
+    # This bogus formula returns an empty series
+    assert len(tsh.get(engine, 'filter-loop')) == 0
+
+    # loop made of a pair of mutually recursive formulas
+    tsh.register_formula(
+        engine,
+        'filter-loop-a',
+        '(add (findseries (by.name "loop-b")))'
+    )
+
+    tsh.register_formula(
+        engine,
+        'filter-loop-b',
+        '(add (findseries (by.name "loop-a")))'
+    )
+
+    # This will slowly but surely eat away the machine's resources
+    # assert tsh.get(engine, 'filter-loop-a')
 
 
 def test_scalar_div(engine, tsh):

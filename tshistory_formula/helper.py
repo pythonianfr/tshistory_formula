@@ -267,6 +267,31 @@ def depth(
     return max(depths) if depths else 0
 
 
+def has_loop(cn, name, parsed, iterp):
+
+    def _hasloop(tree):
+        op = tree[0]
+        if op == 'findseries':
+            # evaluate and see
+            itree = inject_toplevel_bindings(
+                [Symbol('findnames'), tree[1]], {}
+            )
+            names = iterp.evaluate(itree)
+            if name in names:
+                return True
+
+        for item in tree:
+            if isinstance(item, list):
+                if _hasloop(item):
+                    return True
+
+        return False
+
+    return _hasloop(parsed)
+
+
+
+# stats stuff
 
 def update_dict_list(ds0, ds1):
     for k, vs in ds1.items():

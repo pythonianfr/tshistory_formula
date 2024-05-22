@@ -11,6 +11,7 @@ from psyl.lisp import (
 )
 from tshistory.tsio import timeseries as basets
 from tshistory.util import (
+    empty_series,
     patch,
     ts,
     tx
@@ -343,6 +344,13 @@ class timeseries(basets):
     def get(self, cn, name, **kw):
         formula = self.formula(cn, name)
         if formula:
+            if helper.has_loop(
+                    cn,
+                    name,
+                    parse(formula),
+                    interpreter.Interpreter(cn, self, kw)):
+                return empty_series(self.tzaware(cn, name))
+
             ts = self.eval_formula(cn, formula, **kw)
             if ts is not None:
                 ts.name = name
