@@ -802,6 +802,28 @@ def test_filter_loop(engine, tsh):
     # assert tsh.get(engine, 'filter-loop-a')
 
 
+def test_basic_loop(engine, tsh):
+    # here we must ruse a bit to achieve the loop
+    a = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+    )
+    tsh.update(engine, a, 'base-for-loop', 'Babar')
+
+    tsh.register_formula(
+        engine,
+        'basic-loop',
+        '(series "base-for-loop")'
+    )
+
+    # now delete and rename
+    tsh.delete(engine, 'base-for-loop')
+    with pytest.raises(ValueError) as err:
+        tsh.rename(engine, 'basic-loop', 'base-for-loop')
+    # whoops, nope, that would have been too easy :)
+    assert err.value.args[0] == 'new name is already referenced by `basic-loop`'
+
+
 def test_scalar_div(engine, tsh):
     a = pd.Series(
         [1, 2, 3],
