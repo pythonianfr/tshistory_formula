@@ -147,8 +147,6 @@ def expanded(
         level=-1
 ):
     # handle scoped parameter (internal memo)
-    if tree[0] == 'let':
-        import ipdb; ipdb.set_trace()
     scoped = set() if scoped is None else scoped
 
     # base case: check the current operation
