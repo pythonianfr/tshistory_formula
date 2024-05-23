@@ -2162,6 +2162,32 @@ def test_expanded_and_find(engine, tsh):
     assert tsh.depth(engine, 'level-find-0') == 1
     assert tsh.depth(engine, 'level-find-1') == 2
 
+    exp = tsh.expanded_formula(engine, 'level-find-1', display=False)
+    assert exp == (
+        '(let revision_date nil from_value_date nil to_value_date nil '
+        '(+ 1 (add (findseries (by.name "find-base") #:naive #t) '
+        '(series "level-find-series"))))'
+    )
+    exp = tsh.expanded_formula(engine, 'level-find-1', level=0, display=False)
+    assert exp == (
+        '(let revision_date nil from_value_date nil to_value_date nil '
+        '(+ 1 (series "level-find-0")))'
+    )
+    exp = tsh.expanded_formula(engine, 'level-find-1', level=1, display=False)
+    assert exp == (
+        '(let revision_date nil from_value_date nil to_value_date nil '
+        '(+ 1 (add (findseries (by.name "find-base") #:naive #t) '
+        '(series "level-find-series"))))'
+    )
+    exp = tsh.expanded_formula(engine, 'level-find-1', level=2, display=False)
+    assert exp == (
+        '(let revision_date nil from_value_date nil to_value_date nil '
+        '(+ 1 (add (findseries (by.name "find-base") #:naive #t) '
+        '(series "level-find-series"))))'
+    )
+    exp3 = tsh.expanded_formula(engine, 'level-find-1', level=3, display=False)
+    assert exp3 == exp
+
 
 def test_autolike_operator_history_nr(engine, tsh):
     """ In which we show that an history call of an operator playing with
