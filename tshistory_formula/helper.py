@@ -13,6 +13,7 @@ from psyl.lisp import (
 
 from tshistory import search
 
+
 from tshistory_formula.registry import (
     FUNCS,
     METAS,
@@ -211,6 +212,19 @@ def expanded(
                 ),
             ] + options
 
+    # case of findseries
+    tree_find = parse(replace_findseries(cn, tsh, serialize(tree)))
+    if tree_find != tree and level:
+        return expanded(
+            tsh,
+            cn,
+            tree_find,
+            stopnames,
+            shownames,
+            scopes=scopes,
+            remote=remote,
+            level=level - 1
+        )
 
     newtree = []
     for item in tree:

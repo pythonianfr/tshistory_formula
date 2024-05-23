@@ -2164,9 +2164,10 @@ def test_expanded_and_find(engine, tsh):
 
     exp = tsh.expanded_formula(engine, 'level-find-1', display=False)
     assert exp == (
-        '(let revision_date nil from_value_date nil to_value_date nil '
-        '(+ 1 (add (findseries (by.name "find-base") #:naive #t) '
-        '(series "level-find-series"))))'
+        '(let revision_date nil from_value_date nil to_value_date nil'
+        ' (+ 1 (add (series "level-find-base-a")'
+        ' (series "level-find-base-b")'
+        ' (series "level-find-series"))))'
     )
     exp = tsh.expanded_formula(engine, 'level-find-1', level=0, display=False)
     assert exp == (
@@ -2181,9 +2182,10 @@ def test_expanded_and_find(engine, tsh):
     )
     exp = tsh.expanded_formula(engine, 'level-find-1', level=2, display=False)
     assert exp == (
-        '(let revision_date nil from_value_date nil to_value_date nil '
-        '(+ 1 (add (findseries (by.name "find-base") #:naive #t) '
-        '(series "level-find-series"))))'
+        '(let revision_date nil from_value_date nil to_value_date nil'
+        ' (+ 1 (add (series "level-find-base-a")'
+        ' (series "level-find-base-b")'
+        ' (series "level-find-series"))))'
     )
     exp3 = tsh.expanded_formula(engine, 'level-find-1', level=3, display=False)
     assert exp3 == exp
