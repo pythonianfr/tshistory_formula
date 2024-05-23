@@ -1,4 +1,8 @@
+import pandas as pd
+import pytest
+
 from tshistory_formula import search
+from tshistory_formula.helper import replace_findseries
 
 
 def _serialize_roundtrip(searchobj):
@@ -13,3 +17,50 @@ def test_search():
     s1 = search.isformula()
     assert s1.expr() == '(by.formula)'
     assert _serialize_roundtrip(s1)
+
+
+def test_replace_findseries(engine, tsh):
+    ts = pd.Series([1], [pd.Timestamp('2024-01-01', tz='UTC'),])
+    tsh.update(engine, ts, 'to-replace-0', 'test')
+    tsh.update(engine, ts, 'to-replace-1', 'test')
+    tsh.update(engine, ts, 'other-one', 'test')
+
+    formula = """
+    (priority
+        (add (findseries (by.name "to-replace")))
+        (series "other-one"))
+    """
+    tsh.register_formula(engine, 'swithcheroo', formula)
+
+    substitued = replace_findseries(engine, tsh, formula)
+    assert substitued == """(priority (add (series "to-replace-0") (series "to-replace-1")) (series "other-one"))"""
+    assert tsh.get(engine, 'swithcheroo').equals(
+        tsh.eval_formula(engine, substitued)
+    )
+
+    #fill
+
+    formula = """
+    (add (findseries (by.name "to-replace") #:fill "ffill"))
+    """
+    tsh.register_formula(engine, 'find-and-fill', formula)
+
+    substitued = replace_findseries(engine, tsh, formula)
+    assert substitued == """(add (series "to-replace-0" #:fill "ffill") (series "to-replace-1" #:fill "ffill"))"""
+    assert tsh.get(engine, 'find-and-fill').equals(
+        tsh.eval_formula(engine, substitued)
+    )
+
+    # empty return
+
+    formula = """
+    (priority
+        (add (findseries (by.name "no-such-series")))
+        (series "other-one"))
+    """
+    tsh.register_formula(engine, 'degenerate-find', formula)
+    substitued = replace_findseries(engine, tsh, formula)
+    assert substitued == """(priority (add) (series "other-one"))"""
+    assert tsh.get(engine, 'degenerate-find').equals(
+        tsh.eval_formula(engine, substitued)
+    )

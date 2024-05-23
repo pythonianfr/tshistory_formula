@@ -11,6 +11,8 @@ from psyl.lisp import (
     Symbol
 )
 
+from tshistory.search import query
+
 from tshistory_formula.registry import (
     FUNCS,
     METAS,
@@ -373,6 +375,44 @@ def scan_descendant_nodes(cn, tsh, name):
         ('primaries', len(primaries), len(set(primaries))):
             enumlist(primaries),
     }
+
+
+# findseries
+
+def replace_findseries(engine, tsh, formula):
+    tree = parse(formula)
+
+    def _replace(tree):
+        new_tree = []
+        for elt in tree:
+            if isinstance(elt, list):
+                if elt[0] == Symbol('findseries'):
+                    kwargs = buildargs(elt)[-1]
+                    query_tree = elt[1]
+                    new_tree += substitute_findseries(
+                        engine,
+                        tsh,
+                        query_tree,
+                        kwargs,
+                    )
+                else:
+                    new_tree.append(_replace(elt))
+            else:
+                new_tree.append(elt)
+        return new_tree
+
+    return serialize(_replace(tree))
+
+
+def substitute_findseries(engine, tsh, tree, kwargs):
+    names = tsh.find(engine, query._fromtree(tree))
+    fill_option = kwargs.get(Keyword('fill'), None)
+    if fill_option is None:
+        return [[Symbol('series'), name] for name in names]
+    return [
+        [Symbol('series'), name, Keyword('fill'), fill_option]
+        for name in names
+    ]
 
 
 # signature building
