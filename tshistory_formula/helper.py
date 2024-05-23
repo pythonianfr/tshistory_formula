@@ -260,6 +260,10 @@ def depth(
 
         return 0
 
+    elif op == 'findseries':
+        tree_find = replace_findseries(tsh, cn, serialize(tree))
+        return 1 + depth(tsh, cn, tree_find)
+
     depths = []
     for item in tree:
         if isinstance(item, list):

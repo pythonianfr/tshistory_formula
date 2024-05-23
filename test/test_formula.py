@@ -2159,8 +2159,8 @@ def test_expanded_and_find(engine, tsh):
         '(+ 1 (series "level-find-0"))'
     )
 
-    assert tsh.depth(engine, 'level-find-0') == 0
-    assert tsh.depth(engine, 'level-find-1') == 1
+    assert tsh.depth(engine, 'level-find-0') == 1
+    assert tsh.depth(engine, 'level-find-1') == 2
 
 
 def test_autolike_operator_history_nr(engine, tsh):
