@@ -2140,6 +2140,29 @@ def test_expanded_level(engine, tsh):
     assert exp3 == exp
 
 
+def test_expanded_and_find(engine, tsh):
+    ts = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(dt(2022, 1, 1), periods=3, freq='D')
+    )
+    tsh.update(engine, ts, 'level-find-base-a', 'Babar')
+    tsh.update(engine, ts, 'level-find-base-b', 'Babar')
+    tsh.update(engine, ts, 'level-find-series', 'Babar')
+
+    tsh.register_formula(
+        engine,
+        'level-find-0',
+        '(add (findseries (by.name "find-base") #:naive #t) (series "level-find-series"))')
+    tsh.register_formula(
+        engine,
+        'level-find-1',
+        '(+ 1 (series "level-find-0"))'
+    )
+
+    assert tsh.depth(engine, 'level-find-0') == 0
+    assert tsh.depth(engine, 'level-find-1') == 1
+
+
 def test_autolike_operator_history_nr(engine, tsh):
     """ In which we show that an history call of an operator playing with
     interpreter args will NOT crash with a lack of an internal
