@@ -33,6 +33,13 @@ class Migrator(_Migrator):
 
 
 @version('tshistory-formula', '0.16.0')
+def migrate_revision_table(engine, namespace, interactive):
+    from tshistory.migrate import migrate_add_diffstart_diffend
+
+    migrate_add_diffstart_diffend(engine, f'{namespace}-formula-patch', interactive)
+
+
+@version('tshistory-formula', '0.16.0')
 def rename_today_operator(engine, namespace, interactive):
     formulas = engine.execute(
         f'select name, internal_metadata '

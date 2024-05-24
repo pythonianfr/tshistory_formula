@@ -45,7 +45,7 @@ class timeseries(basets):
     def __init__(self, *a, **kw):
         super().__init__(*a, **kw)
         self.patch = basets(
-            namespace='{}-formula-patch'.format(self.namespace)
+            namespace=f'{self.namespace}-formula-patch'
         )
 
     fast_staircase_operators = set(['+', '*', 'series', 'add', 'priority'])
