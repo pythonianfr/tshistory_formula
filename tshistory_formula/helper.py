@@ -11,7 +11,7 @@ from psyl.lisp import (
     Symbol
 )
 
-from tshistory.search import query
+from tshistory import search
 
 from tshistory_formula.registry import (
     FUNCS,
@@ -405,8 +405,24 @@ def replace_findseries(engine, tsh, formula):
 
 
 def substitute_findseries(engine, tsh, tree, kwargs):
-    names = tsh.find(engine, query._fromtree(tree))
+    naive = kwargs.get(Keyword('naive'), False)
     fill_option = kwargs.get(Keyword('fill'), None)
+
+    query_search = search.query._fromtree(tree)
+    if naive:
+        query_search = search.and_(
+            search.not_(
+                search.tzaware()
+            ),
+            query_search
+        )
+    else:
+        query_search = search.and_(
+            search.tzaware(),
+            query_search
+        )
+    names = tsh.find(engine, query_search)
+
     if fill_option is None:
         return [[Symbol('series'), name] for name in names]
     return [

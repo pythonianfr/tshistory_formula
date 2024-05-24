@@ -20,10 +20,17 @@ def test_search():
 
 
 def test_replace_findseries(engine, tsh):
+    # tzware
     ts = pd.Series([1], [pd.Timestamp('2024-01-01', tz='UTC'),])
     tsh.update(engine, ts, 'to-replace-0', 'test')
     tsh.update(engine, ts, 'to-replace-1', 'test')
     tsh.update(engine, ts, 'other-one', 'test')
+
+    # naive
+    ts = pd.Series([1], [pd.Timestamp('2024-01-01'),])
+    tsh.update(engine, ts, 'to-replace-0-naive', 'test')
+    tsh.update(engine, ts, 'to-replace-1-naive', 'test')
+    tsh.update(engine, ts, 'other-one-naive', 'test')
 
     formula = """
     (priority
@@ -32,9 +39,32 @@ def test_replace_findseries(engine, tsh):
     """
     tsh.register_formula(engine, 'swithcheroo', formula)
 
+    formula_naive = """
+    (priority
+        (add (findseries (by.name "to-replace") #:naive #t))
+        (series "other-one-naive"))
+    """
+    tsh.register_formula(engine, 'swithcheroo-naive', formula_naive)
+
+    # tz-aware
     substitued = replace_findseries(engine, tsh, formula)
-    assert substitued == """(priority (add (series "to-replace-0") (series "to-replace-1")) (series "other-one"))"""
+    assert substitued == (
+        '(priority (add (series "to-replace-0")'
+        ' (series "to-replace-1"))'
+        ' (series "other-one"))'
+    )
     assert tsh.get(engine, 'swithcheroo').equals(
+        tsh.eval_formula(engine, substitued)
+    )
+
+    # naive
+    substitued = replace_findseries(engine, tsh, formula_naive)
+    assert substitued == (
+        '(priority (add (series "to-replace-0-naive")'
+        ' (series "to-replace-1-naive"))'
+        ' (series "other-one-naive"))'
+    )
+    assert tsh.get(engine, 'swithcheroo-naive').equals(
         tsh.eval_formula(engine, substitued)
     )
 
