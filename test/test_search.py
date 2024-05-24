@@ -2,6 +2,7 @@ import pandas as pd
 import pytest
 
 from tshistory_formula import search
+from tshistory.search import query
 from tshistory_formula.helper import replace_findseries
 
 
@@ -94,3 +95,16 @@ def test_replace_findseries(engine, tsh):
     assert tsh.get(engine, 'degenerate-find').equals(
         tsh.eval_formula(engine, substitued)
     )
+
+
+def test_find_from_expr(engine, tsh):
+    expr = '(by.formulacontents "whatever")'
+    tsh.find(engine, query.fromexpr(expr))
+
+    expr = '(by.basket "no-basket")'
+    with pytest.raises(KeyError):
+        tsh.find(engine, query.fromexpr(expr))
+
+    expr = '(by.value "whatver" ">" 23)'
+    with pytest.raises(KeyError):
+        tsh.find(engine, query.fromexpr(expr))
