@@ -405,10 +405,13 @@ def replace_findseries(engine, tsh, formula):
 
 
 def substitute_findseries(engine, tsh, tree, kwargs):
+    # protection against circular import
+    from tshistory_formula.interpreter import Interpreter
+
     naive = kwargs.get(Keyword('naive'), False)
     fill_option = kwargs.get(Keyword('fill'), None)
-
-    query_search = search.query._fromtree(tree)
+    i = Interpreter(engine, tsh, kwargs)
+    query_search = i.evaluate(tree)
     if naive:
         query_search = search.and_(
             search.not_(
