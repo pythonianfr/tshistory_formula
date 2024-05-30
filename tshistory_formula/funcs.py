@@ -304,9 +304,6 @@ def byname(namequery: str) -> search.query:
 
 @func('by.basket')
 def bybasket(__interpreter__,
-             __from_value_date__,
-             __to_value_date__,
-             __revision_date__,
              basketname: str) -> search.query:
     """
     Yields a query filter operating on series names.
