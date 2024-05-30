@@ -2140,57 +2140,6 @@ def test_expanded_level(engine, tsh):
     assert exp3 == exp
 
 
-def test_expanded_and_find(engine, tsh):
-    ts = pd.Series(
-        [1, 2, 3],
-        index=pd.date_range(dt(2022, 1, 1), periods=3, freq='D')
-    )
-    tsh.update(engine, ts, 'level-find-base-a', 'Babar')
-    tsh.update(engine, ts, 'level-find-base-b', 'Babar')
-    tsh.update(engine, ts, 'level-find-series', 'Babar')
-
-    tsh.register_formula(
-        engine,
-        'level-find-0',
-        '(add (findseries (by.name "find-base") #:naive #t) (series "level-find-series"))')
-    tsh.register_formula(
-        engine,
-        'level-find-1',
-        '(+ 1 (series "level-find-0"))'
-    )
-
-    assert tsh.depth(engine, 'level-find-0') == 1
-    assert tsh.depth(engine, 'level-find-1') == 2
-
-    exp = tsh.expanded_formula(engine, 'level-find-1', display=False)
-    assert exp == (
-        '(let revision_date nil from_value_date nil to_value_date nil'
-        ' (+ 1 (add (series "level-find-base-a")'
-        ' (series "level-find-base-b")'
-        ' (series "level-find-series"))))'
-    )
-    exp = tsh.expanded_formula(engine, 'level-find-1', level=0, display=False)
-    assert exp == (
-        '(let revision_date nil from_value_date nil to_value_date nil '
-        '(+ 1 (series "level-find-0")))'
-    )
-    exp = tsh.expanded_formula(engine, 'level-find-1', level=1, display=False)
-    assert exp == (
-        '(let revision_date nil from_value_date nil to_value_date nil '
-        '(+ 1 (add (findseries (by.name "find-base") #:naive #t) '
-        '(series "level-find-series"))))'
-    )
-    exp = tsh.expanded_formula(engine, 'level-find-1', level=2, display=False)
-    assert exp == (
-        '(let revision_date nil from_value_date nil to_value_date nil'
-        ' (+ 1 (add (series "level-find-base-a")'
-        ' (series "level-find-base-b")'
-        ' (series "level-find-series"))))'
-    )
-    exp3 = tsh.expanded_formula(engine, 'level-find-1', level=3, display=False)
-    assert exp3 == exp
-
-
 def test_autolike_operator_history_nr(engine, tsh):
     """ In which we show that an history call of an operator playing with
     interpreter args will NOT crash with a lack of an internal

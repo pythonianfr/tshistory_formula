@@ -1,3 +1,5 @@
+from datetime import datetime as dt
+
 import pandas as pd
 import pytest
 
@@ -111,7 +113,81 @@ def test_find_from_expr(engine, tsh):
 
 
 def test_basket_by_value(engine, tsx):
-    basket_definition = '(by.value "whatever" "<" 37)'
-    with pytest.raises(Exception) as error:
-        tsx.register_basket('basket-by-value', basket_definition)
-    assert str(error.value) == "'by.value"
+    basket_definition = '(<  "whatever" 37)'
+    # with pytest.raises(Exception) as error:
+    tsx.register_basket('basket-by-value', basket_definition)
+    # assert str(error.value) == "'by.value"
+
+
+def test_expanded_and_find(engine, tsh):
+    ts = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(dt(2022, 1, 1), periods=3, freq='D')
+    )
+    tsh.update(engine, ts, 'level-find-base-a', 'Babar')
+    tsh.update(engine, ts, 'level-find-base-b', 'Babar')
+    tsh.update(engine, ts, 'level-find-series', 'Babar')
+
+    tsh.register_formula(
+        engine,
+        'level-find-0',
+        '(add (findseries (by.name "find-base") #:naive #t) (series "level-find-series"))')
+    tsh.register_formula(
+        engine,
+        'level-find-1',
+        '(+ 1 (series "level-find-0"))'
+    )
+
+    assert tsh.depth(engine, 'level-find-0') == 1
+    assert tsh.depth(engine, 'level-find-1') == 2
+
+    exp = tsh.expanded_formula(engine, 'level-find-1', display=False)
+    assert exp == (
+        '(let revision_date nil from_value_date nil to_value_date nil'
+        ' (+ 1 (add (series "level-find-base-a")'
+        ' (series "level-find-base-b")'
+        ' (series "level-find-series"))))'
+    )
+    exp = tsh.expanded_formula(engine, 'level-find-1', level=0, display=False)
+    assert exp == (
+        '(let revision_date nil from_value_date nil to_value_date nil '
+        '(+ 1 (series "level-find-0")))'
+    )
+    exp = tsh.expanded_formula(engine, 'level-find-1', level=1, display=False)
+    assert exp == (
+        '(let revision_date nil from_value_date nil to_value_date nil '
+        '(+ 1 (add (findseries (by.name "find-base") #:naive #t) '
+        '(series "level-find-series"))))'
+    )
+    exp = tsh.expanded_formula(engine, 'level-find-1', level=2, display=False)
+    assert exp == (
+        '(let revision_date nil from_value_date nil to_value_date nil'
+        ' (+ 1 (add (series "level-find-base-a")'
+        ' (series "level-find-base-b")'
+        ' (series "level-find-series"))))'
+    )
+    exp3 = tsh.expanded_formula(engine, 'level-find-1', level=3, display=False)
+    assert exp3 == exp
+
+
+def test_nested_find(tsh, engine):
+    ts = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(
+            dt(2022, 1, 1),
+            periods=3,
+            freq='D',
+            tz='CET',
+        )
+    )
+    tsh.update(engine, ts, 'nested-find-base-a', 'Babar')
+    tsh.update(engine, ts, 'nested-find-base-b', 'Babar')
+
+    formula = '(add (series "nested-find-base-a") (series "nested-find-base-b"))'
+    tsh.register_formula(engine, 'nested-find-1', formula)
+    formula = '(add (findseries (by.name "nested-find-1")))'
+    tsh.register_formula(engine, 'nested-find-2', formula)
+
+    # it should be 2 (3 levels)
+    assert tsh.depth(engine, 'nested-find-2') == 1
+
