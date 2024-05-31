@@ -188,6 +188,7 @@ def test_nested_find(tsh, engine):
     formula = '(add (findseries (by.name "nested-find-1")))'
     tsh.register_formula(engine, 'nested-find-2', formula)
 
-    # it should be 2 (3 levels)
-    assert tsh.depth(engine, 'nested-find-2') == 1
-
+    assert tsh.depth(engine, 'nested-find-2') == 2
+    assert tsh.expanded_formula(engine, 'nested-find-2') == (
+        '(add (add (series "nested-find-base-a") (series "nested-find-base-b")))'
+    )

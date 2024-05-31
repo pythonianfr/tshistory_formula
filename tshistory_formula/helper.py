@@ -275,7 +275,14 @@ def depth(
         return 0
 
     elif op == 'findseries':
-        tree_find = replace_findseries(tsh, cn, serialize(tree))
+        query_tree = tree[1]
+        kwargs = buildargs(tree)[-1]
+        tree_find = substitute_findseries(
+            cn,
+            tsh,
+            query_tree,
+            kwargs=kwargs,
+        )
         return 1 + depth(tsh, cn, tree_find)
 
     depths = []
