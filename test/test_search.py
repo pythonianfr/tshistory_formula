@@ -192,3 +192,46 @@ def test_nested_find(tsh, engine):
     assert tsh.expanded_formula(engine, 'nested-find-2') == (
         '(add (add (series "nested-find-base-a") (series "nested-find-base-b")))'
     )
+
+
+def test_find_dependents(engine, tsh):
+    ts = pd.Series(
+        [1, 2],
+        index = pd.date_range(
+            start=dt(2022, 1, 1),
+            periods=2,
+            freq='D',
+            tz='CET',
+        )
+    )
+
+    tsh.update(engine, ts, 'find-base-dep', 'test')
+    tsh.register_formula(
+        engine,
+        'find-dep-level-1',
+        '(series "find-base-dep")'
+    )
+
+    tsh.register_formula(
+        engine,
+        'find-dep-level-2',
+        '(add (findseries (by.name "find-dep-level-1")))'
+    )
+
+    tsh.register_formula(
+        engine,
+        'find-dep-level-3',
+        '(series "find-dep-level-2")'
+    )
+
+    tsh.register_formula(
+        engine,
+        'find-dep-level-4',
+        '(add (findseries (by.name "find-dep-level-3")))'
+    )
+
+    assert tsh.dependents(engine, 'find-base-dep') == []
+    assert tsh.dependents(engine, 'find-dep-level-1') == []
+    assert tsh.dependents(engine, 'find-dep-level-2') == ['find-dep-level-3']
+    assert tsh.dependents(engine, 'find-dep-level-3') == []
+    assert tsh.dependents(engine, 'find-dep-level-4') == []
