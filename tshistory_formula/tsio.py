@@ -16,6 +16,7 @@ from tshistory.util import (
     ts,
     tx
 )
+from tshistory_formula.helper import replace_findseries
 
 from tshistory_formula import funcs, gfuncs  # trigger registration  # noqa: F401
 from tshistory_formula import (
@@ -144,6 +145,30 @@ class timeseries(basets):
 
     @tx
     def dependents(self, cn, name, direct=False):
+        all_formulas = [
+            name
+            for name, type in self.list_series(cn).items()
+            if type == 'formula'
+        ]
+        formulas_find = defaultdict(list)
+        for formula_name in all_formulas:
+            formula = self.formula(cn, formula_name)
+            if 'findseries' in formula:
+                rewritten_formula = replace_findseries(
+                    cn, self, formula
+                )
+                components = self.find_series(cn, parse(rewritten_formula))
+                for comp in components:
+                    formulas_find[comp].append(formula_name)
+
+        return self._dependents(
+            cn,
+            name,
+            direct=direct,
+            formulas_find=formulas_find,
+        )
+
+    def _dependents(self, cn, name, direct=False, formulas_find={}):
         deps = [
             n for n, in cn.execute(
                 f'select f.name '
@@ -156,13 +181,18 @@ class timeseries(basets):
                 name=name
             ).fetchall()
         ]
-
+        dynamic_deps = formulas_find.get(name, [])
+        deps = deps + dynamic_deps
         if direct:
             return sorted(set(deps))
 
         for dname in deps[:]:
             deps.extend(
-                self.dependents(cn, dname)
+                self._dependents(
+                    cn,
+                    dname,
+                    formulas_find=formulas_find
+                )
             )
         return sorted(set(deps))
 

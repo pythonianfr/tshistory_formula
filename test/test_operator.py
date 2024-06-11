@@ -667,12 +667,6 @@ def test_more_filter(engine, tsh):
 2023-01-03 00:00:00+00:00    6.0
 """, ts)
 
-    tsh.register_formula(
-        engine,
-        'find.not',
-        '(add (findseries '
-        '       (by.not (by.value "weight" "<" 42))))'
-    )
     ts = tsh.get(engine, 'find.and')
     assert_df("""
 2023-01-01 00:00:00+00:00    2.0
