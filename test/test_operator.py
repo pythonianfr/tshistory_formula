@@ -18,6 +18,7 @@ from tshistory_formula.registry import (
     func,
     metadata
 )
+from tshistory_formula.helper import zonename
 from tshistory_formula.interpreter import Interpreter
 from tshistory_formula.funcs import compute_bounds
 
@@ -278,6 +279,11 @@ def test_naive_tz_boundaries(engine, tsh):
         to_value_date=pd.Timestamp('2022-2-3', tz='EST')
     )
     assert_df("""
+2022-02-02 00:00:00    29.0
+2022-02-02 01:00:00    30.0
+2022-02-02 02:00:00    31.0
+2022-02-02 03:00:00    32.0
+2022-02-02 04:00:00    33.0
 2022-02-02 05:00:00    34.0
 2022-02-02 06:00:00    35.0
 2022-02-02 07:00:00    36.0
@@ -1209,7 +1215,7 @@ def test_scalar_pow(engine, tsh):
 
     ts = tsh.get(engine, 'pow-2',
                  from_value_date=utcdt(2020, 1, 1))
-    assert ts.index.tz.zone == 'UTC'
+    assert zonename(ts.index.tz) == 'UTC'
 
 
 def test_mul(engine, tsh):
@@ -1235,7 +1241,7 @@ def test_mul(engine, tsh):
 
     ts = tsh.get(engine, 'multiply-aligned',
                  from_value_date=utcdt(2020, 1, 1))
-    assert ts.index.tz.zone == 'UTC'
+    assert zonename(ts.index.tz) == 'UTC'
 
     base = pd.Series(
         [1, 2, np.nan],
@@ -2745,7 +2751,7 @@ def test_trigo(engine, tsh):
 
     ts = tsh.get(engine, 'sinus',
                  from_value_date=utcdt(2023, 1, 1))
-    assert ts.index.tz.zone == 'UTC'
+    assert zonename(ts.index.tz) == 'UTC'
 
     base_coord = pd.Series(
         [-1, -np.sqrt(1/2), 0, 0.76, 1, 90],
@@ -2801,7 +2807,7 @@ def test_trigo(engine, tsh):
 
     ts = tsh.get(engine, 'arcsinus',
                  from_value_date=utcdt(2023, 1, 1))
-    assert ts.index.tz.zone == 'UTC'
+    assert zonename(ts.index.tz) == 'UTC'
 
     tsh.register_formula(
         engine,
@@ -3946,7 +3952,7 @@ def test_round(engine, tsh):
 2023-03-19 00:00:00+00:00    3.0
 """, ts)
 
-    assert ts.index.tz.zone == 'UTC'
+    assert zonename(ts.index.tz) == 'UTC'
 
 
 def test_abs(engine, tsh):
@@ -4018,7 +4024,7 @@ def test_sub(engine, tsh):
 2023-03-27 00:00:00+00:00   -3.0
 """, ts)
 
-    assert ts.index.tz.zone == 'UTC'
+    assert zonename(ts.index.tz) == 'UTC'
 
     meta = tsh.internal_metadata(engine, 'series-sub')
     assert meta['tzaware'] is True

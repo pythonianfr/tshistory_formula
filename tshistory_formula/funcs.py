@@ -36,7 +36,10 @@ from tshistory_formula.registry import (
     argscope
 )
 from tshistory_formula.types import NONETYPE
-from tshistory_formula.helper import seriesname
+from tshistory_formula.helper import (
+    seriesname,
+    zonename
+)
 from tshistory_formula.interpreter import Interpreter
 
 
@@ -88,7 +91,7 @@ def _normalize_dates(dates):
     for d in dates:
         if d.tzinfo:
             # we know there must be one
-            tzone = d.tzinfo.zone
+            tzone = zonename(d.tzinfo)
     return [
         d.tz_localize(tzone) if not d.tzinfo else d
         for d in dates

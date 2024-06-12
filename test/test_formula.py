@@ -2437,14 +2437,8 @@ def test_priority_tzaware_empty_series(engine, tsh):
     )
     assert ts_empty.index.tz is not None
 
-    # 2) In patchmany, if there are more than 2 series,
-    #    and the first one is empty and has no tz, the result will
-    #    be tz-naive whatever tz-status of the other series
 
-    # NOTE: this is not a bug => patchmany assumes all series are
-    #       tzaware or naive
-    # (be careful with what you send)
-
+def test_patch_many():
     ts = pd.Series(
         range(4),
         pd.date_range(
@@ -2452,6 +2446,26 @@ def test_priority_tzaware_empty_series(engine, tsh):
             periods=4,
             freq='D',
             tz='UTC'
+        )
+    )
+
+    empty_ts = pd.Series()
+    l_series = [ts, ts, empty_ts]
+    l_series.reverse()
+    patched = patchmany(l_series)
+    assert_df("""
+2023-10-01 00:00:00+00:00    0.0
+2023-10-02 00:00:00+00:00    1.0
+2023-10-03 00:00:00+00:00    2.0
+2023-10-04 00:00:00+00:00    3.0
+""", patched)
+
+    ts = pd.Series(
+        range(4),
+        pd.date_range(
+            dt(2023, 10, 1),
+            periods=4,
+            freq='d'
         )
     )
 

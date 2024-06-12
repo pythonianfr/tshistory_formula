@@ -11,6 +11,7 @@ from psyl.lisp import (
 )
 from tshistory.tsio import timeseries as basets
 from tshistory.util import (
+    compatible_date,
     empty_series,
     patch,
     ts,
@@ -391,8 +392,10 @@ class timeseries(basets):
                 ts = patch(ts, ts_patch)
             # preserve the options
             opts = getattr(ts, 'options', {})
+            tzaware = self.tzaware(cn, name)
             ts = ts.loc[
-                kw.get('from_value_date'):kw.get('to_value_date')
+                compatible_date(tzaware, kw.get('from_value_date')):
+                compatible_date(tzaware, kw.get('to_value_date'))
             ]
             ts.options = opts
             return ts

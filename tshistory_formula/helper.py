@@ -3,6 +3,8 @@ import queue
 import threading
 from concurrent.futures import _base
 
+import pandas as pd
+
 from psyl.lisp import (
     buildargs,
     Keyword,
@@ -79,13 +81,19 @@ def extract_auto_options(tree):
     return options
 
 
+def zonename(tzinfo):
+    if pd.__version__.startswith('1.'):
+        return tzinfo.zone
+    return str(tzinfo).upper()
+
+
 def inject_toplevel_bindings(tree, qargs):
     top = [Symbol('let')]
     for attr in ('revision_date', 'from_value_date', 'to_value_date'):
         val = qargs.get(attr)
         # naive must remain naive
         # to allow the naive operator to do its transform
-        tzone = val.tzinfo.zone if val and val.tzinfo else Symbol('nil')
+        tzone = zonename(val.tzinfo) if val and val.tzinfo else Symbol('nil')
         top += [
             Symbol(attr),
             [Symbol('date'), val.isoformat(), tzone]
