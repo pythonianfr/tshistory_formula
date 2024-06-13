@@ -25,7 +25,7 @@ def test_eval_formula(tsx):
             index=pd.date_range(
                 pd.Timestamp('2022-1-1', tz='utc'),
                 periods=3,
-                freq='D')
+                freq='d')
         ),
         'Babar',
         insertion_date=pd.Timestamp('2022-1-5', tz='utc')
@@ -38,7 +38,7 @@ def test_eval_formula(tsx):
             index=pd.date_range(
                 pd.Timestamp('2022-1-1', tz='utc'),
                 periods=5,
-                freq='D')
+                freq='d')
         ),
         'Babar',
         insertion_date=pd.Timestamp('2022-1-6', tz='utc')
@@ -101,7 +101,7 @@ def test_local_formula_remote_series(tsa):
         tsa.engine,
         pd.Series(
             [1, 2, 3],
-            index=pd.date_range(pd.Timestamp('2020-1-1'), periods=3, freq='H'),
+            index=pd.date_range(pd.Timestamp('2020-1-1'), periods=3, freq='h'),
         ),
         'remote-series',
         'Babar',
@@ -184,7 +184,7 @@ def test_formula_remote_expansion(tsa):
         tsa.engine,
         pd.Series(
             [1, 2, 3],
-            index=pd.date_range(pd.Timestamp('2024-1-1'), periods=3, freq='H'),
+            index=pd.date_range(pd.Timestamp('2024-1-1'), periods=3, freq='h'),
         ),
         'remote-base-series',
         'Babar',
@@ -220,7 +220,7 @@ def test_formula_remote_double_expansion(tsa):
         tsa.engine,
         pd.Series(
             [1, 2, 3],
-            index=pd.date_range(pd.Timestamp('2024-1-1'), periods=3, freq='H'),
+            index=pd.date_range(pd.Timestamp('2024-1-1'), periods=3, freq='h'),
         ),
         'remote-primary-series',
         'Babar',
@@ -277,7 +277,7 @@ def test_formula_remote_double_expansion(tsa):
 def test_formula_components(tsa):
     series = pd.Series(
         [1, 2, 3],
-        index=pd.date_range(pd.Timestamp('2020-6-1'), freq='D', periods=3)
+        index=pd.date_range(pd.Timestamp('2020-6-1'), freq='d', periods=3)
     )
     tsa.update(
         'component-a',
@@ -379,7 +379,7 @@ def test_formula_components(tsa):
 def test_formula_components_findseries(tsa):
     series = pd.Series(
         [1, 2, 3],
-        index=pd.date_range(pd.Timestamp('2023-1-1', tz='UTC'), freq='D', periods=3)
+        index=pd.date_range(pd.Timestamp('2023-1-1', tz='UTC'), freq='d', periods=3)
     )
     tsa.update(
         'comp-findseries-a',
@@ -413,7 +413,7 @@ def test_formula_components_findseries(tsa):
 def test_formula_depth(tsx):
     ts = pd.Series(
         [1, 2, 3],
-        index=pd.date_range(utcdt(2022, 1, 1), periods=3, freq='D')
+        index=pd.date_range(utcdt(2022, 1, 1), periods=3, freq='d')
     )
     tsx.update('level-base', ts, 'Babar')
     tsx.register_formula('level-0', '(+ 1 (series "level-base"))')
@@ -454,7 +454,7 @@ def test_formula_remote_autotrophic(tsa, engine):
     def customseries() -> pd.Series:
         return pd.Series(
             [1.0, 2.0, 3.0],
-            index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
+            index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='d')
         )
 
     @metadata('customseries')
@@ -523,7 +523,7 @@ def test_formula_remote_autotrophic(tsa, engine):
 def test_formula_components_wall(tsa):
     series = pd.Series(
         [1, 2, 3],
-        index=pd.date_range(pd.Timestamp('2020-6-1'), freq='D', periods=3)
+        index=pd.date_range(pd.Timestamp('2020-6-1'), freq='d', periods=3)
     )
     tsa.update(
         'comp-a',
@@ -598,7 +598,7 @@ def test_autotrophic_idates(tsx):
                __revision_date__) -> pd.Series:
         return pd.Series(
             [1, 2, 3],
-            pd.date_range(utcdt(2020, 1, 1), periods=1, freq='D')
+            pd.date_range(utcdt(2020, 1, 1), periods=1, freq='d')
         )
 
     @finder('autotrophic')
@@ -624,7 +624,7 @@ def test_autotrophic_idates2(tsx):
                __revision_date__) -> pd.Series:
         return pd.Series(
             [1, 2, 3],
-            pd.date_range(utcdt(2020, 1, 1), periods=1, freq='D')
+            pd.date_range(utcdt(2020, 1, 1), periods=1, freq='d')
         )
 
     @finder('auto2')
@@ -680,7 +680,7 @@ def test_group_formula(tsa):
         n_scenarios=3,
         from_date=datetime(2015, 1, 1),
         length=5,
-        freq='D',
+        freq='d',
         seed=2
     )
 
@@ -692,7 +692,7 @@ def test_group_formula(tsa):
         [1] * 7,
         index=pd.date_range(
             start=datetime(2014, 12, 31),
-            freq='D',
+            freq='d',
             periods=7,
         )
     )
@@ -760,11 +760,11 @@ def test_no_group(tsa):
 def test_group_bound_formula(tsa):
     temp = pd.Series(
         [12, 13, 14],
-        index=pd.date_range(utcdt(2021, 1, 1), freq='D', periods=3)
+        index=pd.date_range(utcdt(2021, 1, 1), freq='d', periods=3)
     )
     wind = pd.Series(
         [.1, .1, .1],
-        index=pd.date_range(utcdt(2021, 1, 1), freq='D', periods=3)
+        index=pd.date_range(utcdt(2021, 1, 1), freq='d', periods=3)
     )
 
     tsa.update('base-temp', temp, 'Babar')
@@ -779,7 +779,7 @@ def test_group_bound_formula(tsa):
         n_scenarios=2,
         from_date=utcdt(2021, 1, 1),
         length=3,
-        freq='D',
+        freq='d',
         seed=0
     )
     tsa.group_replace(
@@ -798,7 +798,7 @@ def test_group_bound_formula(tsa):
         n_scenarios=2,
         from_date=utcdt(2021, 1, 1),
         length=3,
-        freq='D',
+        freq='d',
         seed=1
     )
     tsa.group_replace(
@@ -916,7 +916,7 @@ def test_more_group_errors(tsx):
         n_scenarios=3,
         from_date=datetime(2015, 1, 1),
         length=5,
-        freq='D',
+        freq='d',
         seed=2
     )
 
@@ -965,7 +965,7 @@ def test_more_group_errors(tsx):
             name,
             pd.Series(
                 [1, 2, 3],
-                pd.date_range(pd.Timestamp('2021-1-1'), freq='D', periods=3)
+                pd.date_range(pd.Timestamp('2021-1-1'), freq='d', periods=3)
             ),
             'Babar'
         )
@@ -1037,7 +1037,7 @@ def test_more_group_errors(tsx):
 def test_find(tsx):
     ts = pd.Series(
         [1, 2, 3],
-        pd.date_range(utcdt(2023, 1, 1), freq='D', periods=3)
+        pd.date_range(utcdt(2023, 1, 1), freq='d', periods=3)
     )
     tsx.update(
         'base.find',

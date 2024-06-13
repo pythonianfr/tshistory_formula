@@ -105,7 +105,7 @@ def test_bad_name(engine, tsh):
 def test_incomplete_kw(engine, tsh):
     ts = pd.Series(
         [1, 2, 3],
-        index=pd.date_range(dt(2024, 1, 1), periods=3, freq='D')
+        index=pd.date_range(dt(2024, 1, 1), periods=3, freq='d')
     )
     tsh.update(engine, ts, 'baaad', author='Babar')
 
@@ -129,7 +129,7 @@ def test_incomplete_kw(engine, tsh):
 def test_finder(engine, tsh):
     naive = pd.Series(
         [1, 2, 3],
-        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='d')
     )
 
     tsh.update(engine, naive, 'finder', 'Babar',
@@ -171,7 +171,7 @@ def test_finder(engine, tsh):
 def test_metadata(engine, tsh):
     naive = pd.Series(
         [1, 2, 3],
-        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='d')
     )
 
     tsh.update(engine, naive, 'metadata_naive', 'Babar',
@@ -199,7 +199,7 @@ def test_metadata(engine, tsh):
 
     aware = pd.Series(
         [1, 2, 3],
-        index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
+        index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='d')
     )
     tsh.update(engine, aware, 'metadata_tzaware', 'Babar',
                insertion_date=utcdt(2019, 1, 1))
@@ -237,7 +237,7 @@ def test_metadata(engine, tsh):
 def test_user_meta(engine, tsh):
     ts = pd.Series(
         [1, 2, 3],
-        index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
+        index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='d')
     )
 
     tsh.update(engine, ts, 'user_metadata', 'Babar',
@@ -301,7 +301,7 @@ def test_first_latest_insertion_date(engine, tsh):
             [i] * 3,
             index=pd.date_range(
                 utcdt(2022, 1, i+1),
-                freq='D',
+                freq='d',
                 periods=3
             )
         )
@@ -328,7 +328,7 @@ def test_first_latest_insertion_date(engine, tsh):
 def test_series_options(engine, tsh):
     test = pd.Series(
         [1, 2, 3],
-        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='d')
     )
     tsh.update(engine, test, 'options-a', 'Babar')
     tsh.update(engine, test, 'options-b', 'Babar')
@@ -345,11 +345,11 @@ def test_series_options(engine, tsh):
 def test_fill_limit_option(engine, tsh):
     shortts = pd.Series(
         [1, 1, 1],
-        index=pd.date_range(dt(2022, 1, 1), periods=3, freq='D')
+        index=pd.date_range(dt(2022, 1, 1), periods=3, freq='d')
     )
     longts = pd.Series(
         [2, 2, 2, 2, 2],
-        index=pd.date_range(dt(2022, 1, 1), periods=5, freq='D')
+        index=pd.date_range(dt(2022, 1, 1), periods=5, freq='d')
     )
     tsh.update(engine, shortts, 'short-ts', 'Babar')
     tsh.update(engine, longts, 'long-ts', 'Babar')
@@ -370,7 +370,7 @@ def test_fill_limit_option(engine, tsh):
 def test_override_primary(engine, tsh):
     test = pd.Series(
         [1, 2, 3],
-        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='d')
     )
     tsh.update(engine, test, 'a-primary', 'Babar')
 
@@ -389,7 +389,7 @@ def test_override_primary(engine, tsh):
 def _test_override_formula(engine, tsh):
     test = pd.Series(
         [1, 2, 3],
-        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='d')
     )
     tsh.update(engine, test, 'a-primary', 'Babar')
 
@@ -406,7 +406,7 @@ def _test_override_formula(engine, tsh):
 def test_normalization(engine, tsh):
     test = pd.Series(
         [1, 2, 3],
-        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='d')
     )
     tsh.update(engine, test, 'normalize', 'Babar')
     tsh.register_formula(
@@ -446,7 +446,7 @@ def test_base_api(engine, tsh):
 
     test = pd.Series(
         [1, 2, 3],
-        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='d')
     )
 
     tsh.update(engine, test, 'test', 'Babar',
@@ -540,7 +540,7 @@ def test_boolean_support(engine, tsh):
     def customseries(zeroes: bool=False) -> pd.Series:
         return pd.Series(
             np.array([1.0, 2.0, 3.0]) * zeroes,
-            index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+            index=pd.date_range(dt(2019, 1, 1), periods=3, freq='d')
         )
 
     tsh.register_formula(
@@ -574,7 +574,7 @@ def test_boolean_support(engine, tsh):
 def test_scalar_ops(engine, tsh):
     x = pd.Series(
         [1, 2, 3],
-        index=pd.date_range(dt(2020, 1, 1), periods=3, freq='D')
+        index=pd.date_range(dt(2020, 1, 1), periods=3, freq='d')
     )
     tsh.update(engine, x, 'scalar-ops', 'Babar')
 
@@ -596,7 +596,7 @@ def test_options(engine, tsh):
     def dummy(option: int=None) -> pd.Series:
         series = pd.Series(
             [1, 2, 3],
-            index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+            index=pd.date_range(dt(2019, 1, 1), periods=3, freq='d')
         )
         series.options = {'option': option}
         return series
@@ -645,7 +645,7 @@ def test_history(engine, tsh):
         for name in 'ab':
             ts = pd.Series(
                 [day] * 3,
-                index=pd.date_range(dt(2018, 1, 1), periods=3, freq='D')
+                index=pd.date_range(dt(2018, 1, 1), periods=3, freq='d')
             )
             tsh.update(engine, ts, 'h' + name, 'Babar',
                        insertion_date=idate)
@@ -693,7 +693,7 @@ insertion_date             value_date
         idate = utcdt(2019, 1, day)
         ts = pd.Series(
             [41 + day] * 3,
-            index=pd.date_range(dt(2018, 1, 3), periods=3, freq='D')
+            index=pd.date_range(dt(2018, 1, 3), periods=3, freq='d')
         )
         tsh.update(engine, ts, 'hz', 'Babar',
                    insertion_date=idate)
@@ -878,7 +878,7 @@ def test_staircase(engine, tsh):
         for name in 'ab':
             ts = pd.Series(
                 [day / 2.] * 5,
-                index=pd.date_range(dt(2018, 1, day), periods=5, freq='D')
+                index=pd.date_range(dt(2018, 1, day), periods=5, freq='d')
             )
             tsh.update(engine, ts, 's' + name, 'Babar',
                        insertion_date=idate)
@@ -949,7 +949,7 @@ def test_new_func(engine, tsh):
 
     ts = pd.Series(
         [1, 2, 3],
-        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='d')
     )
     tsh.update(engine, ts, 'id-a', 'Babar')
 
@@ -1001,7 +1001,7 @@ def test_ifunc(engine, tsh):
 
     ts = pd.Series(
         [1, 2, 3, 4, 5],
-        index=pd.date_range(dt(2019, 1, 1), periods=5, freq='D')
+        index=pd.date_range(dt(2019, 1, 1), periods=5, freq='d')
     )
     tsh.update(
         engine, ts, 'shiftme', 'Babar',
@@ -1040,7 +1040,7 @@ def test_ifunc(engine, tsh):
 
     ts = pd.Series(
         [1, 2, 3, 4, 5],
-        index=pd.date_range(dt(2019, 1, 2), periods=5, freq='D')
+        index=pd.date_range(dt(2019, 1, 2), periods=5, freq='d')
     )
     tsh.update(
         engine, ts, 'shiftme', 'Babar',
@@ -1101,7 +1101,7 @@ def test_newop_expansion(engine, tsh):
 
     ts = pd.Series(
         [1, 2, 3],
-        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='d')
     )
     tsh.update(engine, ts, 'base-comb', 'Babar')
 
@@ -1162,7 +1162,7 @@ def test_formula_refers_to_nothing(engine, tsh):
 def test_rename(engine, tsh):
     ts = pd.Series(
         [1, 2, 3],
-        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='d')
     )
     tsh.update(engine, ts, 'rename-a', 'Babar')
 
@@ -1245,7 +1245,7 @@ def test_custom_metadata(engine, tsh):
     def customseries() -> pd.Series:
         return pd.Series(
             [1.0, 2.0, 3.0],
-            index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+            index=pd.date_range(dt(2019, 1, 1), periods=3, freq='d')
         )
 
     @metadata('customseries')
@@ -1292,7 +1292,7 @@ def test_custom_history(engine, tsh):
                coeff: float=1.) -> pd.Series:
         return pd.Series(
             np.array([base, base + 1, base + 2]) * coeff,
-            index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+            index=pd.date_range(dt(2019, 1, 1), periods=3, freq='d')
         )
 
     @metadata('made-up-series')
@@ -1400,7 +1400,7 @@ def test_expanded(engine, tsh):
     def customseries() -> pd.Series:
         return pd.Series(
             [1.0, 2.0, 3.0],
-            index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+            index=pd.date_range(dt(2019, 1, 1), periods=3, freq='d')
         )
 
     @metadata('customseries')
@@ -1417,7 +1417,7 @@ def test_expanded(engine, tsh):
 
     base = pd.Series(
         [1, 2, 3],
-        index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
+        index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='d')
     )
     tsh.update(engine, base, 'exp-a', 'Babar')
     tsh.update(engine, base, 'exp-b', 'Celeste')
@@ -1455,7 +1455,7 @@ def test_expanded(engine, tsh):
 def test_slice_naive(engine, tsh):
     ts_hourly = pd.Series(
         [1.0] * 24 * 3,
-        index=pd.date_range(utcdt(2022, 4, 1), periods=24 * 3, freq='H')
+        index=pd.date_range(utcdt(2022, 4, 1), periods=24 * 3, freq='h')
     )
     tsh.update(engine, ts_hourly, 'ts.hourly', 'test')
 
@@ -1480,7 +1480,7 @@ def test_slice_naive(engine, tsh):
 def test_history_nr(engine, tsh):
     ts1 = pd.Series(
         [1.0] * 24,
-        index=pd.date_range(utcdt(2020, 1, 1), periods=24, freq='H')
+        index=pd.date_range(utcdt(2020, 1, 1), periods=24, freq='h')
     )
 
     tsh.update(
@@ -1500,7 +1500,7 @@ def test_history_nr(engine, tsh):
 
     ts2 = pd.Series(
         [10] * 24,
-        index=pd.date_range(utcdt(2020, 1, 1), periods=24, freq='H')
+        index=pd.date_range(utcdt(2020, 1, 1), periods=24, freq='h')
     )
 
     tsh.update(
@@ -1554,7 +1554,7 @@ def test_slice_tzaware(engine, tsh):
     index = pd.date_range(
         start=begin_tz,
         end=tomorwow_tz,
-        freq='H'
+        freq='h'
     )
     ts = pd.Series(
         [1.0] * len(index),
@@ -1586,7 +1586,7 @@ def test_slice_tzaware(engine, tsh):
 def test_history_autotrophic_nr(engine, tsh):
     ts2 = pd.Series(
         [10] * 24,
-        index=pd.date_range(utcdt(2020, 1, 1), periods=24, freq='H')
+        index=pd.date_range(utcdt(2020, 1, 1), periods=24, freq='h')
     )
 
     @func('hist-nr2-1', auto=True)
@@ -1675,7 +1675,7 @@ insertion_date             value_date
 def test_history_auto_nr(engine, tsh):
     ts2 = pd.Series(
         [10] * 24,
-        index=pd.date_range(utcdt(2020, 1, 1), periods=24, freq='H')
+        index=pd.date_range(utcdt(2020, 1, 1), periods=24, freq='h')
     )
 
     @func('auto-operator', auto=True)
@@ -1775,7 +1775,7 @@ def test_history_auto_name_issue(engine, tsh):
     # reset this to be sure it contains our _very late_ new operators definitions
     ts = pd.Series(
         [1.0, 2.0, 3.0],
-        index=pd.date_range(utcdt(2020, 1, 1), periods=3, freq='D')
+        index=pd.date_range(utcdt(2020, 1, 1), periods=3, freq='d')
     )
 
     @func('hist-auto-name', auto=True)
@@ -1851,7 +1851,7 @@ def test_history_auto_name_subexpr(engine, tsh):
     # reset this to be sure it contains our _very late_ new operators definitions
     ts = pd.Series(
         [1.0, 2.0, 3.0],
-        index=pd.date_range(utcdt(2020, 1, 1), periods=3, freq='D')
+        index=pd.date_range(utcdt(2020, 1, 1), periods=3, freq='d')
     )
 
     @func('hist-auto-subexpr', auto=True)
@@ -1914,7 +1914,7 @@ insertion_date             value_date
 def test_expand_vs_fill(engine, tsh):
     ts = pd.Series(
         [1.0, 2.0, 3.0],
-        index=pd.date_range(utcdt(2021, 1, 1), periods=3, freq='D')
+        index=pd.date_range(utcdt(2021, 1, 1), periods=3, freq='d')
     )
 
     tsh.update(
@@ -1969,7 +1969,7 @@ def test_expand_vs_fill(engine, tsh):
 def test_expanded_stopnames(engine, tsh):
     ts = pd.Series(
         [1.0, 2.0, 3.0],
-        index=pd.date_range(utcdt(2021, 1, 1), periods=3, freq='D')
+        index=pd.date_range(utcdt(2021, 1, 1), periods=3, freq='d')
     )
 
     tsh.update(
@@ -2029,7 +2029,7 @@ def test_expanded_shownames(engine, tsh):
     """
     ts = pd.Series(
         [1, 2, 3],
-        index=pd.date_range(dt(2022, 1, 1), periods=3, freq='D')
+        index=pd.date_range(dt(2022, 1, 1), periods=3, freq='d')
     )
 
     # primaries:
@@ -2101,7 +2101,7 @@ def test_expanded_shownames(engine, tsh):
 def test_expanded_level(engine, tsh):
     ts = pd.Series(
         [1, 2, 3],
-        index=pd.date_range(dt(2022, 1, 1), periods=3, freq='D')
+        index=pd.date_range(dt(2022, 1, 1), periods=3, freq='d')
     )
     tsh.update(engine, ts, 'level-base', 'Babar')
     tsh.register_formula(engine, 'level-0', '(+ 1 (series "level-base"))')
@@ -2169,7 +2169,7 @@ def test_autolike_operator_history_nr(engine, tsh):
     ts = pd.Series(
         [1, 2, 3],
         index=pd.date_range(
-            pd.Timestamp('2022-1-1'), periods=3, freq='D'
+            pd.Timestamp('2022-1-1'), periods=3, freq='d'
         )
     )
 
@@ -2202,7 +2202,7 @@ insertion_date             value_date
 def test_dependants(engine, tsh):
     ts = pd.Series(
         [1, 2, 3],
-        index=pd.date_range(utcdt(2022, 1, 1), periods=3, freq='D')
+        index=pd.date_range(utcdt(2022, 1, 1), periods=3, freq='d')
     )
 
     tsh.update(
@@ -2293,7 +2293,7 @@ def test_dependants(engine, tsh):
 def test_transitive_closure_dependents(engine, tsh):
     ts = pd.Series(
         [1, 2, 3],
-        index=pd.date_range(utcdt(2022, 1, 1), periods=3, freq='D')
+        index=pd.date_range(utcdt(2022, 1, 1), periods=3, freq='d')
     )
 
     tsh.update(
@@ -2329,13 +2329,13 @@ def test_fill_and_clip(engine, tsh):
 
     ts = pd.Series(
         [1] * 2,
-        index=pd.date_range(start=dt(2022, 1, 1),freq='D', periods=2)
+        index=pd.date_range(start=dt(2022, 1, 1),freq='d', periods=2)
     )
     tsh.update(engine, ts, 'ts-1', 'toto')
 
     ts = pd.Series(
         [2] * 4,
-        index=pd.date_range(start=dt(2022, 1, 1), freq='D', periods=4)
+        index=pd.date_range(start=dt(2022, 1, 1), freq='d', periods=4)
     )
     tsh.update(engine, ts, 'ts-2', 'tata')
 
@@ -2373,7 +2373,7 @@ def test_priority_tzaware_empty_series(engine, tsh):
         pd.date_range(
             dt(2023, 10, 1),
             periods=4,
-            freq='D',
+            freq='d',
             tz='UTC'
         )
     )
@@ -2384,7 +2384,7 @@ def test_priority_tzaware_empty_series(engine, tsh):
         pd.date_range(
             dt(2023, 10, 4),
             periods=4,
-            freq='D',
+            freq='d',
             tz='UTC'
         )
     )
@@ -2444,7 +2444,7 @@ def test_patch_many():
         pd.date_range(
             dt(2023, 10, 1),
             periods=4,
-            freq='D',
+            freq='d',
             tz='UTC'
         )
     )
@@ -2505,7 +2505,7 @@ def test_diagnose(engine, tsh):
         [2] * 4,
         index=pd.date_range(
             start=dt(2022, 1, 1),
-            freq='D',
+            freq='d',
             periods=4
         )
     )
@@ -2639,7 +2639,7 @@ def test_formula_patch(engine, tsh):
         range(5),
         index=pd.date_range(
             start=dt(2023, 1, 10),
-            freq='D',
+            freq='d',
             periods=5
         )
     )
@@ -2662,7 +2662,7 @@ def test_formula_patch(engine, tsh):
         [-1] * 3,
         index=pd.date_range(
             start=dt(2023, 1, 13),
-            freq='D',
+            freq='d',
             periods=3
         )
     )
@@ -2707,7 +2707,7 @@ def test_formula_patch(engine, tsh):
         [-1] * 3,
         index=pd.date_range(
             start=dt(2023, 1, 13),
-            freq='D',
+            freq='d',
             periods=3
         )
     )
@@ -2717,7 +2717,7 @@ def test_formula_patch(engine, tsh):
         np.nan * 2,
         index=pd.date_range(
             start=dt(2023, 1, 13),
-            freq='D',
+            freq='d',
             periods=2
         )
     )
@@ -2740,7 +2740,7 @@ def test_group_formula(engine, tsh):
         n_scenarios=3,
         from_date=dt(2015, 1, 1),
         length=5,
-        freq='D',
+        freq='d',
         seed=2
     )
 
@@ -2789,7 +2789,7 @@ def test_group_formula(engine, tsh):
         [1] * 7,
         index=pd.date_range(
             start=dt(2014, 12, 31),
-            freq='D',
+            freq='d',
             periods=7,
         )
     )
@@ -2852,24 +2852,24 @@ def test_group_formula(engine, tsh):
 def test_group_vanilla_formula_history(engine, tsh):
     for idx, idate in enumerate(pd.date_range(start=utcdt(2022, 1, 1),
                                               end=utcdt(2022, 1, 5),
-                                              freq='D')):
+                                              freq='d')):
         df = gengroup(
             n_scenarios=3,
             from_date=idate.date(),
             length=3,
-            freq='D',
+            freq='d',
             seed=10 * idx
         )
         tsh.group_replace(engine, df, 'group_a', 'test', insertion_date=idate)
 
     for idx, idate in enumerate(pd.date_range(start=utcdt(2022, 1, 1),
                                               end=utcdt(2022, 1, 5),
-                                              freq='D')):
+                                              freq='d')):
         df = gengroup(
             n_scenarios=3,
             from_date=idate.date(),
             length=3,
-            freq='D',
+            freq='d',
             seed=-10 * idx
         )
         tsh.group_replace(engine, df, 'group_b', 'test',
@@ -2981,14 +2981,14 @@ def test_group_and_series_formula_history(engine, tsh):
             pd.date_range(
                 start=utcdt(2022, 1, 1),
                 end=utcdt(2022, 1, 5),
-                freq='D'
+                freq='d'
             )
     ):
         df = gengroup(
             n_scenarios=3,
             from_date=idate.date(),
             length=3,
-            freq='D',
+            freq='d',
             seed=10 * idx
         )
         tsh.group_replace(engine, df, 'group_c', 'test', insertion_date=idate)
@@ -2998,7 +2998,7 @@ def test_group_and_series_formula_history(engine, tsh):
             index=pd.date_range(
                 start=idate.date(),
                 periods=3,
-                freq='D')
+                freq='d')
         ) + idx / 10
 
         tsh.update(
@@ -3068,14 +3068,14 @@ def test_groups_autotrophic_history(engine, tsh):
         n_scenarios=3,
         from_date=dt(2022, 2, 1),
         length=3,
-        freq='D',
+        freq='d',
         seed=1
     )
     df2 = gengroup(
         n_scenarios=3,
         from_date=dt(2022, 2, 1),
         length=3,
-        freq='D',
+        freq='d',
         seed=-1
     )
 
@@ -3127,12 +3127,12 @@ def test_groups_autotrophic_history(engine, tsh):
     # primary group
     for idx, idate in enumerate(pd.date_range(start=utcdt(2022, 2, 1),
                                               end=utcdt(2022, 2, 5),
-                                              freq='D')):
+                                              freq='d')):
         df = gengroup(
             n_scenarios=3,
             from_date=dt(2022, 2, 1),
             length=3,
-            freq='D',
+            freq='d',
             seed=10 * idx
         )
         tsh.group_replace(engine, df, 'group_d', 'test',
@@ -3203,11 +3203,11 @@ insertion_date            value_date
 def test_group_bound_formula(engine, tsh):
     temp = pd.Series(
         [12, 13, 14],
-        index=pd.date_range(utcdt(2021, 1, 1), freq='D', periods=3)
+        index=pd.date_range(utcdt(2021, 1, 1), freq='d', periods=3)
     )
     wind = pd.Series(
         [.1, .1, .1],
-        index=pd.date_range(utcdt(2021, 1, 1), freq='D', periods=3)
+        index=pd.date_range(utcdt(2021, 1, 1), freq='d', periods=3)
     )
 
     tsh.update(engine, temp, 'base-temp', 'Babar')
@@ -3223,7 +3223,7 @@ def test_group_bound_formula(engine, tsh):
         n_scenarios=2,
         from_date=utcdt(2021, 1, 1),
         length=3,
-        freq='D',
+        freq='d',
         seed=0
     )
     tsh.group_replace(
@@ -3243,7 +3243,7 @@ def test_group_bound_formula(engine, tsh):
         n_scenarios=2,
         from_date=utcdt(2021, 1, 1),
         length=3,
-        freq='D',
+        freq='d',
         seed=1
     )
     tsh.group_replace(
@@ -3331,7 +3331,7 @@ def test_group_bound_history(engine, tsh):
         idate = utcdt(2022, 4, idx+1)
         ts = pd.Series(
             [idx] * 5,
-            index=pd.date_range(idate, periods=5, freq='D')
+            index=pd.date_range(idate, periods=5, freq='d')
         )
         for sn in ('series-a', 'series-b', 'series-c', 'irrelevant-series'):
             tsh.update(engine, ts, sn, 'test', insertion_date=idate)
@@ -3339,12 +3339,12 @@ def test_group_bound_history(engine, tsh):
     # groups
     for idx in range(5):
         idate = utcdt(2022, 4, idx+1)
-        df = gengroup(3, from_date=idate, length=3, freq='D', seed=idx)
+        df = gengroup(3, from_date=idate, length=3, freq='d', seed=idx)
         tsh.group_replace(engine, df, 'group-a', 'test', insertion_date=idate)
 
     tsh.group_replace(
         engine,
-        gengroup(3, from_date=idate, length=3, freq='D', seed=idx),
+        gengroup(3, from_date=idate, length=3, freq='d', seed=idx),
         'irrelevant-group',
         'test',
         insertion_date=utcdt(2023, 1, 1)
@@ -3352,7 +3352,7 @@ def test_group_bound_history(engine, tsh):
 
     for idx in range(5):
         idate = utcdt(2022, 4, idx+3)
-        df = gengroup(3, from_date=idate, length=3, freq='D', seed=idx)
+        df = gengroup(3, from_date=idate, length=3, freq='d', seed=idx)
         tsh.group_replace(
             engine,
             df + 3.14,
@@ -3457,14 +3457,14 @@ def test_for_group_optimization(engine, tsh):
     # Bulding the tree dependency
     ts = pd.Series(
         [1, 2, 3],
-        index=pd.date_range(dt(2022, 1, 1), periods=3, freq='D')
+        index=pd.date_range(dt(2022, 1, 1), periods=3, freq='d')
     )
 
     df = gengroup(
         n_scenarios=3,
         from_date=dt(2022, 1, 1),
         length=3,
-        freq='D',
+        freq='d',
         seed=2
     )
 
@@ -3521,7 +3521,7 @@ Hijacking: load from cache ts-b
 def test_bound_formula_group_crash(engine, tsh):
     ts = pd.Series(
         [1, 2, 3],
-        index=pd.date_range(dt(2023, 1, 1), periods=3, freq='D')
+        index=pd.date_range(dt(2023, 1, 1), periods=3, freq='d')
     )
 
     tsh.update(
@@ -3553,7 +3553,7 @@ def test_bound_formula_group_crash(engine, tsh):
         n_scenarios=3,
         from_date=dt(2022, 1, 1),
         length=3,
-        freq='D',
+        freq='d',
         seed=2
     )
     tsh.group_replace(engine, df, 'some-group', 'test')

@@ -31,13 +31,13 @@ def test_dtypes():
     index = pd.date_range(
         pd.Timestamp('2021-1-1'),
         periods=3,
-        freq='H'
+        freq='h'
     )
     assert index.dtype.str == '<M8[ns]'
     index2 = pd.date_range(
         pd.Timestamp('2021-1-1', tz='UTC'),
         periods=3,
-        freq='H'
+        freq='h'
     )
     assert index2.dtype.str == '|M8[ns]'
 

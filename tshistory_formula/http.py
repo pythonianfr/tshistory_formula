@@ -1,3 +1,4 @@
+import io
 import pandas as pd
 
 from flask_restx import (
@@ -366,7 +367,7 @@ class formula_httpapi(httpapi):
                 @required_roles('admin', 'rw')
                 def put(self):
                     args = boundformula.parse_args()
-                    bindings = pd.read_json(args.bindings)
+                    bindings = pd.read_json(io.StringIO(args.bindings))
                     tsa.register_formula_bindings(
                         args.name,
                         args.formulaname,

@@ -15,7 +15,7 @@ from tshistory.testutil import (
 
 
 def test_series_formula(client):
-    series = genserie(utcdt(2020, 1, 1), 'D', 3)
+    series = genserie(utcdt(2020, 1, 1), 'd', 3)
     res = client.patch('/series/state', params={
         'name': 'test-formula',
         'series': util.tojson(series),
@@ -114,7 +114,7 @@ def test_group_formula(client):
         n_scenarios=3,
         from_date=dt(2021, 1, 1),
         length=5,
-        freq='D',
+        freq='d',
         seed=2.
     )
     df.columns = ['a', 'b', 'c']
@@ -152,7 +152,7 @@ def test_group_formula(client):
 
 
 def test_bound_formula(client):
-    ts = genserie(pd.Timestamp('2021-1-1'), 'H', 3)
+    ts = genserie(pd.Timestamp('2021-1-1'), 'h', 3)
     res = client.patch('/series/state', {
         'name': 'a-series',
         'series': util.tojson(ts),
@@ -182,7 +182,7 @@ def test_bound_formula(client):
         n_scenarios=3,
         from_date=dt(2021, 1, 1),
         length=5,
-        freq='D',
+        freq='d',
         seed=2.
     )
     df.columns = ['a', 'b', 'c']
@@ -242,7 +242,7 @@ def test_formula(tsx, engine, tsh):
             [1, 2, 3],
             index=pd.date_range(
                 pd.Timestamp('2020-1-1', tz='UTC'),
-                freq='D',
+                freq='d',
                 periods=3
             )
         ),
@@ -306,7 +306,7 @@ def test_group_formula_api(tsx):
         n_scenarios=3,
         from_date=dt(2021, 1, 1),
         length=5,
-        freq='D',
+        freq='d',
         seed=2.
     )
     df.columns = ['a', 'b', 'c']
@@ -333,11 +333,11 @@ def test_group_formula_api(tsx):
 def test_bound_formula_api(tsx):
     temp = pd.Series(
         [12, 13, 14],
-        index=pd.date_range(utcdt(2021, 1, 1), freq='D', periods=3)
+        index=pd.date_range(utcdt(2021, 1, 1), freq='d', periods=3)
     )
     wind = pd.Series(
         [.1, .1, .1],
-        index=pd.date_range(utcdt(2021, 1, 1), freq='D', periods=3)
+        index=pd.date_range(utcdt(2021, 1, 1), freq='d', periods=3)
     )
 
     tsx.update('base-temp', temp, 'Babar')
@@ -352,7 +352,7 @@ def test_bound_formula_api(tsx):
         n_scenarios=2,
         from_date=utcdt(2021, 1, 1),
         length=3,
-        freq='D',
+        freq='d',
         seed=0
     )
     tsx.group_replace(
@@ -371,7 +371,7 @@ def test_bound_formula_api(tsx):
         n_scenarios=2,
         from_date=utcdt(2021, 1, 1),
         length=3,
-        freq='D',
+        freq='d',
         seed=1
     )
     tsx.group_replace(

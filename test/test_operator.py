@@ -49,7 +49,7 @@ def test_naive_tzone(engine, tsh):
         engine,
         pd.Series(
             range(5),
-            pd.date_range(utcdt(2020, 10, 25), periods=5, freq='H')
+            pd.date_range(utcdt(2020, 10, 25), periods=5, freq='h')
         ),
         'non-naive',
         'Celeste'
@@ -72,7 +72,7 @@ def test_naive_vs_dst(engine, tsh):
        index=pd.date_range(
            utcdt(2020, 10, 24, 22),
            periods=10,
-           freq='H'
+           freq='h'
        )
    )
    tsh.update(
@@ -131,7 +131,7 @@ def test_naive_registration(engine, tsh):
     def tzauto() -> pd.Series:
         return pd.Series(
             [1., 2., 3., 4., 5.],
-            index=pd.date_range(utcdt(2020, 10, 25), periods=5, freq='H')
+            index=pd.date_range(utcdt(2020, 10, 25), periods=5, freq='h')
         )
 
     @metadata('tzaware-autotrophic')
@@ -154,7 +154,7 @@ def test_naive_registration(engine, tsh):
         engine,
         pd.Series(
             [1., 2., 3., 4., 5],
-            index=pd.date_range(dt(2020, 10, 25), periods=5, freq='H')
+            index=pd.date_range(dt(2020, 10, 25), periods=5, freq='h')
         ),
         'really-naive',
         'Celeste'
@@ -208,7 +208,7 @@ def test_naive_tz_boundaries(engine, tsh):
         range(24 * 3 + 1),
         index=pd.date_range(start=utcdt(2022, 2, 1),
                             end=utcdt(2022, 2, 4),
-                            freq='H')
+                            freq='h')
     )
     tsh.update(engine, ts_hourly, 'hourly-utc', 'test')
 
@@ -1600,7 +1600,7 @@ def test_more_today(engine, tsh):
         ts = pd.Series(
             [d] * 3,
             index=pd.date_range(
-                now, periods=3, freq='D'
+                now, periods=3, freq='d'
             )
         )
 
@@ -1623,7 +1623,7 @@ def test_more_today(engine, tsh):
     # last version: as of today + 1 day
     ts_2 = tsh.get(engine, 'sliced-base')
     assert len(ts_2) == 2
-    assert ts_2[0] == 1.0
+    assert ts_2.iloc[0] == 1.0
     assert ts_2.index[0] == now + relativedelta(days=1)
     assert ts_2.index[-1] == now + relativedelta(days=2)
 
@@ -1636,7 +1636,7 @@ def test_more_today(engine, tsh):
         revision_date=now + relativedelta(days=1)
     )
     assert len(ts_2) == 2
-    assert ts_2[0] == 1.0
+    assert ts_2.iloc[0] == 1.0
     assert ts_2.index[0] == now + relativedelta(days=1)
     assert ts_2.index[-1] == now + relativedelta(days=2)
 
@@ -1646,7 +1646,7 @@ def test_more_today(engine, tsh):
         revision_date=now - relativedelta(days=1)
     )
     assert len(ts_0) == 3
-    assert ts_0[0] == -1.0
+    assert ts_0.iloc[0] == -1.0
     assert ts_0.index[0] == now
 
     # middle version: as of today
@@ -1655,7 +1655,7 @@ def test_more_today(engine, tsh):
         revision_date=now
     )
     assert len(ts_1) == 3
-    assert ts_1[0] == 0.0
+    assert ts_1.iloc[0] == 0.0
     assert ts_1.index[0] == now
 
     hist = tsh.history(
@@ -1683,7 +1683,7 @@ def test_end_of_month(engine, tsh):
 def test_resample(engine, tsh):
     hourly = pd.Series(
         list(range(36)),
-        index=pd.date_range(utcdt(2020, 1, 1), periods=36, freq='H')
+        index=pd.date_range(utcdt(2020, 1, 1), periods=36, freq='h')
     )
 
     gasday = pd.Series(
@@ -1751,7 +1751,7 @@ def test_resample_boundaries(tsh, engine):
             [1.] * 24,
             index=pd.date_range(
                 dt(2023, 1, day, 0),
-                freq='H',
+                freq='h',
                 periods=24
             )
         )
@@ -1798,7 +1798,7 @@ def test_resample_boundaries(tsh, engine):
     )
     ref = pd.Series(
         [24., 24., 24.],
-        index=pd.date_range(dt(2023, 1, 3), freq='D', periods=3)
+        index=pd.date_range(dt(2023, 1, 3), freq='d', periods=3)
     )
 
     assert ts.equals(ref)
@@ -1807,7 +1807,7 @@ def test_resample_boundaries(tsh, engine):
 def test_resample_interpolate(tsh, engine):
     three_hourly = pd.Series(
         list(range(5)),
-        index=pd.date_range(utcdt(2023, 6, 1), periods=5, freq='3H')
+        index=pd.date_range(utcdt(2023, 6, 1), periods=5, freq='3h')
     )
 
     tsh.update(
@@ -1820,7 +1820,7 @@ def test_resample_interpolate(tsh, engine):
     tsh.register_formula(
         engine,
         '3hourly_interpolated',
-        '(resample (series "three-hourly-series") "H" #:method "interpolate")'
+        '(resample (series "three-hourly-series") "h" #:method "interpolate")'
     )
 
     assert_df("""
@@ -1898,18 +1898,18 @@ def test_upsample(engine, tsh):
 
 
 @pytest.mark.parametrize("tstamp,freq,direction,expected", [
-    ('2020-01-01 08:37:56', 'D', 'left', '2020-01-01'),
-    ('2020-01-01 08:37:56', 'D', 'right', '2020-01-01 23:59:59.999999'),
-    ('2020-01-01', 'D', 'left', '2020-01-01'),
-    ('2020-01-01', 'D', 'right', '2020-01-01 23:59:59.999999'),
-    ('2020-01-01 08:37:56', 'H', 'left', '2020-01-01 08:00'),
-    ('2020-01-01 08:37:56', 'H', 'right', '2020-01-01 08:59:59.999999'),
-    ('2020-01-01 08:00', 'H', 'left', '2020-01-01 08:00'),
-    ('2020-01-01 08:00', 'H', 'right', '2020-01-01 08:59:59.999999'),
+    ('2020-01-01 08:37:56', 'd', 'left', '2020-01-01'),
+    ('2020-01-01 08:37:56', 'd', 'right', '2020-01-01 23:59:59.999999'),
+    ('2020-01-01', 'd', 'left', '2020-01-01'),
+    ('2020-01-01', 'd', 'right', '2020-01-01 23:59:59.999999'),
+    ('2020-01-01 08:37:56', 'h', 'left', '2020-01-01 08:00'),
+    ('2020-01-01 08:37:56', 'h', 'right', '2020-01-01 08:59:59.999999'),
+    ('2020-01-01 08:00', 'h', 'left', '2020-01-01 08:00'),
+    ('2020-01-01 08:00', 'h', 'right', '2020-01-01 08:59:59.999999'),
     ('2020-01-01 08:37:56', 'min', 'left', '2020-01-01 08:37:00'),
     ('2020-01-01 08:37:56', 'min', 'right', '2020-01-01 08:37:59.999999'),
-    ('2020-01-01 08:37:56', '30S', 'left', '2020-01-01 08:37:30'),
-    ('2020-01-01 08:37:56', '30S', 'right', '2020-01-01 08:37:59.999999'),
+    ('2020-01-01 08:37:56', '30s', 'left', '2020-01-01 08:37:30'),
+    ('2020-01-01 08:37:56', '30s', 'right', '2020-01-01 08:37:59.999999'),
 ])
 def test_resample_adjusted_stamp(tstamp, freq, direction, expected):
     from tshistory_formula.funcs import resample_adjusted_stamp
