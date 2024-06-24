@@ -29,6 +29,13 @@ class byformulacontents(query):
             {vid: f'%%{self.query}%%'}
         )
 
+    @staticmethod
+    def __sig__():
+        return {
+            'query': 'str',
+            'return': 'query'
+        }
+
 
 class isformula(query):
 
@@ -42,6 +49,12 @@ class isformula(query):
     def sql(self, namespace='tsh'):
         return 'internal_metadata -> \'formula\' is not null', {}
 
+    @staticmethod
+    def __sig__():
+        return {
+            'query': 'str',
+            'return': 'query'
+        }
 
 
 _OPMAP['by.formulacontents'] = 'byformulacontents'
