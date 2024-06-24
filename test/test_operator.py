@@ -3819,17 +3819,14 @@ def test_holidays(engine, tsh):
     ts_joy = tsh.get(
         engine,
         'uk-holidays',
-        from_value_date=dt(2019, 11, 27),
-        to_value_date=dt(2019, 12, 2)
+        from_value_date=dt(2024, 5, 5),
+        to_value_date=dt(2024, 5, 7)
     )
-    assert 1 == sum(ts_joy)
+    assert sum(ts_joy) == 1
     assert_df("""
-2019-11-27    0.0
-2019-11-28    0.0
-2019-11-29    0.0
-2019-11-30    1.0
-2019-12-01    0.0
-2019-12-02    0.0
+2024-05-05    0.0
+2024-05-06    1.0
+2024-05-07    0.0
 """, ts_joy)
 
     meta = tsh.internal_metadata(engine, 'uk-holidays')
