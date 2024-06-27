@@ -2721,7 +2721,7 @@ def test_formula_patch(engine, tsh):
             periods=2
         )
     )
-    tsh.update(engine, ts, 'new-name', 'supervisor')
+    tsh.update(engine, ts, 'new-name', 'supervisor', keepnans=True)
 
     assert_df("""
 2023-01-10    0.0

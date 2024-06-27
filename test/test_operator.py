@@ -1247,7 +1247,7 @@ def test_mul(engine, tsh):
         [1, 2, np.nan],
         index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
     )
-    tsh.update(engine, base, 'mul-b', 'Babar')
+    tsh.update(engine, base, 'mul-b', 'Babar', keepnans=True)
 
     ts = tsh.get(engine, 'multiply-aligned')
     assert_df("""
@@ -1292,7 +1292,7 @@ def test_div(engine, tsh):
         [2, 1, np.nan],
         index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
     )
-    tsh.update(engine, base, 'div-b', 'Babar')
+    tsh.update(engine, base, 'div-b', 'Babar', keepnans=True)
 
     ts = tsh.get(engine, 'divide')
     assert_df("""
@@ -1736,7 +1736,8 @@ def test_resample(engine, tsh):
     assert err.value.args[0] == 'bad resampling method `NO-SUCH-METHOD`'
 
     gasday['2020-1-2'] = np.nan
-    tsh.update(engine, gasday, 'gasday', 'Celeste')
+    tsh.update(engine, gasday, 'gasday', 'Celeste', keepnans=True)
+
     assert_df("""
 2020-01-01 00:00:00+00:00    1.0
 2020-01-02 00:00:00+00:00    1.0
