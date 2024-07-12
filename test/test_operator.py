@@ -337,6 +337,30 @@ def test_naive_tz_boundaries(engine, tsh):
     )
 
 
+def test_tzaware(engine, tsh):
+    ts = pd.Series(
+        [1, 2, 3],
+        pd.date_range(
+            pd.Timestamp('2024-1-1'),
+            periods=3,
+            freq='h'
+        )
+    )
+    tsh.update(engine, ts, 'tznaive', 'Babar')
+
+    tsh.register_formula(
+        engine,
+        'naive2aware',
+        '(tzaware (series "tznaive") #:tzone "CET")'
+    )
+    ts = tsh.get(engine, 'naive2aware')
+    assert_df("""
+2024-01-01 00:00:00+01:00    1.0
+2024-01-01 01:00:00+01:00    2.0
+2024-01-01 02:00:00+01:00    3.0
+""", ts)
+
+
 def test_add(engine, tsh):
     tsh.register_formula(
         engine,

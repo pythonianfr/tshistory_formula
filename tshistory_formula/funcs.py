@@ -477,6 +477,26 @@ def naive(series: pd.Series, tzone: str) -> pd.Series:
     return dedupe(series)
 
 
+@func('tzaware')
+def tzaware(series: pd.Series, tzone: str) -> pd.Series:
+    """
+    Allow promoting a series from a tz-naive index to a tz-aware index.
+
+    One must provide a target timezone.
+
+    Example: `(tzaware (series "tz-naive-series-from-poland") "Europe/Warsaw")`
+
+    """
+    if not len(series):
+        return empty_series(False)
+
+    if tzaware_series(series):
+        return series
+
+    series.index = series.index.tz_localize(tzone)
+    return dedupe(series)
+
+
 @func('date')
 def timestamp(strdate: str,
               tz: Optional[str]='UTC') -> pd.Timestamp:
