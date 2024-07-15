@@ -499,6 +499,9 @@ def test_dynamic_filters(engine, tsh):
     ts = tsh.get(engine, 'combine.add-with-empty')
     assert len(ts) == 0
 
+    idates = tsh.insertion_dates(engine, 'found.them')
+    assert idates == []
+
 
 def test_empty_filter(engine, tsh):
     tsh.register_formula(
