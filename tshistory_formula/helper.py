@@ -221,7 +221,7 @@ def expanded(
             ] + options
 
     # case of findseries
-    tree_find = parse(replace_findseries(cn, tsh, serialize(tree)))
+    tree_find = replace_findseries(cn, tsh, tree)
     if tree_find != tree and level:
         return expanded(
             tsh,
@@ -412,8 +412,7 @@ def scan_descendant_nodes(cn, tsh, name):
 
 # findseries
 
-def replace_findseries(engine, tsh, formula):
-    tree = parse(formula)
+def replace_findseries(engine, tsh, tree):
 
     def _replace(tree):
         new_tree = []
@@ -434,7 +433,7 @@ def replace_findseries(engine, tsh, formula):
                 new_tree.append(elt)
         return new_tree
 
-    return serialize(_replace(tree))
+    return _replace(tree)
 
 
 def substitute_findseries(engine, tsh, tree, kwargs):

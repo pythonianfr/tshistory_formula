@@ -2,7 +2,7 @@ from datetime import datetime as dt
 
 import pandas as pd
 import pytest
-
+from psyl import lisp
 from tshistory_formula import search
 from tshistory.search import query
 from tshistory_formula.helper import replace_findseries
@@ -50,7 +50,9 @@ def test_replace_findseries(engine, tsh):
     tsh.register_formula(engine, 'swithcheroo-naive', formula_naive)
 
     # tz-aware
-    substitued = replace_findseries(engine, tsh, formula)
+    substitued = lisp.serialize(
+        replace_findseries(engine, tsh, lisp.parse(formula))
+    )
     assert substitued == (
         '(priority (add (series "to-replace-0")'
         ' (series "to-replace-1"))'
@@ -61,7 +63,9 @@ def test_replace_findseries(engine, tsh):
     )
 
     # naive
-    substitued = replace_findseries(engine, tsh, formula_naive)
+    substitued = lisp.serialize(
+        replace_findseries(engine, tsh, lisp.parse(formula_naive))
+    )
     assert substitued == (
         '(priority (add (series "to-replace-0-naive")'
         ' (series "to-replace-1-naive"))'
@@ -71,15 +75,16 @@ def test_replace_findseries(engine, tsh):
         tsh.eval_formula(engine, substitued)
     )
 
-    #fill
-
-    formula = """
-    (add (findseries (by.name "to-replace") #:fill "ffill"))
-    """
+    # fill
+    formula = '(add (findseries (by.name "to-replace") #:fill "ffill"))'
     tsh.register_formula(engine, 'find-and-fill', formula)
 
-    substitued = replace_findseries(engine, tsh, formula)
-    assert substitued == """(add (series "to-replace-0" #:fill "ffill") (series "to-replace-1" #:fill "ffill"))"""
+    substitued = lisp.serialize(
+        replace_findseries(engine, tsh, lisp.parse(formula))
+    )
+    assert substitued == (
+        '(add (series "to-replace-0" #:fill "ffill") (series "to-replace-1" #:fill "ffill"))'
+    )
     assert tsh.get(engine, 'find-and-fill').equals(
         tsh.eval_formula(engine, substitued)
     )
@@ -92,8 +97,10 @@ def test_replace_findseries(engine, tsh):
         (series "other-one"))
     """
     tsh.register_formula(engine, 'degenerate-find', formula)
-    substitued = replace_findseries(engine, tsh, formula)
-    assert substitued == """(priority (add) (series "other-one"))"""
+    substitued = lisp.serialize(
+        replace_findseries(engine, tsh, lisp.parse(formula))
+    )
+    assert substitued == '(priority (add) (series "other-one"))'
     assert tsh.get(engine, 'degenerate-find').equals(
         tsh.eval_formula(engine, substitued)
     )
@@ -131,7 +138,8 @@ def test_expanded_and_find(engine, tsh):
     tsh.register_formula(
         engine,
         'level-find-0',
-        '(add (findseries (by.name "find-base") #:naive #t) (series "level-find-series"))')
+        '(add (findseries (by.name "find-base") #:naive #t) (series "level-find-series"))'
+    )
     tsh.register_formula(
         engine,
         'level-find-1',

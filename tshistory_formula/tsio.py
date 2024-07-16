@@ -17,7 +17,6 @@ from tshistory.util import (
     ts,
     tx
 )
-from tshistory_formula.helper import replace_findseries
 
 from tshistory_formula import funcs, gfuncs  # trigger registration  # noqa: F401
 from tshistory_formula import (
@@ -155,10 +154,10 @@ class timeseries(basets):
         for formula_name in all_formulas:
             formula = self.formula(cn, formula_name)
             if 'findseries' in formula:
-                rewritten_formula = replace_findseries(
-                    cn, self, formula
+                rewritten_tree = helper.replace_findseries(
+                    cn, self, parse(formula)
                 )
-                components = self.find_series(cn, parse(rewritten_formula))
+                components = self.find_series(cn, rewritten_tree)
                 for comp in components:
                     formulas_find[comp].append(formula_name)
 
