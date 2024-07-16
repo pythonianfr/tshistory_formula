@@ -220,7 +220,7 @@ def expanded(
                 ),
             ] + options
 
-    # case of findseries
+    # expand findseries
     tree_find = replace_findseries(cn, tsh, tree)
     if tree_find != tree and level:
         return expanded(
@@ -412,37 +412,41 @@ def scan_descendant_nodes(cn, tsh, name):
 
 # findseries
 
-def replace_findseries(engine, tsh, tree):
-
-    def _replace(tree):
-        new_tree = []
-        for elt in tree:
-            if isinstance(elt, list):
-                if elt[0] == Symbol('findseries'):
-                    kwargs = buildargs(elt)[-1]
-                    query_tree = elt[1]
-                    new_tree += substitute_findseries(
-                        engine,
-                        tsh,
-                        query_tree,
-                        kwargs,
-                    )
-                else:
-                    new_tree.append(_replace(elt))
+def replace_findseries(cn, tsh, tree):
+    newtree = []
+    for elt in tree:
+        if isinstance(elt, list):
+            if elt[0] == Symbol('findseries'):
+                kwargs = buildargs(elt)[-1]
+                query_tree = elt[1]
+                # This concatenation is key to properly handle
+                #   (add (findseries ...)
+                # being transformed as
+                #   (add (series ...) (series ...))
+                # rather than
+                #   (add ((series ...) (series ...)))
+                newtree += substitute_findseries(
+                    cn,
+                    tsh,
+                    query_tree,
+                    kwargs,
+                )
             else:
-                new_tree.append(elt)
-        return new_tree
+                newtree.append(
+                    replace_findseries(cn, tsh, elt)
+                )
+        else:
+            newtree.append(elt)
+    return newtree
 
-    return _replace(tree)
 
-
-def substitute_findseries(engine, tsh, tree, kwargs):
+def substitute_findseries(cn, tsh, tree, kwargs):
     # protection against circular import
     from tshistory_formula.interpreter import Interpreter
 
     naive = kwargs.get(Keyword('naive'), False)
     fill_option = kwargs.get(Keyword('fill'), None)
-    i = Interpreter(engine, tsh, kwargs)
+    i = Interpreter(cn, tsh, kwargs)
     query_search = i.evaluate(tree)
     if naive:
         query_search = search.and_(
@@ -456,10 +460,14 @@ def substitute_findseries(engine, tsh, tree, kwargs):
             search.tzaware(),
             query_search
         )
-    names = tsh.find(engine, query_search)
+    names = tsh.find(cn, query_search)
 
     if fill_option is None:
-        return [[Symbol('series'), name] for name in names]
+        return [
+            [Symbol('series'), name]
+            for name in names
+        ]
+
     return [
         [Symbol('series'), name, Keyword('fill'), fill_option]
         for name in names
