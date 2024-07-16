@@ -500,7 +500,7 @@ def test_dynamic_filters(engine, tsh):
     assert len(ts) == 0
 
     idates = tsh.insertion_dates(engine, 'found.them')
-    assert idates == []
+    assert len(idates) == 3
 
 
 def test_empty_filter(engine, tsh):

@@ -406,7 +406,7 @@ def test_formula_components_findseries(tsa):
 
     # let's teach .formula_components to deal with `findseries` !
     assert components == {
-        'show-dyn-comp': ['comp-findseries-b']
+        'show-dyn-comp': ['comp-findseries-a', 'comp-findseries-b']
     }
 
 
