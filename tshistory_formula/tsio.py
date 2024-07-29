@@ -630,11 +630,18 @@ class timeseries(basets):
         return super().log(cn, name, **kw)
 
     @tx
-    def rename(self, cn, oldname, newname):
+    def rename(self, cn, oldname, newname, propagate=True):
         assert isinstance(oldname, str), 'The old name must be a string'
         assert isinstance(newname, str), 'The new name must be a string'
         newname = newname.strip()
         assert len(newname), 'The new name must contain non whitespace items'
+
+        if not propagate:
+            super().rename(cn, oldname, newname)
+            if self.patch.exists(cn, oldname):
+                self.patch.rename(cn, oldname, newname)
+            return
+
         # read all formulas and parse them ...
         formulas = cn.execute(
             f'select name, internal_metadata->\'formula\' '

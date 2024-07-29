@@ -1225,6 +1225,31 @@ def test_rename(engine, tsh):
         engine, 'survive-renaming-2'
     ) == '(add (series "survived") (series "a-renamed" #:fill 0))'
 
+    assert tsh.formula(
+        engine, 'survived'
+    ) == '(+ 1 (series "a-renamed" #:fill 0))'
+
+    # propagate option
+    with engine.begin() as cn:
+        tsh.rename(cn, 'a-renamed', 'b-renamed', propagate=False)
+
+    assert tsh.formula(
+        engine, 'survive-renaming-2'
+    ) == '(add (series "survived") (series "a-renamed" #:fill 0))'
+
+    ts = pd.Series(
+        [4, 5, 6],
+        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='d')
+    )
+    tsh.update(engine, ts, 'a-renamed', 'Babar')
+
+    ts = tsh.get(engine, 'survive-renaming-2')
+    assert_df("""
+2019-01-01     9.0
+2019-01-02    11.0
+2019-01-03    13.0
+""", ts)
+
 
 def test_unknown_operator(engine, tsh):
     with pytest.raises(ValueError) as err:

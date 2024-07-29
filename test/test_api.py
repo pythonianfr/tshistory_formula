@@ -410,6 +410,91 @@ def test_formula_components_findseries(tsa):
     }
 
 
+def test_rename(tsa):
+    ts = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(datetime(2019, 1, 1), periods=3, freq='d')
+    )
+    tsa.update('rename-a', ts, 'Babar')
+
+    tsa.register_formula(
+        'survive-renaming',
+        '(+ 1 (series "rename-a" #:fill 0))'
+    )
+    tsa.register_formula(
+        'survive-renaming-2',
+        '(add (series "survive-renaming") (series "rename-a" #:fill 0))'
+    )
+
+    ts = tsa.get('survive-renaming')
+    assert_df("""
+2019-01-01    2.0
+2019-01-02    3.0
+2019-01-03    4.0
+""", ts)
+
+    ts = tsa.get('survive-renaming-2')
+    assert_df("""
+2019-01-01    3.0
+2019-01-02    5.0
+2019-01-03    7.0
+""", ts)
+
+    with pytest.raises(Exception):
+        tsa.rename('rename-a', ' ')
+
+    tsa.rename('rename-a', 'a-renamed')
+
+    ts = tsa.get('survive-renaming')
+    assert_df("""
+2019-01-01    2.0
+2019-01-02    3.0
+2019-01-03    4.0
+""", ts)
+
+    ts = tsa.get('survive-renaming-2')
+    assert_df("""
+2019-01-01    3.0
+2019-01-02    5.0
+2019-01-03    7.0
+""", ts)
+
+    with pytest.raises(ValueError) as err:
+        tsa.rename('a-renamed', 'survive-renaming')
+
+    assert err.value.args[0] == 'new name is already referenced by `survive-renaming-2`'
+
+    # rename a formula !
+    tsa.rename('survive-renaming', 'survived')
+    assert tsa.formula(
+        'survive-renaming-2'
+    ) == '(add (series "survived") (series "a-renamed" #:fill 0))'
+
+    assert tsa.formula(
+        'survived'
+    ) == '(+ 1 (series "a-renamed" #:fill 0))'
+
+    # propagate option
+    tsa.rename('a-renamed', 'b-renamed', propagate=False)
+
+    assert tsa.formula(
+        'survive-renaming-2'
+    ) == '(add (series "survived") (series "a-renamed" #:fill 0))'
+
+    ts = pd.Series(
+        [4, 5, 6],
+        index=pd.date_range(datetime(2019, 1, 1), periods=3, freq='d')
+    )
+    tsa.update('a-renamed', ts, 'Babar')
+
+    ts = tsa.get('survive-renaming-2')
+    assert_df("""
+2019-01-01     9.0
+2019-01-02    11.0
+2019-01-03    13.0
+""", ts)
+
+
 def test_formula_depth(tsx):
     ts = pd.Series(
         [1, 2, 3],
