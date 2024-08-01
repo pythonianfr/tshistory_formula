@@ -6,7 +6,6 @@ packages:
   - emacs-nox
 sources:
   - hg+ssh://hg@hg.sr.ht/~pythonian/tshistory
-  - hg+ssh://hg@hg.sr.ht/~pythonian/tsview
   - hg+ssh://hg@hg.sr.ht/~pythonian/tshistory_formula
 secrets:
   -  2697538f-6b29-4af7-9fb2-e17694886c3f
@@ -18,7 +17,6 @@ tasks:
       pip3 install pip --upgrade
       pip install tox wheel setuptools webtest pytest_sa_pg --quiet
       pip install -e tshistory
-      pip install -e tsview
       pip install -e tshistory_formula
   - run-tests: |
       export PIP_BREAK_SYSTEM_PACKAGES=1
