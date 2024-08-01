@@ -1212,8 +1212,8 @@ def test_rename(engine, tsh):
 2019-01-03    7.0
 """, ts)
 
-    with engine.begin() as cn:
-        with pytest.raises(ValueError) as err:
+    with pytest.raises(ValueError) as err:
+        with engine.begin() as cn:
             tsh.rename(cn, 'a-renamed', 'survive-renaming')
 
     assert err.value.args[0] == 'new name is already referenced by `survive-renaming-2`'
