@@ -659,6 +659,7 @@ class timeseries(basets):
                 series = False
             return newtree
 
+        rewritten = {}
         for fname, text in formulas:
             tree = parse(text)
             series = self.find_series(
@@ -671,16 +672,17 @@ class timeseries(basets):
             if oldname not in series:
                 continue
 
-            newtree = edit(tree, oldname, newname)
-            newtext = serialize(newtree)
-            # updating using jsonb_set is such a PITA ... we for now
-            # prefer to be slightly more expensive
-            self.update_internal_metadata(cn, fname, {'formula': newtext})
+            rewritten[fname] = serialize(edit(tree, oldname, newname))
 
         if errors:
             raise ValueError(
                 f'new name is already referenced by `{",".join(errors)}`'
             )
+
+        for fname, text in rewritten.items():
+            # updating using jsonb_set is such a PITA ... we for now
+            # prefer to be slightly more expensive
+            self.update_internal_metadata(cn, fname, {'formula': text})
 
         if self.patch.exists(cn, oldname):
             self.patch.rename(cn, oldname, newname)
