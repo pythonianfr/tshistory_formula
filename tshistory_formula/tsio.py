@@ -667,7 +667,8 @@ class timeseries(basets):
             )
             if newname in series:
                 errors.append(fname)
-            if oldname not in series or errors:
+                continue
+            if oldname not in series:
                 continue
 
             newtree = edit(tree, oldname, newname)
