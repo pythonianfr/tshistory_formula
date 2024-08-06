@@ -291,6 +291,8 @@ def depth(
             query_tree,
             kwargs=kwargs,
         )
+        if not len(tree_find):
+            return 1
         return 1 + depth(tsh, cn, tree_find)
 
     depths = []

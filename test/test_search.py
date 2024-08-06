@@ -249,3 +249,17 @@ def test_find_dependents(engine, tsh):
         'find-dep-level-4'
     ]
     assert tsh.dependents(engine, 'find-dep-level-4') == []
+
+
+def test_empty_find(engine, tsh):
+    tsh.register_formula(
+        engine,
+        'empty-find',
+        '(add (findseries (by.name "bachibouzouk")))'
+    )
+
+    ts = tsh.get(engine, 'empty-find')
+    assert len(ts) == 0
+    assert tsh.depth(engine, 'empty-find') == 1
+    assert tsh.expanded_formula(engine, 'empty-find') == '(add)'
+
