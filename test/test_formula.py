@@ -1229,25 +1229,75 @@ def test_rename(engine, tsh):
         engine, 'survived'
     ) == '(+ 1 (series "a-renamed" #:fill 0))'
 
-    # propagate option
-    with engine.begin() as cn:
-        tsh.rename(cn, 'a-renamed', 'b-renamed', propagate=False)
 
-    assert tsh.formula(
-        engine, 'survive-renaming-2'
-    ) == '(add (series "survived") (series "a-renamed" #:fill 0))'
-
+def test_rename_propagate(engine, tsh):
     ts = pd.Series(
-        [4, 5, 6],
-        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='d')
+        [1, 2, 3],
+        index=pd.date_range(dt(2024, 8, 1), periods=3, freq='d')
     )
-    tsh.update(engine, ts, 'a-renamed', 'Babar')
+    tsh.update(engine, ts, 'primary-a', 'Pikachu')
+    tsh.update(engine, ts, 'primary-b', 'Rondoudou')
 
-    ts = tsh.get(engine, 'survive-renaming-2')
+    tsh.register_formula(
+        engine,
+        'formula-a',
+        '(add (series "primary-a") (series "primary-b" #:fill 0))'
+    )
+
+    tsh.register_formula(
+        engine,
+        'formula-b',
+        '(priority (series "formula-a") (series "primary-b"))'
+    )
+
+    with engine.begin() as cn:
+        tsh.rename(cn, 'primary-b', 'primary-c', propagate=False)
+
+    # rename with propagate=False doesn't modify the dependant formula
+    assert tsh.formula(
+        engine, 'formula-b'
+    ) == '(priority (series "formula-a") (series "primary-b"))'
+
+    # the primary is renamed
+    ts = tsh.get(engine, 'primary-c')
     assert_df("""
-2019-01-01     9.0
-2019-01-02    11.0
-2019-01-03    13.0
+2024-08-01    1.0
+2024-08-02    2.0
+2024-08-03    3.0
+""", ts)
+
+    tsh.update(engine, ts, 'primary-d', 'Pikachu')
+
+    with pytest.raises(ValueError) as err:
+        with engine.begin() as cn:
+            tsh.rename(cn, 'primary-a', 'primary-d', propagate=False)
+
+    assert err.value.args[0] == '`primary-d` already exists.'
+
+    # rename a formula with propagate=False
+    with engine.begin() as cn:
+        tsh.rename(cn, 'formula-a', 'name-c', propagate=False)
+
+    # the upper level formula gives an error
+    with pytest.raises(ValueError) as err:
+        with engine.begin() as cn:
+            ts = tsh.get(engine, 'formula-b')
+
+    assert err.value.args[0] == 'No such series `formula-a`'
+
+    tsh.register_formula(
+        engine,
+        'formula-a',
+        '(add (series "primary-a") (series "primary-c" #:fill 0) (series "primary-c" #:fill 0))'
+    )
+    tsh.update(engine, ts, 'primary-b', 'Pikachu')
+
+    # after updating the empty series, formula-b doesn't raise any error
+    ts = tsh.get(engine, 'formula-b')
+    assert_df("""
+2024-08-01    3.0
+2024-08-02    6.0
+2024-08-03    9.0
 """, ts)
 
 
