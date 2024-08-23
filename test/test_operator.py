@@ -453,6 +453,18 @@ def test_add(engine, tsh):
 """, ts)
 
 
+def test_null_add(engine, tsh):
+    # looks silly but (add (findseries ...)) may by a dynamic version
+    # of the same thing ...
+    tsh.register_formula(
+        engine,
+        'null-add',
+        '(add)'
+    )
+    ts = tsh.get(engine, 'null-add')
+    assert len(ts) == 0
+
+
 def test_dynamic_filters(engine, tsh):
     a = pd.Series(
         [1, 2, 3],
