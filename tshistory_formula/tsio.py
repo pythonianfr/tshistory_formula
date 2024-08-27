@@ -371,7 +371,9 @@ class timeseries(basets):
 
     def update(self, cn, updatets, name, author, **k):
         if self.type(cn, name) == 'formula':
-            return self.patch.update(cn, updatets, name, author, **k)
+            # that was premature, and will return in a later version
+            # return self.patch.update(cn, updatets, name, author, **k)
+            raise ValueError(f'`{name}` is a formula, it cannot be updated')
         return super().update(cn, updatets, name, author, **k)
 
     @tx

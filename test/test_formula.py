@@ -2741,71 +2741,75 @@ def test_formula_patch(engine, tsh):
             periods=3
         )
     )
-    tsh.update(engine, ts, 'form-to-supervise', 'supervisor')
+    with pytest.raises(ValueError):
+        tsh.update(engine, ts, 'form-to-supervise', 'supervisor')
 
-    assert_df("""
-2023-01-10    0.0
-2023-01-11    2.0
-2023-01-12    4.0
-2023-01-13   -1.0
-2023-01-14   -1.0
-2023-01-15   -1.0
-""", tsh.get(engine, 'form-to-supervise'))
+    # the last part will come back when we re-active the formula
+    # patching workflow
 
-    # rename: the patch must stay
-    tsh.rename(engine, 'form-to-supervise', 'new-name')
-    assert_df("""
-2023-01-10    0.0
-2023-01-11    2.0
-2023-01-12    4.0
-2023-01-13   -1.0
-2023-01-14   -1.0
-2023-01-15   -1.0
-""", tsh.get(engine, 'new-name'))
+#     assert_df("""
+# 2023-01-10    0.0
+# 2023-01-11    2.0
+# 2023-01-12    4.0
+# 2023-01-13   -1.0
+# 2023-01-14   -1.0
+# 2023-01-15   -1.0
+# """, tsh.get(engine, 'form-to-supervise'))
 
-    # delete and recreate: the patch must disappear
-    tsh.delete(engine, 'new-name')
-    tsh.register_formula(engine, 'new-name', formula)
+#     # rename: the patch must stay
+#     tsh.rename(engine, 'form-to-supervise', 'new-name')
+#     assert_df("""
+# 2023-01-10    0.0
+# 2023-01-11    2.0
+# 2023-01-12    4.0
+# 2023-01-13   -1.0
+# 2023-01-14   -1.0
+# 2023-01-15   -1.0
+# """, tsh.get(engine, 'new-name'))
 
-    assert_df("""
-2023-01-10    0.0
-2023-01-11    2.0
-2023-01-12    4.0
-2023-01-13    6.0
-2023-01-14    8.0
-""", tsh.get(engine, 'new-name'))
+#     # delete and recreate: the patch must disappear
+#     tsh.delete(engine, 'new-name')
+#     tsh.register_formula(engine, 'new-name', formula)
 
-    # patch deletion points:
-    # we add the correction then
-    # we remove the correction on two points with N/A
-    ts = pd.Series(
-        [-1] * 3,
-        index=pd.date_range(
-            start=dt(2023, 1, 13),
-            freq='d',
-            periods=3
-        )
-    )
-    tsh.update(engine, ts, 'new-name', 'supervisor')
+#     assert_df("""
+# 2023-01-10    0.0
+# 2023-01-11    2.0
+# 2023-01-12    4.0
+# 2023-01-13    6.0
+# 2023-01-14    8.0
+# """, tsh.get(engine, 'new-name'))
 
-    ts = pd.Series(
-        np.nan * 2,
-        index=pd.date_range(
-            start=dt(2023, 1, 13),
-            freq='d',
-            periods=2
-        )
-    )
-    tsh.update(engine, ts, 'new-name', 'supervisor', keepnans=True)
+#     # patch deletion points:
+#     # we add the correction then
+#     # we remove the correction on two points with N/A
+#     ts = pd.Series(
+#         [-1] * 3,
+#         index=pd.date_range(
+#             start=dt(2023, 1, 13),
+#             freq='d',
+#             periods=3
+#         )
+#     )
+#     tsh.update(engine, ts, 'new-name', 'supervisor')
 
-    assert_df("""
-2023-01-10    0.0
-2023-01-11    2.0
-2023-01-12    4.0
-2023-01-13    6.0
-2023-01-14    8.0
-2023-01-15   -1.0
-""", tsh.get(engine, 'new-name'))
+#     ts = pd.Series(
+#         np.nan * 2,
+#         index=pd.date_range(
+#             start=dt(2023, 1, 13),
+#             freq='d',
+#             periods=2
+#         )
+#     )
+#     tsh.update(engine, ts, 'new-name', 'supervisor', keepnans=True)
+
+#     assert_df("""
+# 2023-01-10    0.0
+# 2023-01-11    2.0
+# 2023-01-12    4.0
+# 2023-01-13    6.0
+# 2023-01-14    8.0
+# 2023-01-15   -1.0
+# """, tsh.get(engine, 'new-name'))
 
 
 # groups
