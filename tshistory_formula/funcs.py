@@ -642,7 +642,7 @@ def _constant(__interpreter__, args, value, fromdate, todate, freq, revdate):
     dates = pd.date_range(
         start=fromdate,
         end=todate,
-        freq=freq.lower()
+        freq=freq
     )
 
     return pd.Series(
@@ -1362,7 +1362,7 @@ def _infer_freq(series: pd.Series,
     dates = pd.date_range(
         pd.Timestamp('2000-1-1'),
         periods=2,
-        freq=resample_freq.lower()
+        freq=resample_freq
     )
     resample_delta = dates[1] - dates[0]
 
@@ -1443,7 +1443,7 @@ def resample(__interpreter__,
     if not len(series):
         return series
 
-    resampled = series.resample(freq.lower())
+    resampled = series.resample(freq)
 
     # check method
     meth = getattr(resampled, method, None)
