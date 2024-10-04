@@ -2109,6 +2109,8 @@ def get_holidays(__interpreter__,
                  __from_value_date__,
                  __to_value_date__,
                  country: str,
+                 fromdate: pd.Timestamp,
+                 todate: pd.Timestamp,
                  naive: Optional[bool]=False) -> pd.Series:
     """
     Compute a series whose values will be either 0 or 1 to signal the
@@ -2124,11 +2126,8 @@ def get_holidays(__interpreter__,
     ctry = pycountry.countries.get(alpha_2=country.upper())
     hd = holidays.country_holidays(ctry.alpha_2)
 
-    beginyear = datetime(datetime.now().year, 1, 1)
-    endyear = datetime(datetime.now().year + 1, 1, 1)
-
-    from_value_date = __from_value_date__ or beginyear
-    to_value_date = __to_value_date__ or endyear
+    from_value_date = __from_value_date__ or fromdate
+    to_value_date = __to_value_date__ or todate
     from_value_date = set_at_midnight(from_value_date)
     to_value_date = set_at_midnight(to_value_date)
 

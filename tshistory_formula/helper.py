@@ -64,6 +64,23 @@ def rename_operator(tree, oldname, newname):
     ]
 
 
+def fix_holidays(tree):
+    if not isinstance(tree, list):
+        return tree
+
+    op = tree[0]
+    if op == 'holidays':
+        # insert positionnally fromdate and todate
+        # with reasonnable constants
+        tree.insert(2, [Symbol('date'), "2020-1-1"])
+        tree.insert(3, [Symbol('now')])
+
+    return [
+        fix_holidays(item)
+        for item in tree
+    ]
+
+
 def extract_auto_options(tree):
     options = []
     optnames = ('fill', 'limit', 'weight')

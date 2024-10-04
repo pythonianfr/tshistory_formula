@@ -30,6 +30,7 @@ from tshistory_formula.helper import (
     BadKeyword,
     _extract_from_expr,
     expanded,
+    fix_holidays,
     has_names,
     _name_from_signature_and_args,
     name_of_expr,
@@ -91,6 +92,20 @@ def test_rename_operator():
     assert lisp.serialize(
         rename_operator(tree, 'foo', 'FOO')
     ) == '(FOO 1 (bar 5 (FOO 6)))'
+
+
+def test_fix_holidays():
+    form = '(foo 1 (holidays "fr"))'
+    tree = lisp.parse(form)
+    assert lisp.serialize(
+        fix_holidays(tree)
+    ) == '(foo 1 (holidays "fr" (date "2020-1-1") (now)))'
+
+    form = '(foo 1 (holidays "fr" #:naive #t))'
+    tree = lisp.parse(form)
+    assert lisp.serialize(
+        fix_holidays(tree)
+    ) == '(foo 1 (holidays "fr" (date "2020-1-1") (now) #:naive #t))'
 
 
 def test_bad_name(engine, tsh):

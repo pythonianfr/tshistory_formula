@@ -12,6 +12,7 @@ from tshistory.migrate import (
 
 from tshistory_formula import __version__
 from tshistory_formula.helper import (
+    fix_holidays,
     rename_operator,
     rewrite_sub_formula,
     rewrite_trig_formula
@@ -30,6 +31,33 @@ class Migrator(_Migrator):
         migrate_trig_formulas(self.engine, self.namespace, self.interactive)
         migrate_sub_formulas(self.engine, self.namespace, self.interactive)
         migrate_group_formula_schema(self.engine, self.namespace, self.interactive)
+
+
+@version('tshistory-formula', '0.16.1')
+def migrate_holidays_operator(engine, namespace, interactive):
+    formulas = engine.execute(
+        f'select name, internal_metadata '
+        f'from "{namespace}".registry '
+        'where internal_metadata->\'formula\' is not null'
+    ).fetchall()
+
+    for name, imeta in formulas:
+        text = imeta['formula']
+        if '(holidays' in text:
+            print(f' fixing `holidays` for {name}')
+        else:
+            continue
+
+        tree = fix_holidays(parse(text))
+        imeta['formula'] = serialize(tree)
+        with engine.begin() as cn:
+            cn.execute(
+                f'update "{namespace}".registry '
+                'set internal_metadata = %(metadata)s '
+                'where name = %(name)s',
+                metadata=json.dumps(imeta),
+                name=name
+            )
 
 
 @version('tshistory-formula', '0.16.0')

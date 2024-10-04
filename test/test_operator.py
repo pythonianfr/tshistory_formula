@@ -3804,7 +3804,7 @@ def test_holidays(engine, tsh):
     tsh.register_formula(
         engine,
         'school-is-off',
-        '(holidays "fr")'
+        '(holidays "fr" #:fromdate (date "2010-1-1") #:todate (now))'
     )
 
     # just a check that get is working without argument
@@ -3831,7 +3831,7 @@ def test_holidays(engine, tsh):
     # Belgium
     tsh.register_formula(
         engine, 'time-for-waffle',
-        '(holidays "be" #:naive #t)'
+        '(holidays "be" (date "2015-1-1") (date "2017-1-1") #:naive #t)'
     )
 
     ts_joy = tsh.get(
@@ -3853,7 +3853,7 @@ def test_holidays(engine, tsh):
     # UK
     tsh.register_formula(
         engine, 'uk-holidays',
-        '(holidays "gb" #:naive #t)'
+        '(holidays "gb" #:naive #t #:fromdate (date "2024-1-1") #:todate (date "2025-1-1"))'
     )
 
     ts_joy = tsh.get(
@@ -3877,7 +3877,7 @@ def test_holidays_with_tzaware_queryset(engine, tsh):
     tsh.register_formula(
         engine,
         'fr-holidays',
-        '(holidays "fr" #:naive #t)'
+        '(holidays "fr" (date "2018-1-1") (date "2020-1-1") #:naive #t)'
     )
 
     # not crashy with tz-aware query parameters
@@ -3892,7 +3892,7 @@ def test_holidays_with_tzaware_queryset(engine, tsh):
 def test_holidays_datetime(engine, tsh):
     tsh.register_formula(
         engine, 'fr-holidays',
-        '(holidays "fr" #:naive #t)'
+        '(holidays "fr" (date "2021-1-1") (date "2022-1-1") #:naive #t)'
     )
 
     ts = tsh.get(
@@ -3924,7 +3924,7 @@ def test_holidays_datetime(engine, tsh):
 def test_long_holidays(engine, tsh):
     tsh.register_formula(
         engine, 'fr-holidays',
-        '(holidays "fr" #:naive #t)'
+        '(holidays "fr" (date "2020-1-1") (date "2026-1-1") #:naive #t)'
     )
     ts = tsh.get(
         engine,
@@ -3940,6 +3940,13 @@ def test_long_holidays(engine, tsh):
     assert 56 == len(ts)
     assert pd.Timestamp('2020-01-01 00:00:00') == ts.index.min()
     assert pd.Timestamp('2025-01-01 00:00:00') == ts.index.max()
+
+
+    ts = tsh.get(
+        engine,
+        'fr-holidays',
+    )
+    assert len(ts[ts == 1]) == 67
 
 
 def test_round(engine, tsh):
