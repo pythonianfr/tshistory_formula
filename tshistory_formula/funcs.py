@@ -561,6 +561,30 @@ def now(__interpreter__,
     return __interpreter__.now(naive, tz)
 
 
+@func('today')
+def today(__interpreter__,
+          naive: Optional[bool]=False,
+          tz: Optional[str]=None) -> pd.Timestamp:
+    """
+    Produces a timezone-aware timestamp as of today
+
+    The `naive` keyword forces production of a naive timestamp.
+    The `tz` keyword allows to specify an alternate time zone
+    (if unpecified and not naive).
+    Both `tz` and `naive` keywords are mutually exlcusive.
+
+    Example: `(today)`
+    """
+    # impl. note: if not naive and tz is none,
+    # tz will be utc
+    return __interpreter__.now(naive, tz).replace(
+        hour=0,
+        minute=0,
+        second=0,
+        microsecond=0
+    )
+
+
 @func('start-of-month')
 def start_of_month(date: pd.Timestamp) -> pd.Timestamp:
     """

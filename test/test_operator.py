@@ -1607,7 +1607,7 @@ def test_shifted(engine, tsh):
     assert g == pd.Timestamp('2020-01-01 00:01:00+0000', tz='UTC')
 
 
-def test_today(engine, tsh):
+def test_now(engine, tsh):
     e1 = '(now)'
     e2 = '(now #:naive #t)'
     e3 = '(now #:naive #t #:tz "Europe/Moscow")'
@@ -1631,6 +1631,39 @@ def test_today(engine, tsh):
     assert b.tz is None
     assert d.tz == pytz.utc
     assert e.tz.zone == 'Europe/Moscow'
+
+
+def test_today(engine, tsh):
+    e1 = '(today)'
+    e2 = '(today #:naive #t)'
+    e3 = '(today #:naive #t #:tz "Europe/Moscow")'
+    e4 = '(today #:naive #f)'
+    e5 = '(today #:naive #f #:tz "Europe/Moscow")'
+    e6 = '(today #:tz "Gondwana/Chandrapore")'
+
+    i = Interpreter(engine, tsh, {})
+    a = lisp.evaluate(e1, i.env)
+    b = lisp.evaluate(e2, i.env)
+    with pytest.raises(AssertionError) as err:
+        lisp.evaluate(e3, i.env)
+    assert err.value.args[0] == 'date cannot be naive and have a tz'
+    d = lisp.evaluate(e4, i.env)
+    e = lisp.evaluate(e5, i.env)
+    with pytest.raises(pytz.UnknownTimeZoneError) as err:
+        lisp.evaluate(e6, i.env)
+    assert err.value.args[0] == 'Gondwana/Chandrapore'
+
+    assert a.tz == pytz.utc
+    assert b.tz is None
+    assert d.tz == pytz.utc
+    assert e.tz.zone == 'Europe/Moscow'
+
+    assert a.hour == 0
+    assert a.minute == 0
+    assert a.second == 0
+    assert a.microsecond == 0
+
+    assert e.utcoffset().seconds == 10800
 
 
 def test_more_today(engine, tsh):
