@@ -1474,7 +1474,7 @@ def resample(__interpreter__,
     if meth is None:
         raise ValueError(f'bad resampling method `{method}`')
 
-    return resampled.apply(method).ffill().dropna()
+    return resampled.apply(method).dropna()
 
 
 @func('cumsum')

@@ -1812,7 +1812,6 @@ def test_resample(engine, tsh):
 
     assert_df("""
 2020-01-01 00:00:00+00:00    1.0
-2020-01-02 00:00:00+00:00    1.0
 2020-01-03 00:00:00+00:00    3.0
 """, tsh.get(engine, 'gasdaytoday'))
 
@@ -1847,14 +1846,11 @@ def test_resample_fillna(engine, tsh):
 2024-10-01 10:00:00+00:00    10.0
 2024-10-01 11:00:00+00:00    11.0
 Name: hourly_missing_values, dtype: float64
-    """, hourly_nas)
+""", hourly_nas)
 
     # Without a fill option,
-    # we would expect missing values for 2024-10-01 03:00:00+00:00 and 2024-10-01 06:00:00+00:00
     assert_df("""
 2024-10-01 00:00:00+00:00     1.0
-2024-10-01 03:00:00+00:00     1.0
-2024-10-01 06:00:00+00:00     1.0
 2024-10-01 09:00:00+00:00    10.5
 Freq: 3h, Name: hourlynas3h, dtype: float64
 """, tsh.get(engine, 'hourlynas3h'))
@@ -1867,15 +1863,11 @@ Freq: 3h, Name: hourlynas3h, dtype: float64
     )
 
     # With fill=0 option,
-    # we would expect 0 values for 2024-10-01 03:00:00+00:00 and 2024-10-01 06:00:00+00:00
     assert_df("""
 2024-10-01 00:00:00+00:00     1.0
-2024-10-01 03:00:00+00:00     1.0
-2024-10-01 06:00:00+00:00     1.0
 2024-10-01 09:00:00+00:00    10.5
 Freq: 3h, Name: hourlynas3h, dtype: float64
 """, tsh.get(engine, 'hourlynas3h_wt_option'))
-
 
 
 def test_resample_boundaries(tsh, engine):
@@ -2023,12 +2015,10 @@ def test_upsample(engine, tsh):
 
     # Hey ! How about we get an hourly series there ?
     assert_df("""
-2024-12-31 19:00:00    10.0
-2024-12-31 20:00:00    10.0
-2024-12-31 21:00:00    10.0
-2024-12-31 22:00:00    10.0
+2022-12-31 23:00:00     0.0
+2023-12-31 23:00:00    10.0
 2024-12-31 23:00:00    20.0
-""", ts2[-5:])
+""", ts2)
 
 
 @pytest.mark.parametrize("tstamp,freq,direction,expected", [
