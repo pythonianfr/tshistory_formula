@@ -1817,6 +1817,67 @@ def test_resample(engine, tsh):
 """, tsh.get(engine, 'gasdaytoday'))
 
 
+def test_resample_fillna(engine, tsh):
+    hourly_nas = pd.Series(
+        list(range(12)),
+        index=pd.date_range(utcdt(2024, 10, 1), periods=12, freq='h')
+    )
+
+    hourly_nas.iloc[3:10,] = pd.NA
+
+    tsh.update(engine, hourly_nas, 'hourly_missing_values', 'Babar')
+
+    tsh.register_formula(
+        engine,
+        'hourlynas3h',
+        '(resample (series "hourly_missing_values") "3h")'
+    )
+
+    assert_df("""
+2024-10-01 00:00:00+00:00     0.0
+2024-10-01 01:00:00+00:00     1.0
+2024-10-01 02:00:00+00:00     2.0
+2024-10-01 03:00:00+00:00     NaN
+2024-10-01 04:00:00+00:00     NaN
+2024-10-01 05:00:00+00:00     NaN
+2024-10-01 06:00:00+00:00     NaN
+2024-10-01 07:00:00+00:00     NaN
+2024-10-01 08:00:00+00:00     NaN
+2024-10-01 09:00:00+00:00     NaN
+2024-10-01 10:00:00+00:00    10.0
+2024-10-01 11:00:00+00:00    11.0
+Name: hourly_missing_values, dtype: float64
+    """, hourly_nas)
+
+    # Without a fill option,
+    # we would expect missing values for 2024-10-01 03:00:00+00:00 and 2024-10-01 06:00:00+00:00
+    assert_df("""
+2024-10-01 00:00:00+00:00     1.0
+2024-10-01 03:00:00+00:00     1.0
+2024-10-01 06:00:00+00:00     1.0
+2024-10-01 09:00:00+00:00    10.5
+Freq: 3h, Name: hourlynas3h, dtype: float64
+""", tsh.get(engine, 'hourlynas3h'))
+
+
+    tsh.register_formula(
+        engine,
+        'hourlynas3h_wt_option',
+        '(resample (series "hourly_missing_values" #:fill 0) "3h")'
+    )
+
+    # With fill=0 option,
+    # we would expect 0 values for 2024-10-01 03:00:00+00:00 and 2024-10-01 06:00:00+00:00
+    assert_df("""
+2024-10-01 00:00:00+00:00     1.0
+2024-10-01 03:00:00+00:00     1.0
+2024-10-01 06:00:00+00:00     1.0
+2024-10-01 09:00:00+00:00    10.5
+Freq: 3h, Name: hourlynas3h, dtype: float64
+""", tsh.get(engine, 'hourlynas3h_wt_option'))
+
+
+
 def test_resample_boundaries(tsh, engine):
     series_name = 'constant-values-hourly'
     for day in (1, 2, 3, 4, 5, 6):
