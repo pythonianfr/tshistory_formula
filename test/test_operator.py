@@ -1856,18 +1856,97 @@ Freq: 3h, Name: hourlynas3h, dtype: float64
 """, tsh.get(engine, 'hourlynas3h'))
 
 
+    # With fill=0 option,
     tsh.register_formula(
         engine,
         'hourlynas3h_wt_option',
         '(resample (series "hourly_missing_values" #:fill 0) "3h")'
     )
 
-    # With fill=0 option,
+    assert_df("""
+2024-10-01 00:00:00+00:00    1.0
+2024-10-01 03:00:00+00:00    0.0
+2024-10-01 06:00:00+00:00    0.0
+2024-10-01 09:00:00+00:00    7.0
+Freq: 3h, Name: hourlynas3h_wt_option, dtype: float64
+""", tsh.get(engine, 'hourlynas3h_wt_option'))
+
+    # With fill=ffill
+    tsh.register_formula(
+        engine,
+        'hourlynas3h_wt_option',
+        '(resample (series "hourly_missing_values" #:fill "ffill") "3h")'
+    )
+
+    assert_df("""
+2024-10-01 00:00:00+00:00    1.000000
+2024-10-01 03:00:00+00:00    2.000000
+2024-10-01 06:00:00+00:00    2.000000
+2024-10-01 09:00:00+00:00    7.666667
+Freq: 3h, Name: hourlynas3h_wt_option, dtype: float64
+""", tsh.get(engine, 'hourlynas3h_wt_option'))
+
+    # With limit
+    tsh.register_formula(
+        engine,
+        'hourlynas3h_wt_options',
+        '(resample (series "hourly_missing_values" #:fill 0 #:limit 3) "3h")'
+    )
+
     assert_df("""
 2024-10-01 00:00:00+00:00     1.0
+2024-10-01 03:00:00+00:00     0.0
 2024-10-01 09:00:00+00:00    10.5
-Freq: 3h, Name: hourlynas3h, dtype: float64
-""", tsh.get(engine, 'hourlynas3h_wt_option'))
+Name: hourlynas3h_wt_options, dtype: float64
+""", tsh.get(engine, 'hourlynas3h_wt_options'))
+
+    # DAILY
+    daily_nas = pd.Series(
+        list(range(100)),
+        index=pd.date_range(utcdt(2024, 10, 1), periods=100, freq='d')
+    )
+
+    daily_nas.iloc[3:90,] = pd.NA
+
+    tsh.update(engine, daily_nas, 'daily_missing_values', 'Babar')
+
+    tsh.register_formula(
+        engine,
+        'daily2monthly',
+        '(resample (series "daily_missing_values" #:fill 0) "MS")'
+    )
+
+    assert_df("""
+2024-10-01 00:00:00+00:00     0.096774
+2024-11-01 00:00:00+00:00     0.000000
+2024-12-01 00:00:00+00:00     5.838710
+2025-01-01 00:00:00+00:00    95.500000
+Freq: MS, Name: daily2monthly, dtype: float64
+""", tsh.get(engine, 'daily2monthly'))
+
+    # MONTHLY
+    monthly_nas = pd.Series(
+        list(range(30)),
+        index=pd.date_range(utcdt(2024, 10, 1), periods=30, freq='MS')
+    )
+
+    monthly_nas.iloc[2:28,] = pd.NA
+
+    tsh.update(engine, monthly_nas, 'monthly_missing_values', 'Babar')
+
+    tsh.register_formula(
+        engine,
+        'monthly2yearly',
+        '(resample (series "monthly_missing_values" #:fill 0) "YS")'
+    )
+
+    assert_df("""
+2024-01-01 00:00:00+00:00     0.333333
+2025-01-01 00:00:00+00:00     0.000000
+2026-01-01 00:00:00+00:00     0.000000
+2027-01-01 00:00:00+00:00    19.000000
+Freq: YS-JAN, Name: monthly2yearly, dtype: float64
+""", tsh.get(engine, 'monthly2yearly'))
 
 
 def test_resample_boundaries(tsh, engine):

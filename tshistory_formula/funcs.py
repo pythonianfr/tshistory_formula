@@ -805,6 +805,33 @@ def _fill(df, colname, fillopt):
         )
 
 
+def _fill_series(series, fillopt):
+    filler = fillopt['fill']
+    limit = fillopt.get('limit')
+
+    #we need to find missing dates
+    ifreq, _ = infer_freq(series)
+
+    #particular behaviour for month
+    if pd.Timedelta(days=30) <= ifreq <= pd.Timedelta(days=31):
+        ifreq = 'MS'
+
+    series = series.asfreq(ifreq)
+
+    if isinstance(filler, str):
+        for fillmethod in filler.split(','):
+            series = series.apply(
+                fillmethod.strip(),
+                limit=limit
+            )
+    elif isinstance(filler, (int, float)):
+        series = series.fillna(
+            value=filler,
+            limit=limit
+        )
+
+    return series
+
 def _group_series(*serieslist):
     dfs = []
     opts = {}
@@ -1466,6 +1493,11 @@ def resample(__interpreter__,
     """
     if not len(series):
         return series
+
+    fillopt = series.options
+    if 'fill' in fillopt:
+        if fillopt['fill'] is not None:
+            series = _fill_series(series, fillopt)
 
     resampled = series.resample(freq)
 
