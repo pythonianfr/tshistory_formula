@@ -2088,7 +2088,7 @@ def test_upsample(engine, tsh):
     tsh.register_formula(
         engine,
         'upsample-bug',
-        '(resample (series "upsample-yearly") "H" #:method "ffill")'
+        '(resample (series "upsample-yearly") "h" #:method "ffill")'
     )
     ts2 = tsh.get(engine, 'upsample-bug')
 

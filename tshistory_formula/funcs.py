@@ -794,8 +794,8 @@ def _fill(df, colname, fillopt):
     limit = fillopt.get('limit')
     if isinstance(filler, str):
         for method in filler.split(','):
-            df[colname] = df[colname].fillna(
-                method=method.strip(),
+            df[colname] = df[colname].apply(
+                method.strip(),
                 limit=limit
             )
     elif isinstance(filler, (int, float)):
@@ -1430,7 +1430,7 @@ def resample_transform(tree):
     pandas resampling creates intervals based on origin (by default
     'start_day') For instance, when resampling series starting on
     '2000-01-02 08:37': - if freq='D', first interval is ['2000-01-02
-    00:00', '2000-01-03 00:00'] - if freq='H', first interval is
+    00:00', '2000-01-03 00:00'] - if freq='h', first interval is
     ['2000-01-02 08:00', '2000-01-02 09:00']
 
     So number of points in the first and last intervals tends to be
