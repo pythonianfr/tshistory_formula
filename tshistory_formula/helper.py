@@ -463,26 +463,25 @@ def substitute_findseries(cn, tsh, tree, kwargs):
     # protection against circular import
     from tshistory_formula.interpreter import Interpreter
 
-    naive = kwargs.get(Keyword('naive'), False)
-    fill_option = kwargs.get(Keyword('fill'), None)
     i = Interpreter(cn, tsh, kwargs)
-    query_search = i.evaluate(tree)
-    if naive:
-        query_search = search.and_(
+    query = i.evaluate(tree)
+    if kwargs.get('naive', False):
+        query = search.and_(
             search.not_(
                 search.tzaware()
             ),
-            query_search
+            query
         )
     else:
-        query_search = search.and_(
+        query = search.and_(
             search.tzaware(),
-            query_search
+            query
         )
-    names = tsh.find(cn, query_search)
+    names = tsh.find(cn, query)
     if tsh.othersources is not None:
-        names += tsh.othersources.find(query_search.expr())
+        names += tsh.othersources.find(query.expr())
 
+    fill_option = kwargs.get('fill', None)
     if fill_option is None:
         return [
             [Symbol('series'), name]
