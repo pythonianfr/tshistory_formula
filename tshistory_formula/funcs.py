@@ -239,6 +239,9 @@ def serieslist(__interpreter__,
 @func('findnames')
 def findnames(__interpreter__,
               q: search.query) -> List[str]:
+    # We need this as an helper for the expansion.
+    # Since the search expressions in .find and findseries can be
+    # different, we need the full help of the interpreter there.
     i = __interpreter__
     names = i.tsh.find(i.cn, q)
     if i.tsh.othersources is not None:
@@ -272,27 +275,9 @@ def findseries(__interpreter__,
       floating value.
 
     """
-    i = __interpreter__
-    if naive:
-        q = search.and_(
-            search.not_(
-                search.tzaware()
-            ),
-            q
-        )
-    else:
-        q = search.and_(
-            search.tzaware(),
-            q
-        )
-    return serieslist(
-        __interpreter__,
-        __from_value_date__,
-        __to_value_date__,
-        __revision_date__,
-        i.tsh.find(i.cn, q),
-        fill
-    )
+    # We aren't invoked at runtime, the series have already been
+    # fetched at formula expansion time, so doing nothing is fine :)
+    pass
 
 
 @func('by.name')
