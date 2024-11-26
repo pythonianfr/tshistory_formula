@@ -480,6 +480,8 @@ def substitute_findseries(cn, tsh, tree, kwargs):
             query_search
         )
     names = tsh.find(cn, query_search)
+    if tsh.othersources is not None:
+        names += tsh.othersources.find(query_search.expr())
 
     if fill_option is None:
         return [

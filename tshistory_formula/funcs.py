@@ -240,8 +240,11 @@ def serieslist(__interpreter__,
 def findnames(__interpreter__,
               q: search.query) -> List[str]:
     i = __interpreter__
-    # NOTE: we are only searching through the local source
-    return i.tsh.find(i.cn, q)
+    names = i.tsh.find(i.cn, q)
+    if i.tsh.othersources is not None:
+        other = i.tsh.othersources.find(q.expr())
+        names += other
+    return names
 
 
 @func('findseries')

@@ -292,7 +292,7 @@ def test_find_and_remote_byname(tsa, engine):
         '(add (findseries (by.and (by.name "I am") (by.name "find me ?"))))'
     )
     ts = tsa.get('findremote')
-    assert len(ts) == 0
+    assert len(ts) == 3
 
 
 def test_formula_components(tsa):
