@@ -243,7 +243,12 @@ def findnames(__interpreter__,
     # Since the search expressions in .find and findseries can be
     # different, we need the full help of the interpreter there.
     i = __interpreter__
-    names = i.tsh.find(i.cn, q)
+    names = search.local_search(
+        i.cn,
+        i.tsh,
+        q.expr(),
+        'local'
+    )
     if i.tsh.othersources is not None:
         other = i.tsh.othersources.find(q.expr())
         names += other
@@ -292,6 +297,19 @@ def byname(namequery: str) -> search.query:
 
     """
     return search.byname(namequery)
+
+
+@func('by.source')
+def bysource(sourcename: str) -> search.query:
+    """
+    Perform the query (or subquery) matching the source name only
+    on the given source.
+
+    Examples: `(by.and (by.name "wind") (by.source "meteo"))`
+
+    The name of the local source is "local".
+    """
+    return search.bysource(sourcename)
 
 
 @func('by.basket')

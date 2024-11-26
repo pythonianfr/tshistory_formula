@@ -274,7 +274,7 @@ def test_formula_remote_double_expansion(tsa):
     assert f == '(+ 1 (+ 1 (+ 2 (series "remote-primary-series"))))'
 
 
-def test_find_and_remote_byname(tsa, engine):
+def test_findseries_and_remote_byname(tsa, engine):
     ts = pd.Series(
         [1, 2, 3],
         pd.date_range(pd.Timestamp('2024-1-1', tz='UTC'), freq='D', periods=3)
@@ -290,6 +290,34 @@ def test_find_and_remote_byname(tsa, engine):
     tsa.register_formula(
         'findremote',
         '(add (findseries (by.and (by.name "I am") (by.name "find me ?"))))'
+    )
+    ts = tsa.get('findremote')
+    assert len(ts) == 3
+
+
+def test_findseries_bysource(tsa, engine):
+    ts = pd.Series(
+        [1, 2, 3],
+        pd.date_range(pd.Timestamp('2024-1-1', tz='UTC'), freq='D', periods=3)
+    )
+    rtsh = timeseries('remote')
+    rtsh.update(
+        engine,
+        ts,
+        'I am remote, can you find me ?',
+        'Babar'
+    )
+
+    tsa.register_formula(
+        'findremote',
+        '(add (findseries (by.and (by.name "I am") (by.source "local"))))'
+    )
+    ts = tsa.get('findremote')
+    assert len(ts) == 0
+
+    tsa.register_formula(
+        'findremote',
+        '(add (findseries (by.and (by.name "I am") (by.source "remote"))))'
     )
     ts = tsa.get('findremote')
     assert len(ts) == 3

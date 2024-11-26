@@ -477,7 +477,12 @@ def substitute_findseries(cn, tsh, tree, kwargs):
             search.tzaware(),
             query
         )
-    names = tsh.find(cn, query)
+    names = search.local_search(
+        cn,
+        tsh,
+        query.expr(),
+        'local'
+    )
     if tsh.othersources is not None:
         names += tsh.othersources.find(query.expr())
 
