@@ -815,6 +815,27 @@ def test_filter_fill(engine, tsh):
 """, tsf)
 
 
+def test_find_and_byname(engine, tsh):
+    ts = pd.Series(
+        [1, 2, 3],
+        pd.date_range(pd.Timestamp('2024-1-1', tz='UTC'), freq='D', periods=3)
+    )
+    tsh.update(
+        engine,
+        ts,
+        'beginning.end',
+        'Babar'
+    )
+
+    tsh.register_formula(
+        engine,
+        'andbyname',
+        '(add (findseries (by.and (by.name "begin") (by.name "end"))))'
+    )
+    ts = tsh.get(engine, 'andbyname')
+    assert len(ts) == 3
+
+
 def test_filter_loop(engine, tsh):
     tsh.register_formula(
         engine,
