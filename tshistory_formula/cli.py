@@ -1,7 +1,7 @@
 import click
 from sqlalchemy import create_engine
 from psyl.lisp import parse
-from tshistory.util import find_dburi
+from tshistory.config import configuration
 
 from tshistory_formula.schema import formula_schema
 from tshistory_formula.tsio import timeseries
@@ -14,7 +14,7 @@ from tshistory_formula.interpreter import Interpreter
 @click.option('--pdbshell', is_flag=True, default=False)
 @click.option('--namespace', default='tsh')
 def typecheck_formula(db_uri, pdbshell=False, namespace='tsh'):
-    engine = create_engine(find_dburi(db_uri))
+    engine = create_engine(configuration().find_dburi(db_uri))
     tsh = timeseries(namespace)
 
     i = Interpreter(engine, tsh, {})
@@ -37,7 +37,7 @@ def typecheck_formula(db_uri, pdbshell=False, namespace='tsh'):
 @click.option('--pdbshell', is_flag=True, default=False)
 @click.option('--namespace', default='tsh')
 def test_formula(db_uri, formula, pdbshell=False, namespace='tsh'):
-    engine = create_engine(find_dburi(db_uri))
+    engine = create_engine(configuration().find_dburi(db_uri))
     tsh = timeseries(namespace)
 
     ts = tsh.eval_formula(engine, formula)
@@ -51,7 +51,7 @@ def test_formula(db_uri, formula, pdbshell=False, namespace='tsh'):
 @click.option('--namespace', default='tsh')
 def init_db(db_uri, namespace):
     "initialize the formula part of a timeseries history schema"
-    engine = create_engine(find_dburi(db_uri))
+    engine = create_engine(configuration().find_dburi(db_uri))
     formula_schema(namespace).create(engine)
 
 
@@ -64,7 +64,7 @@ def init_db(db_uri, namespace):
 def fix_formula_groups_metadata_(db_uri, namespace='tsh'):
     from tshistory_formula.migrate import fix_formula_groups_metadata
 
-    engine = create_engine(find_dburi(db_uri))
+    engine = create_engine(configuration().find_dburi(db_uri))
     fix_formula_groups_metadata(engine, namespace, True)
 
 
@@ -73,7 +73,7 @@ def fix_formula_groups_metadata_(db_uri, namespace='tsh'):
 @click.argument('db-uri')
 @click.option('--namespace', default='tsh')
 def migrate_to_groups(db_uri, namespace='tsh'):
-    engine = create_engine(find_dburi(db_uri))
+    engine = create_engine(configuration().find_dburi(db_uri))
 
     ns = namespace
     sql = f"""
