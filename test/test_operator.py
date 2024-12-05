@@ -2095,7 +2095,7 @@ def test_resample_interpolate(tsh, engine):
 """, ts)
 
 
-def test_upsample(engine, tsh):
+def test_upsample_with_resample(engine, tsh):
     ts1 = pd.Series(
         [0, 10, 20],
         index=[
@@ -2104,6 +2104,7 @@ def test_upsample(engine, tsh):
             pd.Timestamp('2024-12-31T23:00:00')
         ]
     )
+
     tsh.update(engine, ts1, 'upsample-yearly', 'Babar')
 
     tsh.register_formula(
@@ -2113,7 +2114,6 @@ def test_upsample(engine, tsh):
     )
     ts2 = tsh.get(engine, 'upsample-bug')
 
-    # Hey ! How about we get an hourly series there ?
     assert_df("""
 2024-12-31 19:00:00    10.0
 2024-12-31 20:00:00    10.0
@@ -2122,6 +2122,356 @@ def test_upsample(engine, tsh):
 2024-12-31 23:00:00    20.0
 Freq: h, Name: upsample-bug, dtype: float64
 """, ts2.tail())
+
+    ts2 = tsh.get(
+        engine,
+        'upsample-bug',
+        from_value_date=pd.Timestamp("2024-06-01")
+    )
+
+    # Hey ! How about we get an hourly series there ?
+    assert_df("""
+2024-12-31 23:00:00    20.0
+Freq: h, Name: upsample-bug, dtype: float64
+""", ts2)
+
+
+def test_upsample(engine, tsh):
+
+    # START OF YEAR
+
+    ts1 = pd.Series(
+        [0, 10, 20],
+        index=[
+            pd.Timestamp('2022-01-01T00:00:00'),
+            pd.Timestamp('2023-01-01T00:00:00'),
+            pd.Timestamp('2024-01-01T00:00:00')
+        ]
+    )
+    tsh.update(engine, ts1, 'upsample-yearstart', 'Babar')
+
+    tsh.register_formula(
+        engine,
+        'upsample-formula-yearstart',
+        '(upsample (series "upsample-yearstart") "h" "YS" #:method "ffill")'
+    )
+    ts2 = tsh.get(engine, 'upsample-formula-yearstart')
+
+    assert_df("""
+2024-12-31 19:00:00    20.0
+2024-12-31 20:00:00    20.0
+2024-12-31 21:00:00    20.0
+2024-12-31 22:00:00    20.0
+2024-12-31 23:00:00    20.0
+Freq: h, Name: upsample-formula-yearstart, dtype: float64
+""", ts2.tail())
+
+    ts2 = tsh.get(
+        engine,
+        'upsample-formula-yearstart',
+        from_value_date=pd.Timestamp("2024-06-01")
+    )
+
+    assert_df("""
+2024-06-01 00:00:00    20.0
+2024-06-01 01:00:00    20.0
+2024-06-01 02:00:00    20.0
+2024-06-01 03:00:00    20.0
+2024-06-01 04:00:00    20.0
+Freq: h, Name: upsample-formula-yearstart, dtype: float64
+""", ts2.head())
+
+    # END OF YEAR
+
+    ts1 = pd.Series(
+        [0, 10, 20],
+        index=[
+            pd.Timestamp('2022-12-31T23:00:00'),
+            pd.Timestamp('2023-12-31T23:00:00'),
+            pd.Timestamp('2024-12-31T23:00:00')
+        ]
+    )
+
+    tsh.update(engine, ts1, 'upsample-yearend', 'Babar')
+    tsh.register_formula(
+        engine,
+        'upsample-formula-yearend',
+        '(upsample (series "upsample-yearend") "h" "YE" #:method "ffill")'
+    )
+    ts2 = tsh.get(engine, 'upsample-formula-yearend')
+
+    assert_df("""
+2025-12-31 18:00:00    20.0
+2025-12-31 19:00:00    20.0
+2025-12-31 20:00:00    20.0
+2025-12-31 21:00:00    20.0
+2025-12-31 22:00:00    20.0
+Freq: h, Name: upsample-formula-yearend, dtype: float64
+""", ts2.tail())
+
+    ts2 = tsh.get(
+        engine,
+        'upsample-formula-yearend',
+        from_value_date=pd.Timestamp("2024-09-01")
+    )
+
+    assert_df("""
+2024-09-01 00:00:00    10.0
+2024-09-01 01:00:00    10.0
+2024-09-01 02:00:00    10.0
+2024-09-01 03:00:00    10.0
+2024-09-01 04:00:00    10.0
+Freq: h, Name: upsample-formula-yearend, dtype: float64
+""", ts2.head())
+
+    # START OF MONTH
+
+    ts1 = pd.Series(
+        [0, 10, 20],
+        index=[
+            pd.Timestamp('2024-12-01T00:00:00'),
+            pd.Timestamp('2025-01-01T00:00:00'),
+            pd.Timestamp('2025-02-01T00:00:00'),
+        ]
+    )
+    tsh.update(engine, ts1, 'upsample-monthstart', 'Babar')
+
+    tsh.register_formula(
+        engine,
+        'upsample-formula-monthstart',
+        '(upsample (series "upsample-monthstart") "d" "MS" #:method "ffill")'
+    )
+    ts2 = tsh.get(engine, 'upsample-formula-monthstart')
+
+    assert_df("""
+2025-02-24    20.0
+2025-02-25    20.0
+2025-02-26    20.0
+2025-02-27    20.0
+2025-02-28    20.0
+Freq: D, Name: upsample-formula-monthstart, dtype: float64
+""", ts2.tail())
+
+    ts2 = tsh.get(
+        engine,
+        'upsample-formula-monthstart',
+        to_value_date=pd.Timestamp("2025-01-03")
+    )
+
+    assert_df("""
+2024-12-30     0.0
+2024-12-31     0.0
+2025-01-01    10.0
+2025-01-02    10.0
+2025-01-03    10.0
+Freq: D, Name: upsample-formula-monthstart, dtype: float64
+""", ts2.tail())
+
+    # METHOD INTERPOLATE
+
+    ts1 = pd.Series(
+        [0, 10, 20],
+        index=[
+            pd.Timestamp('2024-12-05T00:00:00'),
+            pd.Timestamp('2024-12-06T00:00:00'),
+            pd.Timestamp('2024-12-07T00:00:00'),
+        ]
+    )
+    tsh.update(engine, ts1, 'upsample-daily', 'Babar')
+
+    tsh.register_formula(
+        engine,
+        'upsample-formula-daily',
+        '(upsample (series "upsample-daily") "3h" "d")'
+    )
+    ts2 = tsh.get(engine, 'upsample-formula-daily')
+
+    assert_df("""
+2024-12-05 00:00:00    0.00
+2024-12-05 03:00:00    1.25
+2024-12-05 06:00:00    2.50
+2024-12-05 09:00:00    3.75
+2024-12-05 12:00:00    5.00
+Freq: 3h, Name: upsample-formula-daily, dtype: float64
+""", ts2.head())
+
+    # series extension to next expected timestep
+    assert_df("""
+2024-12-07 09:00:00    20.0
+2024-12-07 12:00:00    20.0
+2024-12-07 15:00:00    20.0
+2024-12-07 18:00:00    20.0
+2024-12-07 21:00:00    20.0
+Freq: 3h, Name: upsample-formula-daily, dtype: float64
+""", ts2.tail())
+
+    ts2 = tsh.get(
+        engine,
+        'upsample-formula-daily',
+        to_value_date=pd.Timestamp("2024-12-06T12:00:00")
+    )
+
+    assert_df("""
+2024-12-06 00:00:00    10.00
+2024-12-06 03:00:00    11.25
+2024-12-06 06:00:00    12.50
+2024-12-06 09:00:00    13.75
+2024-12-06 12:00:00    15.00
+Freq: 3h, Name: upsample-formula-daily, dtype: float64
+""", ts2.tail())
+
+
+def test_upsample_fillopt(engine, tsh):
+    yearly_nas = pd.Series(
+        list(range(12)),
+        index=pd.date_range(utcdt(2024, 10, 1), periods=12, freq='YS')
+    )
+
+    yearly_nas.iloc[3:10,] = pd.NA
+
+    tsh.update(engine, yearly_nas, 'yearly_missing_values', 'Babar')
+
+    tsh.register_formula(
+        engine,
+        'yearlynas3h',
+        '(upsample (series "yearly_missing_values") "3h" "YS")'
+    )
+
+    assert_df("""
+2025-01-01 00:00:00+00:00     0.0
+2026-01-01 00:00:00+00:00     1.0
+2027-01-01 00:00:00+00:00     2.0
+2028-01-01 00:00:00+00:00     NaN
+2029-01-01 00:00:00+00:00     NaN
+2030-01-01 00:00:00+00:00     NaN
+2031-01-01 00:00:00+00:00     NaN
+2032-01-01 00:00:00+00:00     NaN
+2033-01-01 00:00:00+00:00     NaN
+2034-01-01 00:00:00+00:00     NaN
+2035-01-01 00:00:00+00:00    10.0
+2036-01-01 00:00:00+00:00    11.0
+Freq: YS-JAN, Name: yearly_missing_values, dtype: float64
+""", yearly_nas)
+
+    ts = tsh.get(
+        engine,
+        'yearlynas3h',
+        from_value_date=pd.Timestamp('2028-12-31'),
+        to_value_date=pd.Timestamp('2035-01-02'))
+
+    # Without a fill option,
+    assert_df("""
+2035-01-01 00:00:00+00:00    10.000000
+2035-01-01 03:00:00+00:00    10.000342
+2035-01-01 06:00:00+00:00    10.000685
+2035-01-01 09:00:00+00:00    10.001027
+2035-01-01 12:00:00+00:00    10.001370
+2035-01-01 15:00:00+00:00    10.001712
+2035-01-01 18:00:00+00:00    10.002055
+2035-01-01 21:00:00+00:00    10.002397
+2035-01-02 00:00:00+00:00    10.002740
+Freq: 3h, Name: yearlynas3h, dtype: float64
+""", ts)
+
+
+    # With fill=0 option,
+    tsh.register_formula(
+        engine,
+        'yearlynas3h_wt_option',
+        '(upsample (series "yearly_missing_values" #:fill 0) "3h" "YS")'
+    )
+
+    # here we are requesting data with a fromdate located in the "hole"
+    # of data. That's why series start at the first available value, in 2035
+    ts = tsh.get(
+        engine,
+        'yearlynas3h_wt_option',
+        from_value_date=pd.Timestamp('2028-12-31'),
+        to_value_date=pd.Timestamp('2035-01-02'))
+
+    assert_df("""
+2035-01-01 00:00:00+00:00    10.000000
+2035-01-01 03:00:00+00:00    10.000342
+2035-01-01 06:00:00+00:00    10.000685
+2035-01-01 09:00:00+00:00    10.001027
+2035-01-01 12:00:00+00:00    10.001370
+2035-01-01 15:00:00+00:00    10.001712
+2035-01-01 18:00:00+00:00    10.002055
+2035-01-01 21:00:00+00:00    10.002397
+2035-01-02 00:00:00+00:00    10.002740
+Freq: 3h, Name: yearlynas3h_wt_option, dtype: float64
+""", ts)
+
+    ts = tsh.get(
+        engine,
+        'yearlynas3h_wt_option',
+        from_value_date=pd.Timestamp('2026-12-31'),
+        to_value_date=pd.Timestamp('2035-01-02'))
+
+    assert_df("""
+2026-12-31 00:00:00+00:00    1.997260
+2026-12-31 03:00:00+00:00    1.997603
+2026-12-31 06:00:00+00:00    1.997945
+2026-12-31 09:00:00+00:00    1.998288
+2026-12-31 12:00:00+00:00    1.998630
+Freq: 3h, Name: yearlynas3h_wt_option, dtype: float64
+""", ts.head())
+
+    # With fill=ffill
+    tsh.register_formula(
+        engine,
+        'yearlynas3h_wt_option',
+        '(upsample (series "yearly_missing_values" #:fill "ffill") "3h" "YS")'
+    )
+
+    ts = tsh.get(
+        engine,
+        'yearlynas3h_wt_option',
+        from_value_date=pd.Timestamp('2027-12-31'),
+        to_value_date=pd.Timestamp('2035-01-02'))
+
+    assert_df("""
+2028-01-03 00:00:00+00:00    2.0
+2028-01-03 03:00:00+00:00    2.0
+2028-01-03 06:00:00+00:00    2.0
+2028-01-03 09:00:00+00:00    2.0
+2028-01-03 12:00:00+00:00    2.0
+2028-01-03 15:00:00+00:00    2.0
+2028-01-03 18:00:00+00:00    2.0
+2028-01-03 21:00:00+00:00    2.0
+2028-01-04 00:00:00+00:00    2.0
+2028-01-04 03:00:00+00:00    2.0
+2028-01-04 06:00:00+00:00    2.0
+Freq: 3h, Name: yearlynas3h_wt_option, dtype: float64
+""", ts[24:35])
+
+    # With limit
+    tsh.register_formula(
+        engine,
+        'yearlynas3h_wt_option',
+        '(upsample (series "yearly_missing_values" #:fill 0 #:limit 1) "3h" "YS")'
+    )
+
+    ts = tsh.get(
+        engine,
+        'yearlynas3h_wt_option',
+        from_value_date=pd.Timestamp('2027-12-31'),
+        to_value_date=pd.Timestamp('2035-01-02'))
+
+    assert_df("""
+2028-01-03 00:00:00+00:00    0.007822
+2028-01-03 03:00:00+00:00    0.008311
+2028-01-03 06:00:00+00:00    0.008799
+2028-01-03 09:00:00+00:00    0.009288
+2028-01-03 12:00:00+00:00    0.009777
+2028-01-03 15:00:00+00:00    0.010266
+2028-01-03 18:00:00+00:00    0.010755
+2028-01-03 21:00:00+00:00    0.011244
+2028-01-04 00:00:00+00:00    0.011732
+2028-01-04 03:00:00+00:00    0.012221
+2028-01-04 06:00:00+00:00    0.012710
+Freq: 3h, Name: yearlynas3h_wt_option, dtype: float64
+""", ts[24:35])
 
 
 @pytest.mark.parametrize("tstamp,freq,direction,expected", [

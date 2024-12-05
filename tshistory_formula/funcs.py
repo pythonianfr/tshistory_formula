@@ -794,7 +794,6 @@ def scalar_pow(
     return res
 
 
-
 def _fill(df, colname, fillopt):
     """ in-place application of the series fill policies
     which can be a int/float or a coma separated string
@@ -815,16 +814,19 @@ def _fill(df, colname, fillopt):
         )
 
 
-def _fill_series(series, fillopt):
+def _fill_series(series, fillopt, origin_freq=None):
     filler = fillopt['fill']
     limit = fillopt.get('limit')
 
-    #we need to find missing dates
-    ifreq, _ = infer_freq(series)
+    if origin_freq:
+        ifreq = origin_freq
+    else:
+        #we need to find missing dates
+        ifreq, _ = infer_freq(series)
 
-    #particular behaviour for month
-    if pd.Timedelta(days=30) <= ifreq <= pd.Timedelta(days=31):
-        ifreq = 'MS'
+        #particular behaviour for month
+        if pd.Timedelta(days=30) <= ifreq <= pd.Timedelta(days=31):
+            ifreq = 'MS'
 
     series = series.asfreq(ifreq)
 
@@ -841,6 +843,7 @@ def _fill_series(series, fillopt):
         )
 
     return series
+
 
 def _group_series(*serieslist):
     dfs = []
@@ -1517,6 +1520,94 @@ def resample(__interpreter__,
         raise ValueError(f'bad resampling method `{method}`')
 
     return resampled.apply(method).dropna()
+
+# UPSAMPLE
+
+@func('upsample_adjusted_stamp')
+def upsample_adjusted_stamp(
+        tstamp: Optional[pd.Timestamp],
+        origin_freq: str,
+        direction: str) -> Optional[pd.Timestamp]:
+    assert direction in ('left', 'right')
+    if tstamp is None:
+        return tstamp
+    if direction == 'left':
+        return (tstamp - pd.tseries.frequencies.to_offset(origin_freq))
+
+    return (tstamp + pd.tseries.frequencies.to_offset(origin_freq))
+
+
+def upsample_transform(tree):
+    """Enlarge the from_value_date <-> to_value_date range to get
+    consistent upsampling data
+    To extend it correctly, we need the "origin_freq" info that 
+    correspond to the initial frequency.
+    """
+    posargs, kwargs = buildargs(tree[1:])
+    origin_freq = posargs[2]
+    top = [
+        Symbol('let'),
+        Symbol('origin_freq'),
+            origin_freq
+        ,
+        [
+            Symbol('let'),
+            Symbol('from_value_date'), [
+                Symbol('upsample_adjusted_stamp'),
+                Symbol('from_value_date'),
+                Symbol('origin_freq'),
+                'left',
+            ],
+            Symbol('to_value_date'), [
+                Symbol('upsample_adjusted_stamp'),
+                Symbol('to_value_date'),
+                Symbol('origin_freq'),
+                'right',
+            ],
+            tree
+        ]
+    ]
+    return top
+
+
+@func('upsample')
+@argscope('upsample', upsample_transform)
+def upsample(__interpreter__,
+             __revision_date__,
+             __from_value_date__,
+             __to_value_date__,
+             series: pd.Series,
+             freq: str,
+             origin_freq: str,
+             method: str='interpolate') -> pd.Series:
+    """
+    Upsamples its input series using `freq` and the aggregation method
+    `method` (as described in the pandas documentation).
+
+    Example: `(upsample (series "yearly") #:freq "3h" #:origin-freq "Y")`
+
+    """
+    if not len(series):
+        return series
+    fillopt = series.options
+    if 'fill' in fillopt:
+        if fillopt['fill'] is not None:
+            series = _fill_series(series, fillopt, origin_freq)
+
+    # we want to extend the series to the next expected timestep
+    extended_series = series.iloc[[-1]].rename(
+        lambda x: x + pd.tseries.frequencies.to_offset(origin_freq)
+    )
+    series = pd.concat([series, extended_series])
+
+    upsampled = series.resample(freq)
+
+    # check method
+    meth = getattr(upsampled, method, None)
+    if meth is None:
+        raise ValueError(f'bad resampling method `{method}`')
+
+    return upsampled.apply(method).dropna().iloc[:-1]
 
 
 @func('cumsum')
