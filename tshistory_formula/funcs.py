@@ -1,6 +1,5 @@
 from datetime import date, timedelta, datetime
 from typing import List, Union, Optional, Tuple
-from numbers import Number
 import calendar
 from functools import reduce
 import operator
@@ -35,7 +34,10 @@ from tshistory_formula.registry import (
     metadata,
     argscope
 )
-from tshistory_formula.types import NONETYPE
+from tshistory_formula.types import (
+    NONETYPE,
+    Number
+)
 from tshistory_formula.helper import (
     seriesname,
     zonename
@@ -282,7 +284,8 @@ def findseries(__interpreter__,
     """
     # We aren't invoked at runtime, the series have already been
     # fetched at formula expansion time, so doing nothing is fine :)
-    pass
+    # To satisfy the type checker we return an empty list ...
+    return []
 
 
 @func('by.name')
@@ -1163,7 +1166,7 @@ def series_multiply(*serieslist: pd.Series) -> pd.Series:
             continue
         res = res.multiply(df[col], axis=0)
 
-    return res[res.columns[0]].dropna()
+    return res[res.columns[0]].dropna()  # pytype: disable=attribute-error
 
 
 @func('div')
@@ -2244,7 +2247,7 @@ def holidays_metadata(cn, tsh, tree):
             }
         }
     country = args[0]
-    tzones = pytz.country_timezones(country)
+    tzones = pytz.country_timezones(country)  # pytype: disable=not-callable
     assert len(tzones) == 1, f'Many available timezones for {country}, cannot compute'
     return {
         'holidays': {

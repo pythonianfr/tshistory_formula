@@ -48,7 +48,7 @@ def test_series_formula(client):
     })
     assert res.status_code == 409
     assert res.json['message'] == (
-        'TypeError("\'foo\' not of <class \'pandas.core.series.Series\'>")'
+        'TypeError("\'foo\' not a <class \'pandas.core.series.Series\'>")'
     )
 
     res = client.patch('/series/formula', params={

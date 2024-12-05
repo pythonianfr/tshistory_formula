@@ -2,7 +2,6 @@ import json
 import inspect
 import itertools
 import typing
-from numbers import Number
 
 import pytest
 import pandas as pd
@@ -18,6 +17,7 @@ from tshistory_formula.types import (
     isoftype,
     function_types,
     findtype,
+    Number,
     Packed,
     sametype,
     typecheck
@@ -370,7 +370,7 @@ def test_failing_arg(engine, tsh):
     with pytest.raises(TypeError) as err:
         typecheck(lisp.parse(expr), i.env)
 
-    assert err.value.args[0] == "'toto' not of <class 'numbers.Number'>"
+    assert err.value.args[0] == "'toto' not a Number"
 
 
 def test_failing_kw(engine, tsh):
@@ -379,7 +379,7 @@ def test_failing_kw(engine, tsh):
     with pytest.raises(TypeError) as err:
         typecheck(lisp.parse(expr), i.env)
 
-    assert err.value.args[0] == "42 not of <class 'tshistory_formula.helper.seriesname'>"
+    assert err.value.args[0] == "42 not a <class 'tshistory_formula.helper.seriesname'>"
 
 
 def test_kw_subexpr(engine, tsh):

@@ -1,7 +1,6 @@
 import abc
 import inspect
 import itertools
-from numbers import Number
 import re
 import typing
 
@@ -18,6 +17,7 @@ from tshistory_formula.helper import seriesname
 
 
 NONETYPE = type(None)
+Number = typing.TypeVar('Number', int, float)
 
 
 _CFOLDENV = Env({
@@ -83,12 +83,12 @@ def isoftype(typespec, val):
 def sametype(supertype, atype):
     # base case, because issubclass of Number vs concrete number types
     # does not work :/
-    if supertype is Number:
+    if supertype == Number:
         if isinstance(atype, (type, abc.ABCMeta)):
             return atype in (int, float, Number)
         return any(sametype(supertype, subt)
                    for subt in atype.__args__)
-    elif atype is Number:
+    elif atype == Number:
         if sametype(atype, supertype):
             return True
 
@@ -148,7 +148,7 @@ def sametype(supertype, atype):
 # isinstance(<typedescr>, type) but "class Unpacked(List): pass" would
 # ...
 # With the typing module, we have another asyncio it seems.
-Packed = typing._alias(list, 1, inst=False, name='Packed')
+Packed = typing._alias(list, 1, inst=False, name='Packed') # pytype: disable=module-attr
 
 
 def findtype(signature, argidx=None, argname=None):
@@ -206,6 +206,8 @@ def normalize_union_types(obj):
 def typename(typespec):
     if isinstance(typespec, type):
         return extract_type_name(typespec.__name__)
+    if typespec is Number:
+        return 'Number'
     strtype = str(typespec)
     # as of py39 Optional is first class and no longer devolves
     # into Union[<type>, NoneType]
@@ -234,7 +236,7 @@ def typename(typespec):
 def function_types(func):
     sig = inspect.signature(func)
     types = {
-        'return': typename(sig.return_annotation)
+        'return': typename(sig.return_annotation).replace('~', '')
     }
     for par in sig.parameters.values():
         if par.name.startswith('__'):
@@ -247,7 +249,7 @@ def function_types(func):
             if isinstance(default, str):
                 default = f'"{default}"'
             atype = f'Default[{atype}={default}]'
-        types[par.name] = atype
+        types[par.name] = atype.replace('~', '')
     return types
 
 
@@ -348,7 +350,9 @@ def typecheck(tree, env=FUNCS):
             )
         else:
             if not isoftype(expecttype, arg):
-                raise TypeError(f'{repr(arg)} not of {expecttype}')
+                raise TypeError(
+                    f'{repr(arg)} not a {str(expecttype).replace("~","")}'
+                )
             narrowed_argstypes.append(
                 narrow_arg(expecttype, arg)
             )

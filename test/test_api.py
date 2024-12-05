@@ -83,7 +83,7 @@ def test_eval_formula(tsx):
         tsx.eval_formula(
             '(+ "1" (series "test-eval"))'
         )
-    assert err.value.args[0] == "'1' not of <class 'numbers.Number'>"
+    assert err.value.args[0] == "'1' not a Number"
 
 
 def test_bogus_formula(tsx):
