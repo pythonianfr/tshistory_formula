@@ -8,7 +8,10 @@ from click.testing import CliRunner
 
 from tshistory import cli as command, api
 from tshistory.http.util import nosecurity
-from tshistory.testutil import make_tsx
+from tshistory.testutil import (
+    make_tsx,
+    tempconfig
+)
 
 from tshistory_formula.schema import formula_schema
 from tshistory_formula.testutil import with_http_bridge
@@ -39,12 +42,17 @@ def tsh(request, engine):
 def tsa(engine):
     formula_schema().create(engine, reset=True)
     formula_schema('remote').create(engine, reset=True)
-    return api.timeseries(
-        str(engine.url),
-        namespace='tsh',
-        handler=timeseries,
-        sources={'remote': (str(engine.url), 'remote')}
-    )
+    config = (
+        f'[dburi]\n'
+        f'test = {str(engine.url)}\n'
+    ).encode()
+    with tempconfig(config):
+        yield api.timeseries(
+            str(engine.url),
+            namespace='tsh',
+            handler=timeseries,
+            sources={'remote': (str(engine.url), 'remote')}
+        )
 
 
 @pytest.fixture
