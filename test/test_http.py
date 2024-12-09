@@ -5,7 +5,10 @@ import pandas as pd
 import pytest
 import webtest
 
-from tshistory import util
+from tshistory import (
+    codecs,
+    util
+)
 from tshistory.testutil import (
     assert_df,
     gengroup,
@@ -119,7 +122,7 @@ def test_group_formula(client):
     )
     df.columns = ['a', 'b', 'c']
 
-    bgroup = util.pack_group(df)
+    bgroup = codecs.pack_group(df)
     res = client.patch('/group/state', {
         'name': 'test_group',
         'author': 'Babar',
@@ -146,7 +149,7 @@ def test_group_formula(client):
         'name': 'group_formula',
         'format': 'tshpack'
     })
-    df2 = util.unpack_group(res.body)
+    df2 = codecs.unpack_group(res.body)
 
     assert df2.equals(df * 2)
 
@@ -187,7 +190,7 @@ def test_bound_formula(client):
     )
     df.columns = ['a', 'b', 'c']
 
-    bgroup = util.pack_group(df)
+    bgroup = codecs.pack_group(df)
     res = client.patch('/group/state', {
         'name': 'a-group',
         'author': 'Babar',
@@ -227,7 +230,7 @@ def test_bound_formula(client):
         'name': 'bfgroup',
         'format': 'tshpack'
     })
-    df2 = util.unpack_group(res.body)
+    df2 = codecs.unpack_group(res.body)
 
     assert_df("""
               a    b    c

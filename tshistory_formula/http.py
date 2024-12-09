@@ -7,10 +7,8 @@ from flask_restx import (
     reqparse
 )
 
-from tshistory.util import (
-    series_metadata,
-    unpack_series
-)
+from tshistory.util import series_metadata
+from tshistory.codecs import unpack_series
 from tshistory.http.client import httpclient, unwraperror
 from tshistory.http.util import (
     enum,

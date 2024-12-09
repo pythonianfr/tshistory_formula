@@ -32,8 +32,6 @@ setup(name='tshistory_formula',
               'typecheck-formula=tshistory_formula.cli:typecheck_formula',
               'test-formula=tshistory_formula.cli:test_formula',
               'formula-init-db=tshistory_formula.cli:init_db',
-              'migrate-to-formula-groups=tshistory_formula.cli:migrate_to_groups',
-              'fix-formula-groups-metadata=tshistory_formula.cli:fix_formula_groups_metadata_'
           ],
           'tshistory.migrate.Migrator': [
               'migrator=tshistory_formula.migrate:Migrator'
