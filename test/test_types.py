@@ -253,6 +253,7 @@ def test_operators_types():
         'priority': {'return': 'Series', 'serieslist': 'Packed[Series]'},
         'resample': {'freq': 'str',
                      'method': 'Default[str="mean"]',
+                     'origin_freq': 'Default[str=None]',
                      'return': 'Series',
                      'series': 'Series'},
         'round': {'decimals': 'Default[Number=0]',

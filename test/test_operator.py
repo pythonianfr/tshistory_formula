@@ -2110,16 +2110,16 @@ def test_upsample_with_resample(engine, tsh):
     tsh.register_formula(
         engine,
         'upsample-bug',
-        '(resample (series "upsample-yearly") "h" #:method "ffill")'
+        '(resample (series "upsample-yearly") "h" #:method "ffill" #:origin_freq "YE")'
     )
     ts2 = tsh.get(engine, 'upsample-bug')
 
     assert_df("""
-2024-12-31 19:00:00    10.0
-2024-12-31 20:00:00    10.0
-2024-12-31 21:00:00    10.0
-2024-12-31 22:00:00    10.0
-2024-12-31 23:00:00    20.0
+2025-12-31 18:00:00    20.0
+2025-12-31 19:00:00    20.0
+2025-12-31 20:00:00    20.0
+2025-12-31 21:00:00    20.0
+2025-12-31 22:00:00    20.0
 Freq: h, Name: upsample-bug, dtype: float64
 """, ts2.tail())
 
@@ -2129,11 +2129,14 @@ Freq: h, Name: upsample-bug, dtype: float64
         from_value_date=pd.Timestamp("2024-06-01")
     )
 
-    # Hey ! How about we get an hourly series there ?
     assert_df("""
-2024-12-31 23:00:00    20.0
+2024-06-01 00:00:00    10.0
+2024-06-01 01:00:00    10.0
+2024-06-01 02:00:00    10.0
+2024-06-01 03:00:00    10.0
+2024-06-01 04:00:00    10.0
 Freq: h, Name: upsample-bug, dtype: float64
-""", ts2)
+""", ts2.head())
 
 
 def test_upsample(engine, tsh):

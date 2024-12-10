@@ -1461,23 +1461,32 @@ def resample_transform(tree):
 
     """
     posargs, kwargs = buildargs(tree[1:])
-    top = [
-        Symbol('let'),
-        Symbol('needed_freq'), [
+    if 'origin_freq' in kwargs:
+        #upsample
+        needed_freq = kwargs['origin_freq']
+        adjusted_stamp_func = 'upsample_adjusted_stamp'
+    else:
+        needed_freq = [
             Symbol('_infer_freq'),
             posargs[0],
             posargs[1],
-        ],
+        ]
+        adjusted_stamp_func = 'resample_adjusted_stamp'
+
+    top = [
+        Symbol('let'),
+        Symbol('needed_freq'),
+        needed_freq,
         [
             Symbol('let'),
             Symbol('from_value_date'), [
-                Symbol('resample_adjusted_stamp'),
+                Symbol(adjusted_stamp_func),
                 Symbol('from_value_date'),
                 Symbol('needed_freq'),
                 'left',
             ],
             Symbol('to_value_date'), [
-                Symbol('resample_adjusted_stamp'),
+                Symbol(adjusted_stamp_func),
                 Symbol('to_value_date'),
                 Symbol('needed_freq'),
                 'right',
@@ -1496,12 +1505,17 @@ def resample(__interpreter__,
              __to_value_date__,
              series: pd.Series,
              freq: str,
-             method: str='mean') -> pd.Series:
+             method: str='mean',
+             origin_freq: Optional[str]=None) -> pd.Series:
     """
     Resamples its input series using `freq` and the aggregation method
     `method` (as described in the pandas documentation).
 
     Example: `(resample (series "hourly") "D")`
+
+    In case of upsampling (going from a large timestep to a smaller one), the user needs
+    to add the `origin_freq` information in order to maintain all functionnalities.
+    `origin_freq` corresponds to the frequency of the original series.
 
     """
     if not len(series):
@@ -1510,7 +1524,15 @@ def resample(__interpreter__,
     fillopt = series.options
     if 'fill' in fillopt:
         if fillopt['fill'] is not None:
-            series = _fill_series(series, fillopt)
+            series = _fill_series(series, fillopt, origin_freq)
+
+    # if upsample
+    if origin_freq:
+        # we want to extend the series to the next expected timestep
+        extended_series = series.iloc[[-1]].rename(
+            lambda x: x + pd.tseries.frequencies.to_offset(origin_freq)
+        )
+        series = pd.concat([series, extended_series])
 
     resampled = series.resample(freq)
 
@@ -1519,7 +1541,12 @@ def resample(__interpreter__,
     if meth is None:
         raise ValueError(f'bad resampling method `{method}`')
 
-    return resampled.apply(method).dropna()
+    if origin_freq:
+        #upsampling case
+        return resampled.apply(method).dropna().iloc[:-1]
+    else:
+        return resampled.apply(method).dropna()
+
 
 # UPSAMPLE
 
