@@ -21,7 +21,7 @@ setup(name='tshistory_formula',
       install_requires=[
           'tshistory >= 0.20.0',
           'holidays == 0.62',
-          'pycountry >= 22.3.5',
+          'pycountry >= 24.6.1',
           'psyl >= 0.8'
       ],
       package_data={'tshistory_formula': [
