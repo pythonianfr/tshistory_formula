@@ -33,6 +33,13 @@ class Migrator(_Migrator):
         migrate_group_formula_schema(self.engine, self.namespace, self.interactive)
 
 
+@version('tshistory-formula', '0.17.0')
+def do_migrate_intervals(engine, namespace, interactive):
+    from tshistory.migrate import migrate_intervals
+
+    migrate_intervals(engine, f'{namespace}-formula-patch', interactive)
+
+
 @version('tshistory-formula', '0.16.1')
 def migrate_holidays_operator(engine, namespace, interactive):
     formulas = engine.execute(
