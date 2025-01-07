@@ -19,11 +19,11 @@ from tshistory.testutil import (
 
 def test_series_formula(client):
     series = genserie(utcdt(2020, 1, 1), 'd', 3)
-    res = client.patch('/series/state', params={
+    res = client.patch_json('/series/state', params={
         'name': 'test-formula',
-        'series': util.tojson(series),
+        'series': json.loads(util.tojson(series)),
         'author': 'Babar',
-        'insertion_date': utcdt(2020, 1, 1, 10),
+        'insertion_date': str(utcdt(2020, 1, 1, 10)),
         'tzaware': util.tzaware_series(series)
     })
 
@@ -156,18 +156,18 @@ def test_group_formula(client):
 
 def test_bound_formula(client):
     ts = genserie(pd.Timestamp('2021-1-1'), 'h', 3)
-    res = client.patch('/series/state', {
+    res = client.patch_json('/series/state', {
         'name': 'a-series',
-        'series': util.tojson(ts),
+        'series': json.loads(util.tojson(ts)),
         'author': 'Babar',
-        'insertion_date': utcdt(2021, 1, 1, 10),
+        'insertion_date': str(utcdt(2021, 1, 1, 10)),
         'tzaware': util.tzaware_series(ts)
     })
-    res = client.patch('/series/state', {
+    res = client.patch_json('/series/state', {
         'name': 'another-series',
-        'series': util.tojson(ts),
+        'series': json.loads(util.tojson(ts)),
         'author': 'Babar',
-        'insertion_date': utcdt(2021, 1, 1, 10),
+        'insertion_date': str(utcdt(2021, 1, 1, 10)),
         'tzaware': util.tzaware_series(ts)
     })
 
