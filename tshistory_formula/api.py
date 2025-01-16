@@ -46,7 +46,8 @@ def eval_formula(self,
                  formula: str,
                  revision_date: pd.Timestamp=None,
                  from_value_date: pd.Timestamp=None,
-                 to_value_date: pd.Timestamp=None) -> pd.Series:
+                 to_value_date: pd.Timestamp=None,
+                 tz=None) -> pd.Series:
     """Execute a formula on the spot.
 
     .. highlight:: python
@@ -57,14 +58,14 @@ def eval_formula(self,
 
     # basic syntax check
     tree = parse(formula)
-    # this normalizes the formula
-    formula = serialize(tree)
 
     with self.engine.begin() as cn:
         # type checking
         i = interpreter.Interpreter(cn, self, {})
         rtype = types.typecheck(tree, env=i.env)
         if not types.sametype(rtype, pd.Series):
+            # this normalizes the formula
+            formula = serialize(tree)
             raise TypeError(
                 f'formula `{formula}` must return a `Series`, not `{rtype.__name__}`'
             )
@@ -74,7 +75,8 @@ def eval_formula(self,
             formula,
             revision_date=revision_date,
             from_value_date=from_value_date,
-            to_value_date=to_value_date
+            to_value_date=to_value_date,
+            tz=tz
         )
 
 

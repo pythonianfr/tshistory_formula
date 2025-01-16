@@ -7,7 +7,10 @@ from flask_restx import (
     reqparse
 )
 
-from tshistory.util import series_metadata
+from tshistory.util import (
+    series_metadata,
+    tzaware_series
+)
 from tshistory.codecs import unpack_series
 from tshistory.http.client import httpclient, unwraperror
 from tshistory.http.util import (
@@ -95,6 +98,9 @@ eval_formula.add_argument(
 )
 eval_formula.add_argument(
     'to_value_date', type=utcdt, default=None
+)
+eval_formula.add_argument(
+    'tz', type=str, default=None
 )
 eval_formula.add_argument(
     'format', type=enum('json', 'tshpack'), default='json'
@@ -266,7 +272,8 @@ class formula_httpapi(httpapi):
                         args.text,
                         revision_date=args.revision_date,
                         from_value_date=args.from_value_date,
-                        to_value_date=args.to_value_date
+                        to_value_date=args.to_value_date,
+                        tz=args.tz
                     )
                 except SyntaxError as err:
                     return f'syn:{err}', 400
@@ -453,12 +460,14 @@ class formula_httpclient(httpclient):
     def eval_formula(self, formula,
                      revision_date=None,
                      from_value_date=None,
-                     to_value_date=None):
+                     to_value_date=None,
+                     tz=None):
         query = {
             'text': formula,
             'revision_date': strft(revision_date) if revision_date else None,
             'from_value_date': strft(from_value_date) if from_value_date else None,
             'to_value_date': strft(to_value_date) if to_value_date else None,
+            'tz': tz,
             'format': 'tshpack'
         }
         res = self.session.post(
@@ -466,7 +475,10 @@ class formula_httpclient(httpclient):
             data=query
         )
         if res.status_code == 200:
-            return unpack_series('on-the-fly', res.content)
+            ts = unpack_series('on-the-fly', res.content)
+            if tz and tzaware_series(ts):
+                ts = ts.tz_convert(tz)
+            return ts
 
         if res.status_code == 400:
             msg = res.json()

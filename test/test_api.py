@@ -65,6 +65,18 @@ def test_eval_formula(tsx):
 2022-01-03 00:00:00+00:00    4.0
 """, ts)
 
+    ts = tsx.eval_formula(
+        '(+ 1 (series "test-eval"))',
+        tz='CET'
+    )
+    assert_df("""
+2022-01-01 01:00:00+01:00    2.0
+2022-01-02 01:00:00+01:00    3.0
+2022-01-03 01:00:00+01:00    4.0
+2022-01-04 01:00:00+01:00    5.0
+2022-01-05 01:00:00+01:00    6.0
+""", ts)
+
     with pytest.raises(SyntaxError):
         tsx.eval_formula(
             '(+ 1 i am borked'
@@ -84,6 +96,31 @@ def test_eval_formula(tsx):
             '(+ "1" (series "test-eval"))'
         )
     assert err.value.args[0] == "'1' not a Number"
+
+
+def test_eval_formula_naive(tsx):
+    tsx.update(
+        'test-eval-naive',
+        pd.Series(
+            [1, 2, 3],
+            index=pd.date_range(
+                pd.Timestamp('2022-1-1'),
+                periods=3,
+                freq='d')
+        ),
+        'Babar',
+        insertion_date=pd.Timestamp('2022-1-5', tz='utc')
+    )
+
+    ts = tsx.eval_formula(
+        '(+ 1 (series "test-eval-naive"))',
+        tz='CET'
+    )
+    assert_df("""
+2022-01-01    2.0
+2022-01-02    3.0
+2022-01-03    4.0
+""", ts)
 
 
 def test_bogus_formula(tsx):

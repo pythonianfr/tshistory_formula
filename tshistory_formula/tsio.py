@@ -15,7 +15,8 @@ from tshistory.util import (
     empty_series,
     patch,
     ts,
-    tx
+    tx,
+    tzaware_series
 )
 
 from tshistory_formula import funcs, gfuncs  # trigger registration  # noqa: F401
@@ -431,11 +432,13 @@ class timeseries(basets):
 
         return pd.Interval(mindate, maxdate)
 
-    def eval_formula(self, cn, formula, **kw):
+    def eval_formula(self, cn, formula, tz=None, **kw):
         i = kw.get('__interpreter__') or interpreter.Interpreter(cn, self, kw)
         ts = i.evaluate(
             self._expanded_formula(cn, formula, display=False, qargs=kw)
         )
+        if tz and tzaware_series(ts):
+            ts = ts.tz_convert(tz)
         return ts
 
     def _expanded_formula(self, cn, formula, stopnames=(), level=-1,
