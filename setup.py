@@ -28,11 +28,6 @@ setup(name='tshistory_formula',
           'schema.sql'
       ]},
       entry_points={
-          'tshistory.subcommands': [
-              'typecheck-formula=tshistory_formula.cli:typecheck_formula',
-              'test-formula=tshistory_formula.cli:test_formula',
-              'formula-init-db=tshistory_formula.cli:init_db',
-          ],
           'tshistory.migrate.Migrator': [
               'migrator=tshistory_formula.migrate:Migrator'
           ],
