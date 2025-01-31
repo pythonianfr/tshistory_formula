@@ -39,6 +39,20 @@ def do_migrate_intervals(engine, namespace, interactive):
 
     migrate_intervals(engine, f'{namespace}-formula-patch', interactive)
 
+    with engine.begin() as cn:
+        cn.execute(
+            f'drop table if exists "{namespace}-formula-patch".basket'
+        )
+        cn.execute(
+            f'drop table if exists "{namespace}-formula-patch".groupmap'
+        )
+        cn.execute(
+            f'drop table if exists "{namespace}-formula-patch".group_registry'
+        )
+        cn.execute(
+            f'drop table if exists "{namespace}-group".basket'
+        )
+
 
 @version('tshistory-formula', '0.16.1')
 def migrate_holidays_operator(engine, namespace, interactive):

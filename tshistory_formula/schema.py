@@ -11,13 +11,17 @@ SCHEMA = Path(__file__).parent / 'schema.sql'
 
 class formula_schema(tsschema):
 
-    def create(self, engine, **kw):
-        super().create(engine, **kw)
+    def create(self, engine):
+        super().create(engine)
 
         with engine.begin() as cn:
             cn.execute(sqlfile(SCHEMA, ns=self.namespace))
 
-        tsschema(f'{self.namespace}-formula-patch').create(engine)
+        tsschema(f'{self.namespace}-formula-patch').create(
+            engine,
+            base=False,
+            groups=False
+        )
 
         kvstore = kvapi.kvstore(str(engine.url), namespace=f'{self.namespace}-kvstore')
         kvstore.set('tshistory-formula-version', __version__)

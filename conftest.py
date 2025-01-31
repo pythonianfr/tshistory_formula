@@ -32,7 +32,7 @@ def engine(request):
 
 @pytest.fixture(scope='session', params=[1, 16])
 def tsh(request, engine):
-    formula_schema().create(engine, reset=True)
+    formula_schema().create(engine)
     tsh = timeseries()
     tsh.concurrency = request.param
     yield tsh
@@ -40,8 +40,8 @@ def tsh(request, engine):
 
 @pytest.fixture(scope='session')
 def tsa(engine):
-    formula_schema().create(engine, reset=True)
-    formula_schema('remote').create(engine, reset=True)
+    formula_schema().create(engine)
+    formula_schema('remote').create(engine)
     config = (
         f'[dburi]\n'
         f'test = {str(engine.url)}\n'
@@ -102,7 +102,7 @@ class WebTester(webtest.TestApp):
 
 @pytest.fixture(scope='session')
 def client(engine):
-    formula_schema().create(engine, reset=True)
+    formula_schema().create(engine)
     wsgi = nosecurity(
         make_app(
             api.timeseries(
@@ -117,7 +117,7 @@ def client(engine):
 
 
 def _initschema(engine):
-    formula_schema('tsh').create(engine, reset=True)
+    formula_schema('tsh').create(engine)
 
 
 tsx = make_tsx(
