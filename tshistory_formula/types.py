@@ -11,9 +11,13 @@ from psyl.lisp import (
     Keyword,
     serialize
 )
+import tshistory.search as search
 
 from tshistory_formula.registry import FUNCS
-from tshistory_formula.helper import seriesname
+from tshistory_formula.helper import (
+    seriesname,
+    BasketName
+)
 
 
 NONETYPE = type(None)
@@ -26,6 +30,13 @@ _CFOLDENV = Env({
     '/': lambda a, b: a / b
 })
 
+
+PROPOSAL_TYPES = (
+    seriesname,
+    search.Source,
+    search.MetaKey,
+    BasketName
+)
 
 def constant_fold(tree):
     op = tree[0]
@@ -98,8 +109,8 @@ def sametype(supertype, atype):
             # supertype = atype (standard python types or abc.Meta)
             if issubclass(atype, supertype):
                 return True
-            if supertype is seriesname and issubclass(atype, str):
-                # gross cheat there but we want `seriesname` to really
+            if supertype in PROPOSAL_TYPES and issubclass(atype, str):
+                # gross cheat there but we want `PROPOSAL_TYPES` to really
                 # be an alias for `str`
                 return True
         elif atype.__origin__ is typing.Union:

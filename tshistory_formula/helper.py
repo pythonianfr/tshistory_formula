@@ -28,6 +28,10 @@ class seriesname(str):
     pass
 
 
+class BasketName(str):
+    pass
+
+
 class BadKeyword(Exception):
     pass
 

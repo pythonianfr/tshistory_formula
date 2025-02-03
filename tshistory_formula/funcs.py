@@ -40,6 +40,7 @@ from tshistory_formula.types import (
 )
 from tshistory_formula.helper import (
     seriesname,
+    BasketName,
     zonename
 )
 from tshistory_formula.interpreter import Interpreter
@@ -303,7 +304,7 @@ def byname(namequery: str) -> search.query:
 
 
 @func('by.source')
-def bysource(sourcename: str) -> search.query:
+def bysource(sourcename: search.Source) -> search.query:
     """
     Perform the query (or subquery) matching the source name only
     on the given source.
@@ -317,7 +318,7 @@ def bysource(sourcename: str) -> search.query:
 
 @func('by.basket')
 def bybasket(__interpreter__,
-             basketname: str) -> search.query:
+             basketname: BasketName) -> search.query:
     """
     Yields a query filter operating on series names.
 
@@ -332,7 +333,7 @@ def bybasket(__interpreter__,
 
 
 @func('by.metakey')
-def bymetakey(keyquery: str) -> search.query:
+def bymetakey(keyquery: search.MetaKey) -> search.query:
     """
     Yields a query filter operating on metadata key.
 

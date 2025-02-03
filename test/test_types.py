@@ -208,7 +208,7 @@ def test_operators_types():
                  'series': 'Series'},
         'by.and': {'queries': 'Packed[query]', 'return': 'query'},
         'by.metaitem': {'key': 'str', 'return': 'query', 'value': 'Union[str, Number]'},
-        'by.metakey': {'keyquery': 'str', 'return': 'query'},
+        'by.metakey': {'keyquery': 'MetaKey', 'return': 'query'},
         'by.name': {'namequery': 'str', 'return': 'query'},
         'by.or': {'queries': 'Packed[query]', 'return': 'query'},
         'by.value': {'key': 'str',
