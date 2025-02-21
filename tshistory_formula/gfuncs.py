@@ -15,8 +15,17 @@ def group(__interpreter__, name: str)-> pd.DataFrame:
     formula or bound formula).
 
     """
-    return __interpreter__.tsh.group_get(
-        __interpreter__.cn, name,  **__interpreter__.getargs
+    i = __interpreter__
+    exists = i.tsh.group_exists(i.cn, name)
+    if not exists:
+        if i.tsh.othersources and i.tsh.othersources.group_exists(name):
+            return i.tsh.othersources.group_get(name, **i.getargs)
+
+    if not exists:
+        raise ValueError(f'No such group `{name}`')
+
+    return i.tsh.group_get(
+        i.cn, name,  **i.getargs
     )
 
 

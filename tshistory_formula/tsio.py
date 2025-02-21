@@ -407,6 +407,7 @@ class timeseries(basets):
             return ts
 
         ts = super().get(cn, name, **kw)
+        # this actually belongs to the base tshistory
         if ts is None and self.othersources:
             ts = self.othersources.get(
                 name, **kw
@@ -825,13 +826,17 @@ class timeseries(basets):
 
     @tx
     def group_formula(self, cn, groupname):
-        res = cn.execute(
+        form = cn.execute(
             f'select internal_metadata->\'formula\' '
             f'from "{self.namespace}".group_registry '
             f'where name = %(name)s',
             name=groupname
-        )
-        return res.scalar()
+        ).scalar()
+        if form is not None:
+            return form
+
+        if self.othersources and self.othersources.group_exists(groupname):
+            return self.othersources.group_formula(groupname)
 
     @tx
     def list_groups(self, cn):
@@ -921,6 +926,9 @@ class timeseries(basets):
                 operator_name = str(info[0])
                 if operator_name == 'group':
                     if not self.group_exists(cn, name):
+                        # let's peek at the other sources
+                        if self.othersources and self.othersources.group_exists(name):
+                            allrevs += self.othersources.group_insertion_dates(name, **bounds)
                         continue
                     allrevs += self.group_insertion_dates(cn, name, **bounds)
                 elif operator_name == 'series':

@@ -1242,6 +1242,93 @@ def test_more_group_errors(tsx):
     )
 
 
+def test_local_group_formula_remote_group(tsa):
+    rtsh = timeseries('remote')
+    df = gengroup(
+        n_scenarios=3,
+        from_date=datetime(2025, 1, 1),
+        length=5,
+        freq='d',
+        seed=2
+    )
+
+    rtsh.group_replace(
+        tsa.engine,
+        df,
+        'remote-group',
+        'Babar',
+        insertion_date=pd.Timestamp('2025-1-1', tz='UTC')
+    )
+
+    tsa.register_group_formula(
+        'test-localformula-remotegroup',
+        '(group "remote-group"))'
+    )
+
+    ts = tsa.group_get('test-localformula-remotegroup')
+    assert_df("""
+              0    1    2
+2025-01-01  2.0  3.0  4.0
+2025-01-02  3.0  4.0  5.0
+2025-01-03  4.0  5.0  6.0
+2025-01-04  5.0  6.0  7.0
+2025-01-05  6.0  7.0  8.0
+""", ts)
+
+    hist = tsa.group_history('test-localformula-remotegroup')
+    assert_hist("""
+                                        0    1    2
+insertion_date            value_date               
+2025-01-01 00:00:00+00:00 2025-01-01  2.0  3.0  4.0
+                          2025-01-02  3.0  4.0  5.0
+                          2025-01-03  4.0  5.0  6.0
+                          2025-01-04  5.0  6.0  7.0
+                          2025-01-05  6.0  7.0  8.0
+""", hist)
+
+    f = tsa.group_formula('test-localformula-remotegroup')
+    assert f == '(group "remote-group")'
+
+    none = tsa.group_formula('nosuchformula')
+    assert none is None
+
+    # altsource formula
+    rtsh.register_group_formula(
+        tsa.engine,
+        'remote-formula-remote-group',
+        '(group "remote-group")'
+    )
+    f = tsa.group_formula('remote-formula-remote-group')
+    assert f == '(group "remote-group")'
+
+    assert_df("""
+              0    1    2
+2025-01-01  2.0  3.0  4.0
+2025-01-02  3.0  4.0  5.0
+2025-01-03  4.0  5.0  6.0
+2025-01-04  5.0  6.0  7.0
+2025-01-05  6.0  7.0  8.0
+""", tsa.group_get('remote-formula-remote-group'))
+
+    rtsh.register_group_formula(
+        tsa.engine,
+        'remote-formula-local-group-formula',
+        '(group "remote-formula-remote-group")'
+    )
+    f = tsa.group_formula('remote-formula-local-group-formula')
+    assert f == '(group "remote-formula-remote-group")'
+
+    ts = tsa.group_get('remote-formula-local-group-formula')
+    assert_df("""
+              0    1    2
+2025-01-01  2.0  3.0  4.0
+2025-01-02  3.0  4.0  5.0
+2025-01-03  4.0  5.0  6.0
+2025-01-04  5.0  6.0  7.0
+2025-01-05  6.0  7.0  8.0
+""", ts)
+
+
 def test_find(tsx):
     ts = pd.Series(
         [1, 2, 3],

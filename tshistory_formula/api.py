@@ -279,6 +279,16 @@ def group_formula(self, name: str, expanded: bool=False) -> Optional[str]:
         return self.tsh.group_formula(cn, name)
 
 
+@extend(altsources)
+def group_formula(self,  # noqa: F811
+                name: str,
+                expanded: bool=False):
+    source = self._findsourceforgroup(name)
+    if source is None:
+        return {}
+    return source.tsa.group_formula(name, expanded=expanded)
+
+
 @extend(mainsource)
 def register_formula_bindings(self,
                               groupname: str,
