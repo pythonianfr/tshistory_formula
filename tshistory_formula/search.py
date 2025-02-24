@@ -52,7 +52,6 @@ class isformula(query):
     @staticmethod
     def __sig__():
         return {
-            'query': 'str',
             'return': 'query'
         }
 
