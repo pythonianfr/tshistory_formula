@@ -1021,6 +1021,12 @@ def superior_to(series: pd.Series,
     is a scalar, or of the length of the index intersection in the case
     of two series.
 
+    Examples:
+
+     `(> (series "a") 100)`
+
+     `(> (series "a") (series "b") #:true_value 6 #:false_value 5 )`
+
     Series values are dependent on the condition:
     * the values are set to true_value (default 1) where the condition is verified.
     * the values are set to false_value (default 0) where the condition is NOT verified.
@@ -1037,6 +1043,12 @@ def superior_or_equal_to(series: pd.Series,
     Returns a series of length of the first argument if the second one
     is a scalar, or of the length of the index intersection in the case
     of two series.
+
+    Examples:
+
+     `(>= (series "a") 100)`
+
+     `(>= (series "a") (series "b") #:true_value 6 #:false_value 5 )`
 
     Series values are dependent on the condition:
     * the values are set to true_value (default 1) where the condition is verified.
@@ -1055,6 +1067,12 @@ def inferior_to(series: pd.Series,
     is a scalar, or of the length of the index intersection in the case
     of two series.
 
+    Examples:
+
+     `(< (series "a") 100)`
+
+     `(< (series "a") (series "b") #:true_value 6 #:false_value 5 )`
+
     Series values are dependent on the condition:
     * the values are set to true_value (default 1) where the condition is verified.
     * the values are set to false_value (default 0) where the condition is NOT verified.
@@ -1071,6 +1089,12 @@ def inferior_or_equal_to(series: pd.Series,
     Returns a series of length of the first argument if the second one
     is a scalar, or of the length of the index intersection in the case
     of two series.
+
+    Examples:
+
+     `(<= (series "a") 100)`
+
+     `(<= (series "a") (series "b") #:true_value 6 #:false_value 5 )`
 
     Series values are dependent on the condition:
     * the values are set to true_value (default 1) where the condition is verified.
@@ -1089,6 +1113,12 @@ def equal_to(series: pd.Series,
     is a scalar, or of the length of the index intersection in the case
     of two series.
 
+    Examples:
+
+     `(== (series "a") 100)`
+
+     `(== (series "a") (series "b") #:true_value 6 #:false_value 5 )`
+
     Series values are dependent on the condition:
     * the values are set to true_value (default 1) where the condition is verified.
     * the values are set to false_value (default 0) where the condition is NOT verified.
@@ -1105,6 +1135,12 @@ def different_to(series: pd.Series,
     Returns a series of length of the first argument if the second one
     is a scalar, or of the length of the index intersection in the case
     of two series.
+
+    Examples:
+
+     `(<> (series "a") 100)`
+
+     `(<> (series "a") (series "b") #:true_value 6 #:false_value 5 )`
 
     Series values are dependent on the condition:
     * the values are set to true_value (default 1) where the condition is verified.
