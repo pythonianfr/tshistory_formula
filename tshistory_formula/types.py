@@ -3,6 +3,7 @@ import inspect
 import itertools
 import re
 import typing
+from dataclasses import dataclass
 
 import pandas as pd
 from psyl.lisp import (
@@ -19,10 +20,25 @@ from tshistory_formula.helper import (
     cronrule,
     seriesname,
 )
+from tshistory_formula.vocabulary import PERIOD_OFFSETS
 
 
 NONETYPE = type(None)
 Number = typing.TypeVar('Number', int, float)
+
+
+@dataclass
+class Freq:
+    multiplier: typing.Optional[Number]
+    period_offset: PERIOD_OFFSETS
+
+    def __repr__(self) -> str:
+        """Render Freq as pandas input"""
+        return '%s%s' % (self.multiplier or '', self.period_offset)
+
+
+# `Freq` is for formula editor and `str` for Pandas power users
+FreqType = typing.Union[Freq, str]
 
 
 _CFOLDENV = Env({
@@ -89,8 +105,19 @@ def assert_typed(func):
     )
 
 
+def valid_literal(typespec, val):
+    origin = getattr(typespec, '__origin__', None)
+    if origin is typing.Literal:
+        if val in typing.get_args(typespec):
+            return True
+    elif origin is typing.Union:
+        if any(valid_literal(argspec, val) for argspec in typespec.__args__):
+            return True
+    return False
+
+
 def isoftype(typespec, val):
-    return sametype(typespec, type(val))
+    return valid_literal(typespec, val) or sametype(typespec, type(val))
 
 
 def sametype(supertype, atype):
@@ -201,6 +228,8 @@ def extract_type_name(cls):
     mobj = CLS_NAME_PTN.search(str_cls)
     if mobj:
         str_cls = mobj.group(1).split('.')[-1]
+    if str_cls.startswith('typing.'):
+        str_cls = str_cls[7:]
     return str_cls
 
 
@@ -241,9 +270,7 @@ def typename(typespec):
         return f'{typespec._name}[{typename(typespec.__args__[0])}]'
     if 'Union' in strtype:
         return normalize_union_types(typespec)
-    if strtype.startswith('typing.'):
-        strtype = strtype[7:]
-    return strtype
+    return extract_type_name(strtype)
 
 
 def function_types(func):
@@ -364,7 +391,7 @@ def typecheck(tree, env=FUNCS):
         else:
             if not isoftype(expecttype, arg):
                 raise TypeError(
-                    f'{repr(arg)} not a {str(expecttype).replace("~","")}'
+                    f'{repr(arg)} not a {typename(expecttype)}'
                 )
             narrowed_argstypes.append(
                 narrow_arg(expecttype, arg)
@@ -381,7 +408,7 @@ def typecheck(tree, env=FUNCS):
                 )
         elif not isoftype(expecttype, val):
             raise TypeError(
-                f'keyword `{name}` = {repr(val)} not of {expecttype}'
+                f'keyword `{name}` = {repr(val)} not of {typename(expecttype)}'
             )
 
     returntype = narrow_types(

@@ -18,9 +18,11 @@ from tshistory_formula.registry import (
     func,
     metadata
 )
+from tshistory_formula.types import typename
 from tshistory_formula.helper import zonename
 from tshistory_formula.interpreter import Interpreter
 from tshistory_formula.funcs import compute_bounds
+from tshistory_formula.vocabulary import CALCULATION_METHODS
 
 
 def test_naive_tzone(engine, tsh):
@@ -217,7 +219,7 @@ def test_naive_tz_boundaries(engine, tsh):
     tsh.register_formula(
         engine,
         'resampled-daily-naive',
-        '(resample (naive (series "hourly-utc") "EST") "D")'
+        '(resample (naive (series "hourly-utc") "EST") (freq "D"))'
     )
 
     ts = tsh.get(
@@ -1805,11 +1807,6 @@ def test_resample(engine, tsh):
         'gasdaytoday',
         '(resample (series "gasday") "D")'
     )
-    tsh.register_formula(
-        engine,
-        'badmethod',
-        '(resample (series "gasday") "D" "NO-SUCH-METHOD")'
-    )
 
     assert_df("""
 2020-01-01 00:00:00+00:00    11.5
@@ -1827,9 +1824,14 @@ def test_resample(engine, tsh):
 2020-01-03 00:00:00+00:00    3.0
 """, tsh.get(engine, 'gasdaytoday'))
 
-    with pytest.raises(ValueError) as err:
-        tsh.get(engine, 'badmethod')
-    assert err.value.args[0] == 'bad resampling method `NO-SUCH-METHOD`'
+    with pytest.raises(TypeError) as err:
+        tsh.register_formula(
+            engine,
+            'badmethod',
+            '(resample (series "gasday") "D" "NO-SUCH-METHOD")'
+        )
+    assert err.value.args[0] == \
+        f"'NO-SUCH-METHOD' not a {typename(CALCULATION_METHODS)}"
 
     gasday['2020-1-2'] = np.nan
     tsh.update(engine, gasday, 'gasday', 'Celeste', keepnans=True)
@@ -1853,7 +1855,7 @@ def test_resample_fillna(engine, tsh):
     tsh.register_formula(
         engine,
         'hourlynas3h',
-        '(resample (series "hourly_missing_values") "3h")'
+        '(resample (series "hourly_missing_values") (nfreq 3 "h"))'
     )
 
     assert_df("""

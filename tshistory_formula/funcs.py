@@ -35,9 +35,20 @@ from tshistory_formula.registry import (
     metadata,
     argscope
 )
+from tshistory_formula.vocabulary import (
+    PERIOD_OFFSETS,
+    CALCULATION_METHODS,
+    FILL_METHODS,
+    LEAP_DAY_RULES,
+    TIMEZONES,
+    BY_VALUE_OPS,
+    HOLIDAYS_COUNTRIES
+)
 from tshistory_formula.types import (
     NONETYPE,
-    Number
+    Number,
+    Freq,
+    FreqType
 )
 from tshistory_formula.helper import (
     BasketName,
@@ -50,7 +61,7 @@ from tshistory_formula.interpreter import Interpreter
 
 @func('options')
 def options(series: pd.Series,
-            fill: Union[str, Number, NONETYPE]=None,
+            fill: Union[FILL_METHODS, Number, NONETYPE]=None,
             limit: Optional[int]=None,
             weight: Optional[Number]=None) -> pd.Series:
     """
@@ -125,7 +136,7 @@ def series(__interpreter__,
            __to_value_date__,
            __revision_date__,
            name: seriesname,
-           fill: Union[str, Number, NONETYPE]=None,
+           fill: Union[FILL_METHODS, Number, NONETYPE]=None,
            limit: Optional[int]=None,
            weight: Optional[Number]=None) -> pd.Series:
     """
@@ -267,7 +278,7 @@ def findseries(__interpreter__,
                __revision_date__,
                q: search.query,
                naive: bool=False,
-               fill: Union[str, Number, NONETYPE]=None) -> List[pd.Series]:
+               fill: Union[FILL_METHODS, Number, NONETYPE]=None) -> List[pd.Series]:
     """
     Yields a series list out of a metadata/name/... filtering query.
 
@@ -363,7 +374,7 @@ def bymetaitems(key: str, value: Union[str, Number]) -> search.query:
 
 
 @func('by.value')
-def byvalue(key: str, operator: str, value: Union[str, Number]) -> search.query:
+def byvalue(key: str, operator: BY_VALUE_OPS, value: Union[str, Number]) -> search.query:
     """
     Yields a query filter operating on metadata items.
 
@@ -441,7 +452,7 @@ def asof(revision_date: pd.Timestamp,
 
 
 @func('tzaware-stamp')
-def tzaware_date(dt: pd.Timestamp, tzone: str) -> pd.Timestamp:
+def tzaware_date(dt: pd.Timestamp, tzone: TIMEZONES) -> pd.Timestamp:
     if dt is None:
         return
     if dt.tzinfo is None:
@@ -471,7 +482,7 @@ def naive_transform(tree):
 
 @func('naive')
 @argscope('naive', naive_transform)
-def naive(series: pd.Series, tzone: str) -> pd.Series:
+def naive(series: pd.Series, tzone: TIMEZONES) -> pd.Series:
     """
     Allow demoting a series from a tz-aware index to a tz-naive index.
 
@@ -491,7 +502,7 @@ def naive(series: pd.Series, tzone: str) -> pd.Series:
 
 
 @func('tzaware')
-def tzaware(series: pd.Series, tzone: str) -> pd.Series:
+def tzaware(series: pd.Series, tzone: TIMEZONES) -> pd.Series:
     """
     Allow promoting a series from a tz-naive index to a tz-aware index.
 
@@ -512,7 +523,7 @@ def tzaware(series: pd.Series, tzone: str) -> pd.Series:
 
 @func('date')
 def timestamp(strdate: str,
-              tz: Optional[str]='UTC') -> pd.Timestamp:
+              tz: Optional[TIMEZONES]='UTC') -> pd.Timestamp:
     """
     Produces an utc timestamp from its input string date in iso format.
 
@@ -558,7 +569,7 @@ def shifted(date: pd.Timestamp,
 @func('now')
 def now(__interpreter__,
         naive: Optional[bool]=False,
-        tz: Optional[str]=None) -> pd.Timestamp:
+        tz: Optional[TIMEZONES]=None) -> pd.Timestamp:
     """
     Produces a timezone-aware timestamp as of now
 
@@ -703,7 +714,7 @@ def constant(__interpreter__,
              value: Number,
              fromdate: pd.Timestamp,
              todate: pd.Timestamp,
-             freq: str,
+             freq: FreqType,
              revdate: pd.Timestamp) -> pd.Series:
     """
     Produces a constant-valued timeseries over a pre-defined horizon
@@ -715,6 +726,7 @@ def constant(__interpreter__,
     2040, dated from 1900.
 
     """
+    freq = str(freq)
     assert fromdate.tzinfo is not None
     assert todate.tzinfo is not None
     assert revdate.tzinfo is not None
@@ -1528,7 +1540,8 @@ def resample_adjusted_stamp(
 
 @func('_infer_freq')
 def _infer_freq(series: pd.Series,
-                resample_freq: str) -> pd.Timedelta:
+                resample_freq: FreqType) -> pd.Timedelta:
+    resample_freq = str(resample_freq)
     if len(series) < 2:
         return resample_freq
 
@@ -1574,7 +1587,7 @@ def resample_transform(tree):
     posargs, kwargs = buildargs(tree[1:])
     if 'origin_freq' in kwargs:
         #upsample
-        needed_freq = kwargs['origin_freq']
+        needed_freq = str(kwargs['origin_freq'])
         adjusted_stamp_func = 'upsample_adjusted_stamp'
     else:
         needed_freq = [
@@ -1608,6 +1621,22 @@ def resample_transform(tree):
     return top
 
 
+@func('freq')
+def freq(period_offset: PERIOD_OFFSETS) -> Freq:
+    """
+    Build a frequency from a valid PERIOD_OFFSETS
+    """
+    return Freq(None, period_offset)
+
+
+@func('nfreq')
+def nfreq(multiplier: Number, period_offset: PERIOD_OFFSETS) -> Freq:
+    """
+    Build a frequency from a valid PERIOD_OFFSETS and a multiplier
+    """
+    return Freq(multiplier, period_offset)
+
+
 @func('resample')
 @argscope('resample', resample_transform)
 def resample(__interpreter__,
@@ -1615,9 +1644,9 @@ def resample(__interpreter__,
              __from_value_date__,
              __to_value_date__,
              series: pd.Series,
-             freq: str,
-             method: str='mean',
-             origin_freq: Optional[str]=None) -> pd.Series:
+             freq: FreqType,
+             method: CALCULATION_METHODS='mean',
+             origin_freq: Optional[FreqType]=None) -> pd.Series:
     """
     Resamples its input series using `freq` and the aggregation method
     `method` (as described in the pandas documentation).
@@ -1631,6 +1660,10 @@ def resample(__interpreter__,
     """
     if not len(series):
         return series
+
+    freq = str(freq)
+    if origin_freq:
+        origin_freq = str(origin_freq)
 
     fillopt = series.options
     if 'fill' in fillopt:
@@ -1682,7 +1715,7 @@ def upsample_transform(tree):
     correspond to the initial frequency.
     """
     posargs, kwargs = buildargs(tree[1:])
-    origin_freq = posargs[2]
+    origin_freq = str(posargs[2])
     top = [
         Symbol('let'),
         Symbol('origin_freq'),
@@ -1715,8 +1748,8 @@ def upsample(__interpreter__,
              __from_value_date__,
              __to_value_date__,
              series: pd.Series,
-             freq: str,
-             origin_freq: str,
+             freq: FreqType,
+             origin_freq: FreqType,
              method: str='interpolate') -> pd.Series:
     """
     Upsamples its input series using `freq` and the aggregation method
@@ -1725,6 +1758,9 @@ def upsample(__interpreter__,
     Example: `(upsample (series "yearly") #:freq "3h" #:origin-freq "Y")`
 
     """
+    freq = str(freq)
+    origin_freq = str(origin_freq)
+
     if not len(series):
         return series
     fillopt = series.options
@@ -1819,7 +1855,7 @@ def time_shifted(series: pd.Series,
 @func('rolling')
 def rolling(series: pd.Series,
             window: int,
-            method: str='mean') -> pd.Series:
+            method: CALCULATION_METHODS='mean') -> pd.Series:
     """
     Computes a calculation `method` (mean by default) to a rolling
     window (as described in the pandas documentation).
@@ -2125,8 +2161,8 @@ def doy_scope_shift_transform(tree):
 def doy_aggregation(
         series: pd.Series,
         depth: int,
-        method: str = "mean",
-        leap_day_rule: str = "linear",  # Literal["ignore", "linear", "as_is"]
+        method: CALCULATION_METHODS = "mean",
+        leap_day_rule: LEAP_DAY_RULES = "linear",
         valid_aggr_ratio: Number = 1.) -> pd.Series:
     """
     Computes a calculation `method` to aggregate data per day of year over `depth` years.
@@ -2403,7 +2439,7 @@ def compatible_date_at_midnight(tzaware, date):
 def get_holidays(__interpreter__,
                  __from_value_date__,
                  __to_value_date__,
-                 country: str,
+                 country: HOLIDAYS_COUNTRIES,
                  fromdate: pd.Timestamp,
                  todate: pd.Timestamp,
                  naive: Optional[bool]=False) -> pd.Series:

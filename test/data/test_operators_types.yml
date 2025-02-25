@@ -1,0 +1,235 @@
+output_spec:
+  options:
+    return: Series
+    series: Series
+    fill: Default[Union[Literal['ffill', 'bfill', 'ffill, bfill', 'bfill, ffill'],
+      Number]=None]
+    limit: Default[int=None]
+    weight: Default[Number=None]
+  series:
+    return: Series
+    name: seriesname
+    fill: Default[Union[Literal['ffill', 'bfill', 'ffill, bfill', 'bfill, ffill'],
+      Number]=None]
+    limit: Default[int=None]
+    weight: Default[Number=None]
+  findseries:
+    return: List[Series]
+    q: query
+    naive: Default[bool=False]
+    fill: Default[Union[Literal['ffill', 'bfill', 'ffill, bfill', 'bfill, ffill'],
+      Number]=None]
+  by.name:
+    return: query
+    namequery: str
+  by.metakey:
+    return: query
+    keyquery: MetaKey
+  by.metaitem:
+    return: query
+    key: str
+    value: Union[str, Number]
+  by.value:
+    return: query
+    key: str
+    operator: Literal['<', '<=', '>', '>=']
+    value: Union[str, Number]
+  by.and:
+    return: query
+    queries: Packed[query]
+  by.or:
+    return: query
+    queries: Packed[query]
+  asof:
+    return: Series
+    revision_date: Timestamp
+    series: Series
+  naive:
+    return: Series
+    series: Series
+    tzone: Literal['UTC', 'CET', 'EST', 'GMT', 'ETC/GMT+3', 'Europe/Paris', 'Europe/London',
+      'Asia/Tokyo', 'Europe/Berlin', 'Europe/Madrid', 'Europe/Rome', 'Europe/Zurich',
+      'Ameria/New_York', 'Ameria/Los_Angeles', 'America/Blanc-Sablon', 'America/Coral_Harbour',
+      'America/Halifax', 'America/Regina', 'America/St_Johns', 'America/Vancouver',
+      'America/Toronto', 'America/Whitehorse', 'America/Winnipeg', 'America/Yellowknife',
+      'US/Central', 'US/Eastern', 'US/Pacific', 'utc']
+  shifted:
+    return: Timestamp
+    date: Timestamp
+    years: Default[int=0]
+    months: Default[int=0]
+    weeks: Default[int=0]
+    days: Default[int=0]
+    hours: Default[int=0]
+    minutes: Default[int=0]
+  now:
+    return: Timestamp
+    naive: Default[bool=False]
+    tz: Default[Literal['UTC', 'CET', 'EST', 'GMT', 'ETC/GMT+3', 'Europe/Paris', 'Europe/London',
+      'Asia/Tokyo', 'Europe/Berlin', 'Europe/Madrid', 'Europe/Rome', 'Europe/Zurich',
+      'Ameria/New_York', 'Ameria/Los_Angeles', 'America/Blanc-Sablon', 'America/Coral_Harbour',
+      'America/Halifax', 'America/Regina', 'America/St_Johns', 'America/Vancouver',
+      'America/Toronto', 'America/Whitehorse', 'America/Winnipeg', 'America/Yellowknife',
+      'US/Central', 'US/Eastern', 'US/Pacific', 'utc']=None]
+  start-of-month:
+    return: Timestamp
+    date: Timestamp
+  end-of-month:
+    return: Timestamp
+    date: Timestamp
+  constant:
+    return: Series
+    value: Number
+    fromdate: Timestamp
+    todate: Timestamp
+    freq: Union[Freq, str]
+    revdate: Timestamp
+  +:
+    return: Union[Number, Series]
+    num: Number
+    num_or_series: Union[Number, Series]
+  '*':
+    return: Union[Number, Series]
+    num: Number
+    num_or_series: Union[Number, Series]
+  /:
+    return: Union[Number, Series]
+    num_or_series: Union[Number, Series]
+    num: Number
+  '**':
+    return: Series
+    series: Series
+    num: Number
+  trig.cos:
+    return: Series
+    series: Series
+  trig.arccos:
+    return: Series
+    series: Series
+  trig.sin:
+    return: Series
+    series: Series
+  trig.arcsin:
+    return: Series
+    series: Series
+  trig.tan:
+    return: Series
+    series: Series
+  trig.arctan:
+    return: Series
+    series: Series
+  trig.row-arctan2:
+    return: Series
+    series1: Series
+    series2: Series
+  <:
+    return: Series
+    series: Series
+    num_or_series: Union[Number, Series]
+    false_value: Default[Number=0]
+    true_value: Default[Number=1]
+  add:
+    return: Series
+    serieslist: Packed[Series]
+  mul:
+    return: Series
+    serieslist: Packed[Series]
+  div:
+    return: Series
+    s1: Series
+    s2: Series
+  priority:
+    return: Series
+    serieslist: Packed[Series]
+  clip:
+    return: Series
+    series: Series
+    min: Default[Number=None]
+    max: Default[Number=None]
+    replacemin: Default[bool=False]
+    replacemax: Default[bool=False]
+  slice:
+    return: Series
+    series: Series
+    fromdate: Default[Timestamp=None]
+    todate: Default[Timestamp=None]
+  row-mean:
+    return: Series
+    serieslist: Packed[Series]
+    skipna: Default[bool=True]
+  row-min:
+    return: Series
+    serieslist: Packed[Series]
+    skipna: Default[bool=True]
+  row-max:
+    return: Series
+    serieslist: Packed[Series]
+    skipna: Default[bool=True]
+  std:
+    return: Series
+    serieslist: Packed[Series]
+    skipna: Default[bool=True]
+  resample:
+    return: Series
+    series: Series
+    freq: Union[Freq, str]
+    method: Default[Literal['mean', 'min', 'max', 'median', 'sum', 'interpolate',
+      'count', 'ffill', 'last']="mean"]
+    origin_freq: Default[Union[Freq, str]=None]
+  cumsum:
+    return: Series
+    series: Series
+  time-shifted:
+    return: Series
+    series: Series
+    weeks: Default[int=0]
+    days: Default[int=0]
+    hours: Default[int=0]
+    minutes: Default[int=0]
+  rolling:
+    return: Series
+    series: Series
+    window: int
+    method: Default[Literal['mean', 'min', 'max', 'median', 'sum', 'interpolate',
+      'count', 'ffill', 'last']="mean"]
+  integration:
+    return: Series
+    stock_name: str
+    flow_name: str
+    fill: Default[bool=False]
+  holidays:
+    return: Series
+    country: Literal['aw', 'af', 'ao', 'ai', 'ax', 'al', 'ad', 'ae', 'ar', 'am', 'as',
+      'aq', 'tf', 'ag', 'au', 'at', 'az', 'bi', 'be', 'bj', 'bq', 'bf', 'bd', 'bg',
+      'bh', 'bs', 'ba', 'bl', 'by', 'bz', 'bm', 'bo', 'br', 'bb', 'bn', 'bt', 'bv',
+      'bw', 'cf', 'ca', 'cc', 'ch', 'cl', 'cn', 'ci', 'cm', 'cd', 'cg', 'ck', 'co',
+      'km', 'cv', 'cr', 'cu', 'cw', 'cx', 'ky', 'cy', 'cz', 'de', 'dj', 'dm', 'dk',
+      'do', 'dz', 'ec', 'eg', 'er', 'eh', 'es', 'ee', 'et', 'fi', 'fj', 'fk', 'fr',
+      'fo', 'fm', 'ga', 'gb', 'ge', 'gg', 'gh', 'gi', 'gn', 'gp', 'gm', 'gw', 'gq',
+      'gr', 'gd', 'gl', 'gt', 'gf', 'gu', 'gy', 'hk', 'hm', 'hn', 'hr', 'ht', 'hu',
+      'id', 'im', 'in', 'io', 'ie', 'ir', 'iq', 'is', 'il', 'it', 'jm', 'je', 'jo',
+      'jp', 'kz', 'ke', 'kg', 'kh', 'ki', 'kn', 'kr', 'kw', 'la', 'lb', 'lr', 'ly',
+      'lc', 'li', 'lk', 'ls', 'lt', 'lu', 'lv', 'mo', 'mf', 'ma', 'mc', 'md', 'mg',
+      'mv', 'mx', 'mh', 'mk', 'ml', 'mt', 'mm', 'me', 'mn', 'mp', 'mz', 'mr', 'ms',
+      'mq', 'mu', 'mw', 'my', 'yt', 'na', 'nc', 'ne', 'nf', 'ng', 'ni', 'nu', 'nl',
+      'no', 'np', 'nr', 'nz', 'om', 'pk', 'pa', 'pn', 'pe', 'ph', 'pw', 'pg', 'pl',
+      'pr', 'kp', 'pt', 'py', 'ps', 'pf', 'qa', 're', 'ro', 'ru', 'rw', 'sa', 'sd',
+      'sn', 'sg', 'gs', 'sh', 'sj', 'sb', 'sl', 'sv', 'sm', 'so', 'pm', 'rs', 'ss',
+      'st', 'sr', 'sk', 'si', 'se', 'sz', 'sx', 'sc', 'sy', 'tc', 'td', 'tg', 'th',
+      'tj', 'tk', 'tm', 'tl', 'to', 'tt', 'tn', 'tr', 'tv', 'tw', 'tz', 'ug', 'ua',
+      'um', 'uy', 'us', 'uz', 'va', 'vc', 've', 'vg', 'vi', 'vn', 'vu', 'wf', 'ws',
+      'ye', 'za', 'zm', 'zw']
+    fromdate: Timestamp
+    todate: Timestamp
+    naive: Default[bool=False]
+  round:
+    return: Series
+    series: Series
+    decimals: Default[Number=0]
+  abs:
+    return: Series
+    series: Series
+  sub:
+    return: Series
+    series1: Series
+    series2: Series
