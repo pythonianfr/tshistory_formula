@@ -71,11 +71,6 @@ def cli():
     return runner
 
 
-@pytest.fixture(scope='session')
-def datadir():
-    return DATADIR
-
-
 # support for the http extensions
 DBURI = 'postgresql://localhost:5433/postgres'
 
