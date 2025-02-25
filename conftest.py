@@ -18,7 +18,8 @@ from tshistory_formula.testutil import with_http_bridge
 from tshistory_formula.tsio import timeseries
 from tshistory_formula import http
 
-DATADIR = Path(__file__).parent / 'data'
+
+DATADIR = Path(__file__).parent / 'test' / 'data'
 
 
 @pytest.fixture(scope='session')
