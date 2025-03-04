@@ -1391,6 +1391,10 @@ def test_local_group_formula_remote_bound_group(tsa):
 2025-01-03 00:00:00+00:00  4.0  5.0  6.0
 """, df)
 
+    # ask for the bindings
+    b = tsa.bindings_for('remote-bound-group')
+    assert b is None  # WRONG
+
 
 def test_find(tsx):
     ts = pd.Series(
