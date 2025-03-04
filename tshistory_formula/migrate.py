@@ -13,6 +13,10 @@ from tshistory.migrate import (
 from tshistory_formula import __version__
 from tshistory_formula.helper import (
     fix_holidays,
+    FREQ_OPS,
+    migrate_freq,
+    TIMEZONE_OPS,
+    migrate_timezone,
     rename_operator,
     rewrite_sub_formula,
     rewrite_trig_formula
@@ -31,6 +35,36 @@ class Migrator(_Migrator):
         migrate_trig_formulas(self.engine, self.namespace, self.interactive)
         migrate_sub_formulas(self.engine, self.namespace, self.interactive)
         migrate_group_formula_schema(self.engine, self.namespace, self.interactive)
+
+@version('tshistory-formula', '0.18.0')
+def migrate_freq_and_timezone(engine, namespace, interactive):
+    formulas = engine.execute(
+        f'select name, internal_metadata '
+        f'from "{namespace}".registry '
+        'where internal_metadata->\'formula\' is not null'
+    ).fetchall()
+
+    op_names = list(FREQ_OPS) + list(TIMEZONE_OPS)
+    for name, imeta in formulas:
+        text = imeta['formula']
+        do_migrate = False
+        for op_name in op_names:
+            if op_name in text:
+                do_migrate = True
+        if not do_migrate:
+            continue
+
+        print(f'migrating {name} to 0.18.0')
+        tree = migrate_timezone(migrate_freq(parse(text)))
+        imeta['formula'] = serialize(tree)
+        with engine.begin() as cn:
+            cn.execute(
+                f'update "{namespace}".registry '
+                'set internal_metadata = %(metadata)s '
+                'where name = %(name)s',
+                metadata=json.dumps(imeta),
+                name=name
+            )
 
 
 @version('tshistory-formula', '0.18.0')

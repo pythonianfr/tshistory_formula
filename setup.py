@@ -24,6 +24,7 @@ setup(name='tshistory_formula',
           'pycountry >= 24.6.1',
           'psyl >= 0.8',
           'python-icron',
+          'pytest-golden',
       ],
       package_data={'tshistory_formula': [
           'schema.sql'

@@ -33,6 +33,10 @@ from tshistory_formula.helper import (
     fix_holidays,
     has_names,
     _name_from_signature_and_args,
+    add_freq,
+    migrate_freq,
+    change_timezone,
+    migrate_timezone,
     name_of_expr,
     rename_operator,
     find_autos,
@@ -43,6 +47,10 @@ from tshistory_formula.helper import (
 from tshistory_formula.interpreter import (
     NullIntepreter,
     GroupInterpreter,
+)
+from tshistory_formula.vocabulary import (
+    PERIOD_OFFSETS,
+    TIMEZONES
 )
 
 
@@ -107,6 +115,98 @@ def test_fix_holidays():
         fix_holidays(tree)
     ) == '(foo 1 (holidays "fr" (date "2020-1-1") (now) #:naive #t))'
 
+
+def test_add_freq():
+    tests = [
+        ('T', '(freq "min")'),
+        ('15T', '(nfreq 15 "min")'),
+        ('min', '(freq "min")'),
+        ('1.5H', '(nfreq 1.5 "h")'),
+        ('d', '(freq "d")'),
+        ('10SM', '(nfreq 10 "SME")'),
+        ('A', '(freq "YE")'),
+    ]
+    for sfreq, res in tests:
+        assert lisp.serialize(add_freq(sfreq)) == res
+
+    with pytest.raises(TypeError) as err:
+        add_freq("15NOFREQ")
+
+    assert err.value.args[0] == f"'NOFREQ' not a valid {PERIOD_OFFSETS}"
+    
+    not_a_freq = "2024-10-01"
+    assert add_freq(not_a_freq) == not_a_freq
+
+FREQ_FORMS = [
+    '(upsample (series "dev") "A" "15min")',
+    '(upsample (series "dev") #:origin_freq "15T" #:freq "AS")',
+    '(upsample (series "dev") "5min" #:origin_freq "1M")',
+
+    '(resample (series "dev") "30T")',
+    '(resample (series "dev") "Q" #:origin_freq "Y")',
+    '(resample (series "dev") #:origin_freq "BY" #:freq "12SM")',
+
+    '(constant 3 (now) (now) "1.5H" (now))',
+    '(constant 3 (now) (now) #:revdate (now) #:freq "1.5L")',
+
+    '(priority '
+    '(resample (series "dev1") "30.1U") '
+    '(resample (series "dev2") "30.2N") '
+    '(resample (series "dev3") "30.3M"))',
+]
+
+FREQ_UPDATED_FORMS = [
+    '(upsample (series "dev") (freq "YE") (nfreq 15 "min"))',
+    '(upsample (series "dev") #:origin_freq (nfreq 15 "min") #:freq (freq "YS"))',
+    '(upsample (series "dev") (nfreq 5 "min") #:origin_freq (nfreq 1 "ME"))',
+
+    '(resample (series "dev") (nfreq 30 "min"))',
+    '(resample (series "dev") (freq "QE") #:origin_freq (freq "YE"))',
+    '(resample (series "dev") #:origin_freq (freq "BYE") #:freq (nfreq 12 "SME"))',
+    '(constant 3 (now) (now) (nfreq 1.5 "h") (now))',
+    '(constant 3 (now) (now) #:revdate (now) #:freq (nfreq 1.5 "ms"))',
+
+    '(priority '
+    '(resample (series "dev1") (nfreq 30.1 "us")) '
+    '(resample (series "dev2") (nfreq 30.2 "ns")) '
+    '(resample (series "dev3") (nfreq 30.3 "ME")))',
+]
+
+def test_migrate_freq():
+    for form, updated_form in zip(FREQ_FORMS, FREQ_UPDATED_FORMS):
+        assert lisp.serialize(migrate_freq(lisp.parse(form))) == updated_form
+
+
+def test_change_timezone():
+    with pytest.raises(TypeError) as err:
+        change_timezone("Utc")
+
+    assert err.value.args[0] == f"'Utc' not a valid {TIMEZONES}"
+
+
+TZ_FORMS = [
+    '(holidays "fr" (now #:tz "utc") (date "2025-03-03" #:tz "ETC/GMT+3"))',
+    '(naive (series "dev") "ETC/GMT+3")',
+    '(naive (series "dev") #:tzone "utc")',
+    '(priority '
+    '(tzaware (series "dev1") "Etc/GMT+4") '
+    '(tzaware (series "dev2") #:tzone "ETC/GMT+3") '
+    '(naive (series "dev3") #:tzone "UTC"))',
+]
+
+TZ_UPDATED_FORMS = [
+    '(holidays "fr" (now #:tz "UTC") (date "2025-03-03" #:tz "Etc/GMT+3"))',
+    '(naive (series "dev") "Etc/GMT+3")',
+    '(naive (series "dev") #:tzone "UTC")',
+    '(priority '
+    '(tzaware (series "dev1") "Etc/GMT+4") '
+    '(tzaware (series "dev2") #:tzone "Etc/GMT+3") '
+    '(naive (series "dev3") #:tzone "UTC"))',
+]
+
+def test_migrate_timezone():
+    for form, updated_form in zip(TZ_FORMS, TZ_UPDATED_FORMS):
+        assert lisp.serialize(migrate_timezone(lisp.parse(form))) == updated_form
 
 def test_bad_name(engine, tsh):
     with pytest.raises(AssertionError):

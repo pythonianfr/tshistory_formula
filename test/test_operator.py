@@ -3253,9 +3253,9 @@ def test_naive_constant(engine, tsh):
         engine,
         'naive-constant',
         '(constant 1. (date "2025-1-1") '
-        '             (date "2025-1-3" #:tz #nil) '
+        '             (date "2025-1-3" #:tz "Europe/Paris") '
         '             "D" '
-        '             (date "2025-2-1" #:tz #nil))'
+        '             (date "2025-2-1" #:tz "Europe/Paris"))'
     )
 
     # whoops ... can't we have a naive constant series ?

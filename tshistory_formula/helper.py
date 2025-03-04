@@ -1,5 +1,7 @@
+import re
 import inspect
 import queue
+import typing
 import threading
 from concurrent.futures import _base
 
@@ -21,6 +23,10 @@ from tshistory_formula.registry import (
     METAS,
     ARGSCOPES,
     AUTO,
+)
+from tshistory_formula.vocabulary import (
+    PERIOD_OFFSETS,
+    TIMEZONES
 )
 
 
@@ -87,6 +93,122 @@ def fix_holidays(tree):
         fix_holidays(item)
         for item in tree
     ]
+
+
+def migrate_arg(tree, op_args_dct, change_arg_func):
+    if not isinstance(tree, list):
+        return tree
+
+    op = tree[0]
+    op_args = op_args_dct.get(op)
+    if op_args:
+        pos_args_len = len(
+            buildargs(tree[1:])[0]
+        )
+
+        (pos_idxs, keys) = op_args
+        for pos_idx in pos_idxs:
+            if pos_idx <= pos_args_len:
+                tree[pos_idx] = change_arg_func(tree[pos_idx])
+        for key in keys:
+            try:
+                karg_idx = tree.index(Keyword(key)) + 1
+            except ValueError:
+                pass
+            else:
+                tree[karg_idx] = change_arg_func(tree[karg_idx])
+    return [migrate_arg(item, op_args_dct, change_arg_func) for item in tree]
+
+
+PERIOD_CHANGES = {
+    'BH': 'bh',
+    'CBH': 'cbh',
+    'H':'h',
+    'T': 'min',
+    'S': 's',
+    'L': 'ms',
+    'U': 'us',
+    'N': 'ns',
+    'M': 'ME',
+    'BM': 'BME',
+    'SM': 'SME',
+    'CBM': 'CBME',
+    'Q': 'QE',
+    'BQ': 'BQE',
+    'Y': 'YE',
+    'BY': 'BYE',
+    'AS':'YS',
+    'A': 'YE',
+    'BAS': 'BYS',
+    'BA': 'BYE',
+}
+
+
+FREQ_PTN = re.compile(r"""
+    ([0-9.]*) # Optional multiplier (int or float)
+    ([\w]+)   # Period offset
+    """, re.X)
+
+
+def add_freq(arg_str):
+    """Add a `Freq` object by using `freq` and `nfreq` functions
+    in case the string argument is valid.
+    """
+    res = FREQ_PTN.fullmatch(arg_str)
+    if res:
+        (multiplier_str, period) = res.groups()
+
+        period = PERIOD_CHANGES.get(period) or period
+
+        if period not in typing.get_args(PERIOD_OFFSETS):
+            raise TypeError(f"'{period}' not a valid {PERIOD_OFFSETS}")
+
+        freq = [Symbol("freq"), period]
+        if multiplier_str:
+            multiplier = float(multiplier_str)
+            if multiplier_str.isnumeric():
+                multiplier = int(multiplier_str)
+            freq = [Symbol("nfreq"), multiplier, period]
+        return freq
+    return arg_str
+
+
+FREQ_OPS = {
+    'upsample': ([2, 3], ['freq', 'origin_freq']),
+    'resample': ([2], ['freq', 'origin_freq']),
+    'constant': ([4], ['freq']),
+}
+
+
+def migrate_freq(tree):
+    return migrate_arg(tree, FREQ_OPS, add_freq)
+
+
+TIMEZONE_MAPPING = {
+    'utc': 'UTC',
+    'ETC/GMT+3': 'Etc/GMT+3',
+}
+
+
+def change_timezone(tz_str):
+    tz_str = TIMEZONE_MAPPING.get(tz_str) or tz_str
+
+    if tz_str not in typing.get_args(TIMEZONES):
+        raise TypeError(f"'{tz_str}' not a valid {TIMEZONES}")
+
+    return tz_str
+
+
+TIMEZONE_OPS = {
+    'naive': ([2], ['tzone']),
+    'tzaware': ([2], ['tzone']),
+    'date': ([], ['tz']),
+    'now': ([], ['tz']),
+}
+
+
+def migrate_timezone(tree):
+    return migrate_arg(tree, TIMEZONE_OPS, change_timezone)
 
 
 def extract_auto_options(tree):
