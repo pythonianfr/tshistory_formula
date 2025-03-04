@@ -1329,6 +1329,69 @@ insertion_date            value_date
 """, ts)
 
 
+def test_local_group_formula_remote_bound_group(tsa):
+    rtsh = timeseries('remote')
+    rtsh.delete(tsa.engine, 'remote-series')
+    rtsh.group_delete(tsa.engine, 'remote-group')
+    rtsh.group_delete(tsa.engine, 'remote-bound-group')
+
+    rtsh.update(
+        tsa.engine,
+        pd.Series(
+            [1, 2, 3],
+            pd.date_range(utcdt(2023, 1, 1), freq='d', periods=3)
+        ),
+        'remote-series',
+        'Babar'
+    )
+
+    rtsh.register_formula(
+        tsa.engine,
+        'remote-formula',
+        '(series "remote-series")'
+    )
+
+    df = gengroup(
+        n_scenarios=3,
+        from_date=utcdt(2025, 1, 1),
+        length=3,
+        freq='d',
+        seed=2
+    )
+
+    rtsh.group_replace(
+        tsa.engine,
+        df,
+        'remote-group',
+        'Celeste'
+    )
+
+    rtsh.register_formula_bindings(
+        tsa.engine,
+        'remote-bound-group',
+        'remote-formula',
+        pd.DataFrame(
+            [
+                ['remote-series', 'remote-group', 'family'],
+            ],
+            columns=('series', 'group', 'family')
+        )
+    )
+
+    # now the local part
+    tsa.register_group_formula(
+        'local-group-remote-bound-group',
+        '(group "remote-bound-group")'
+    )
+    df = tsa.group_get('local-group-remote-bound-group')
+    assert_df("""
+                             0    1    2
+2025-01-01 00:00:00+00:00  2.0  3.0  4.0
+2025-01-02 00:00:00+00:00  3.0  4.0  5.0
+2025-01-03 00:00:00+00:00  4.0  5.0  6.0
+""", df)
+
+
 def test_find(tsx):
     ts = pd.Series(
         [1, 2, 3],
