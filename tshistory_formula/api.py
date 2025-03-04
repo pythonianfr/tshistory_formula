@@ -344,7 +344,21 @@ def register_formula_bindings(self,
             bindings
         )
 
+
 @extend(mainsource)
 def bindings_for(self, name: str):
     with self.engine.begin() as cn:
-        return self.tsh.bindings_for(cn, name)
+        bindings = self.tsh.bindings_for(cn, name)
+
+    if bindings is not None:
+        return bindings
+
+    return self.othersources.bindings_for(name)
+
+
+@extend(altsources)
+def bindings_for(self, name):  # noqa
+    source = self._findsourceforgroup(name)
+    if source is None:
+        return None
+    return source.tsa.bindings_for(name)

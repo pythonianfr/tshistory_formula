@@ -1392,8 +1392,13 @@ def test_local_group_formula_remote_bound_group(tsa):
 """, df)
 
     # ask for the bindings
-    b = tsa.bindings_for('remote-bound-group')
-    assert b is None  # WRONG
+    boundseries, binding = tsa.bindings_for('remote-bound-group')
+    assert boundseries == 'remote-formula'
+    assert binding.to_dict() == {
+        'series': {0: 'remote-series'},
+        'group': {0: 'remote-group'},
+        'family': {0: 'family'}
+    }
 
 
 def test_find(tsx):
