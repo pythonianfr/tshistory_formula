@@ -1,6 +1,7 @@
 
 import typing
 
+import pytz
 import pycountry
 
 
@@ -16,14 +17,11 @@ import pycountry
 # pp.pprint(result)
 
 PERIOD_OFFSETS = typing.Literal[
-    'A',
-    'AS',
     'B',
     'C',
     'W',
     'WOM',
     'LWOM',
-    'M',
     'ME',
     'MS',
     'BME',
@@ -47,26 +45,32 @@ PERIOD_OFFSETS = typing.Literal[
     'd',
     'D',
     'h',
-    'H',
     'min',
     's',
     'ms',
     'us',
-    'ns',
-    'T'
+    'ns'
 ]
 
 
 CALCULATION_METHODS = typing.Literal[
-    'mean',
-    'min',
-    'max',
-    'median',
-    'sum',
-    'interpolate',
+    'asfreq',
+    'bfill',
     'count',
     'ffill',
-    'last'
+    'first',
+    'interpolate',
+    'last',
+    'max',
+    'mean',
+    'median',
+    'min',
+    'nearest',
+    'sem',
+    'size',
+    'std',
+    'sum',
+    'var',
 ]
 
 
@@ -86,34 +90,7 @@ LEAP_DAY_RULES = typing.Literal[
 
 
 TIMEZONES = typing.Literal[
-    'UTC',
-    'CET',
-    'EST',
-    'GMT',
-    'ETC/GMT+3',
-    'Europe/Paris',
-    'Europe/London',
-    'Asia/Tokyo',
-    'Europe/Berlin',
-    'Europe/Madrid',
-    'Europe/Rome',
-    'Europe/Zurich',
-    'Ameria/New_York',
-    'Ameria/Los_Angeles',
-    'America/Blanc-Sablon',
-    'America/Coral_Harbour',
-    'America/Halifax',
-    'America/Regina',
-    'America/St_Johns',
-    'America/Vancouver',
-    'America/Toronto',
-    'America/Whitehorse',
-    'America/Winnipeg',
-    'America/Yellowknife',
-    'US/Central',
-    'US/Eastern',
-    'US/Pacific',
-    'utc'
+    *(pytz.all_timezones)
 ]
 
 
