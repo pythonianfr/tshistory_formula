@@ -593,6 +593,82 @@ def find_tz(self, cn, tree, tzmap, path=()):
             find_tz(self, cn, item, tzmap, path)
 
 
+# bound formulas helpers
+
+def new_bound_formula(cn, ns, groupid, formulaname, binding):
+    sid = cn.execute(
+        f'select id from "{ns}".registry where name = %(name)s',
+        name=formulaname
+    ).scalar()
+    assert sid is not None, f'The formula `{formulaname}` does not exisst.'
+    gmid = cn.execute(
+        f'insert into "{ns}".group_binding (groupid, seriesid) '
+        'values (%(grid)s, %(sid)s) '
+        'returning id',
+        grid=groupid,
+        sid=sid
+    ).scalar()
+
+    # collect series ids
+    names = tuple(binding.series.values)
+    seriesmap = {
+        name: sid for name, sid in
+        cn.execute(
+            f'select name, id from "{ns}".registry '
+            'where name in %(names)s',
+            names=names
+        ).fetchall()
+    }
+
+    # group ids
+    names = tuple(binding.group.values)
+    groupmap = {
+        name: grid for name, grid in
+        cn.execute(
+            f'select name, id from "{ns}".group_registry '
+            'where name in %(names)s',
+            names=tuple(binding.group.values)
+        ).fetchall()
+    }
+
+    # build tuples of ids from the groupmaps + bindings
+    idata = [
+        {
+            'family': f,
+            'parent': gmid,
+            'groupid': groupmap[g],
+            'seriesid': seriesmap[s],
+        }
+        for f, g, s in zip(binding.family, binding.group, binding.series)
+    ]
+    cn.execute(
+        f'insert into "{ns}".group_series_map values '
+        '(%(family)s, %(parent)s, %(groupid)s, %(seriesid)s)',
+        idata
+    )
+
+
+def group_bindings(cn, ns, gb):
+    q = (
+        'select family, gr.name, s.name '
+        f'from "{ns}".group_series_map as map, '
+        f'     "{ns}".group_registry as gr, '
+        f'     "{ns}".registry as s '
+        'where map.parent = %(parent)s and '
+        '      map.groupid = gr.id and '
+        '      map.seriesid = s.id'
+    )
+
+    return pd.DataFrame([
+        {
+            'family': family,
+            'group': groupname,
+            'series': seriesname
+        }
+        for family, groupname, seriesname in cn.execute(q, parent=gb.id).fetchall()
+    ])
+
+
 # thread pool
 
 class _WorkItem(object):

@@ -3398,11 +3398,7 @@ def test_group_bound_formula(engine, tsh):
     tsh.update_group_metadata(engine, 'hijacking', {'foo': 'bar'})
     assert tsh.group_metadata(engine, 'hijacking') == {'foo': 'bar'}
     assert tsh.group_internal_metadata(engine, 'hijacking') == {
-        'bindings': (
-            '[{"series":"base-temp","group":"temp-ens","family":"meteo"},'
-            '{"series":"base-wind","group":"wind-ens","family":"meteo"}]'
-        ),
-        'boundseries': 'hijacked',
+        'bound': True,
         'index_dtype': '|M8[ns]',
         'index_type': 'datetime64[ns, UTC]',
         'tzaware': True,

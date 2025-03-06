@@ -33,6 +33,75 @@ class Migrator(_Migrator):
         migrate_group_formula_schema(self.engine, self.namespace, self.interactive)
 
 
+@version('tshistory-formula', '0.18.0')
+def migrate_bound_groups(engine, namespace, interactive):
+    import json
+    import pandas as pd
+    from tshistory_formula.tsio import timeseries
+    from tshistory_formula import helper
+
+    tsh  = timeseries(namespace)
+    ns = namespace
+    newtables = f"""
+create table if not exists "{ns}".group_binding (
+  id serial primary key,
+  groupid int not null references "{ns}".group_registry(id) on delete cascade,
+  seriesid int not null references "{ns}".registry(id) on delete cascade
+);
+
+create index if not exists "ix_{ns}_group_binding_groupid" on "{ns}".group_binding (groupid);
+create index if not exists "ix_{ns}_group_binding_seriesid" on "{ns}".group_binding (seriesid);
+
+create table if not exists "{ns}".group_series_map (
+  family text not null,
+  parent int not null references "{ns}".group_binding(id) on delete cascade,
+  groupid int not null references "{ns}".group_registry(id) on delete cascade,
+  seriesid int not null references "{ns}".registry(id) on delete cascade,
+  unique(family, groupid, seriesid)
+);
+
+create index if not exists "ix_{ns}_group_series_map_parent" on "{ns}".group_series_map (parent);
+create index if not exists "ix_{ns}_group_series_map_family" on "{ns}".group_series_map (family);
+create index if not exists "ix_{ns}_group_series_map_groupid" on "{ns}".group_series_map (groupid);
+create index if not exists "ix_{ns}_group_series_map_seriesid" on "{ns}".group_series_map (seriesid);
+"""
+    with engine.begin() as cn:
+        cn.execute(newtables)
+
+    with engine.begin() as cn:
+        sql = (
+            f'select name from "{ns}".group_registry '
+            'where internal_metadata -> \'bindings\' is not null'
+        )
+        for name, in cn.execute(sql).fetchall():
+            res = cn.execute(
+                f'select id, '
+                f'       internal_metadata->\'boundseries\', '
+                f'       internal_metadata->\'bindings\' '
+                f'from "{namespace}".group_registry '
+                'where name = %(gname)s',
+                gname=name
+            )
+            groupid, formulaname, binding = res.fetchone()
+            binding = pd.DataFrame(json.loads(binding))
+
+            # recreate the binding
+            helper.new_bound_formula(cn, namespace, groupid, formulaname, binding)
+
+            # cleanup the internal metadata
+            imeta = tsh.group_internal_metadata(cn, name)
+            imeta.pop('boundseries')
+            imeta.pop('bindings')
+            imeta['bound'] = True
+            cn.execute(
+                f'update "{namespace}".group_registry '
+                'set internal_metadata = %(imeta)s '
+                f'where name = %(name)s',
+                imeta=json.dumps(imeta),
+                name=name
+            )
+
+
 @version('tshistory-formula', '0.17.0')
 def do_migrate_intervals(engine, namespace, interactive):
     from tshistory.migrate import migrate_intervals

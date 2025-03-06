@@ -1084,11 +1084,7 @@ def test_group_bound_formula(tsa):
 
     assert tsa.group_metadata('hijacking') == {}
     assert tsa.group_internal_metadata('hijacking') == {
-        'bindings': (
-            '[{"series":"base-temp","group":"temp-ens","family":"meteo"},'
-            '{"series":"base-wind","group":"wind-ens","family":"meteo"}]'
-        ),
-        'boundseries': 'hijacked',
+        'bound': True,
         'index_dtype': '|M8[ns]',
         'index_type': 'datetime64[ns, UTC]',
         'tzaware': True,
@@ -1098,11 +1094,7 @@ def test_group_bound_formula(tsa):
     tsa.update_group_metadata('hijacking', {'foo': 'bar'})
     assert tsa.group_metadata('hijacking') == {'foo': 'bar'}
     assert tsa.group_internal_metadata('hijacking') == {
-        'bindings': (
-            '[{"series":"base-temp","group":"temp-ens","family":"meteo"},'
-            '{"series":"base-wind","group":"wind-ens","family":"meteo"}]'
-        ),
-        'boundseries': 'hijacked',
+        'bound': True,
         'index_dtype': '|M8[ns]',
         'index_type': 'datetime64[ns, UTC]',
         'tzaware': True,

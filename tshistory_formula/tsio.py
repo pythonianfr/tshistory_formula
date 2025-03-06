@@ -727,7 +727,7 @@ class timeseries(basets):
             return 'primary'
         if 'formula' in imeta:
             return 'formula'
-        if 'bindings' in imeta:
+        if 'bound' in imeta:
             return 'bound'
         return 'primary'
 
@@ -841,11 +841,11 @@ class timeseries(basets):
     @tx
     def list_groups(self, cn):
         return {
-            name: 'formula' if formula else 'bound' if bindings else 'primary'
-            for name, formula, bindings in cn.execute(
+            name: 'formula' if formula else 'bound' if bound else 'primary'
+            for name, formula, bound in cn.execute(
                 f'select name, '
                 '        internal_metadata->\'formula\', '
-                '        internal_metadata->\'bindings\' '
+                '        internal_metadata->\'bound\' '
                 f'from "{self.namespace}".group_registry'
             ).fetchall()
         }
@@ -1062,50 +1062,54 @@ class timeseries(basets):
             raise ValueError(f'cannot bind `{groupname}`: already a {gtype}')
 
         if exists:
-            imeta = self.group_internal_metadata(cn, groupname)
-            imeta['bindings'] = binding.to_json(orient='records')
-            imeta['boundseries'] = formulaname
+            groupid = cn.execute(
+                f'select id from "{self.namespace}".group_registry where name = %(name)s',
+                name=groupname
+            ).scalar()
+            # delete the current bindings
             cn.execute(
-                f'update "{self.namespace}"."group_registry" '
-                f'set internal_metadata = %(imeta)s '
-                f'where name = %(gname)s',
-                gname=groupname,
-                imeta=json.dumps(imeta)
+                f'delete from "{self.namespace}".group_binding where groupid = %(grid)s',
+                grid=groupid
             )
+            helper.new_bound_formula(cn, self.namespace, groupid, formulaname, binding)
             return
 
         coremeta = self.internal_metadata(cn, formulaname)
         coremeta.pop('formula')
         coremeta.pop('contenthash')
-        coremeta['bindings'] = binding.to_json(orient='records')
-        coremeta['boundseries'] = formulaname
-        cn.execute(
+        coremeta['bound'] = True
+
+        groupid = cn.execute(
             f'insert into "{self.namespace}"."group_registry" '
             f'            (name, internal_metadata, metadata) '
-            'values (%(gname)s, %(imeta)s, %(meta)s)',
+            f'values (%(gname)s, %(imeta)s, %(meta)s)'
+            f'returning id',
             gname=groupname,
             imeta=json.dumps(coremeta),
             meta=json.dumps({})
-        )
+        ).scalar()
+
+        # groupname -> groupid
+        helper.new_bound_formula(cn, self.namespace, groupid, formulaname, binding)
+
 
     @tx
     def bindings_for(self, cn, groupname):
-        res = cn.execute(
-            f'select internal_metadata->\'boundseries\', '
-            f'       internal_metadata->\'bindings\' '
-            f'from "{self.namespace}".group_registry '
-            'where name = %(gname)s',
+        gb = cn.execute(
+            f'select gb.id, ts.name '
+            f'from "{self.namespace}".group_binding as gb, '
+            f'     "{self.namespace}".group_registry as gr, '
+            f'     "{self.namespace}".registry as ts '
+            f'where gr.name = %(gname)s and '
+            f'      gr.id = gb.groupid and '
+            f'      ts.id = gb.seriesid',
             gname=groupname
-        )
-        sname_binding = res.fetchone()
-        if sname_binding is None or sname_binding[0] is None:
+        ).fetchone()
+        if gb is None:
             return
-        binding = pd.DataFrame(
-            json.loads(
-                sname_binding[1]
-            )
-        )
-        return sname_binding[0], binding
+
+        binding = helper.group_bindings(cn, self.namespace, gb)
+        return gb.name, binding
 
     @tx
     def get_bound_group(self, cn, name, binding,
