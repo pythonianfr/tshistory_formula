@@ -731,6 +731,15 @@ class timeseries(basets):
             return 'bound'
         return 'primary'
 
+    @tx
+    def group_log(self, cn, name, limit=None,
+                  fromdate=None, todate=None):
+        if self.group_type(cn, name) == 'primary':
+            return super().group_log(cn, name)
+
+        return []
+
+
     def check_group_tz_compatibility(self, cn, tree):
         """check that groups are timezone-compatible
         """
