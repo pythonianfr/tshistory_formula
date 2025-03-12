@@ -580,6 +580,8 @@ def find_tz(self, cn, tree, tzmap, path=()):
             tzaware = metadata['tzaware'] if metadata else None
             if 'naive' in path:
                 tzaware = False
+            if 'tzaware' in path:
+                tzaware = True
             tzmap[(name, path)] = tzaware
 
     if op == 'findseries':
