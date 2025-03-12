@@ -360,6 +360,13 @@ def test_tzaware(engine, tsh):
 2024-01-01 02:00:00+01:00    3.0
 """, ts)
 
+    # however, the metadata does not follow which
+    # prohibit to use it in another formula with series
+    # of the same tz-awarness
+
+    meta = tsh.internal_metadata(engine, 'naive2aware')
+    assert meta['tzaware'] == False
+
 
 def test_add(engine, tsh):
     tsh.register_formula(
