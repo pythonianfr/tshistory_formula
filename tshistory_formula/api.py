@@ -33,12 +33,13 @@ def register_formula(self,
       tsa.register_formula('sales.eu', '(add (series "sales.fr") (series "sales.be"))')
     """
 
-    self.tsh.register_formula(
-        self.engine,
-        name,
-        formula,
-        reject_unknown=reject_unknown
-    )
+    with self.engine.begin() as cn:
+        self.tsh.register_formula(
+            cn,
+            name,
+            formula,
+            reject_unknown=reject_unknown
+        )
 
 
 @extend(mainsource)
@@ -108,20 +109,21 @@ def formula(self,
     """
     expanded = expanded or level >= 0
 
-    form = self.tsh.formula(self.engine, name)
-    if form:
-        if not expanded:
-            return form
+    with self.engine.begin() as cn:
+        form = self.tsh.formula(cn, name)
+        if form:
+            if not expanded:
+                return form
 
-        tree = self.tsh._expanded_formula(
-            self.engine,
-            form,
-            level=level,
-            display=display,
-            remote=remote
-        )
-        if tree:
-            return serialize(tree)
+            tree = self.tsh._expanded_formula(
+                cn,
+                form,
+                level=level,
+                display=display,
+                remote=remote
+            )
+            if tree:
+                return serialize(tree)
 
     # NOTE: pass levels and remote
     # except: if we are actually a primary ... do we want to look otherwise ?
@@ -162,7 +164,9 @@ def formula_depth(self, name: str):
     The depth is the maximum number of formula series sub expressions
     that have to be traversed to get to the bottom.
     """
-    depth = self.tsh.depth(self.engine, name)
+    with self.engine.begin() as cn:
+        depth = self.tsh.depth(cn, name)
+
     if depth is None:
         return self.othersources.formula_depth(name)
 
@@ -209,25 +213,26 @@ def formula_components(self,
     """
     form = self.formula(name)
 
-    if form is None:
-        if not self.tsh.exists(self.engine, name):
-            return self.othersources.formula_components(
-                name,
-                expanded=expanded
-            )
-        return
+    with self.engine.begin() as cn:
+        if form is None:
+            if not self.tsh.exists(cn, name):
+                return self.othersources.formula_components(
+                    name,
+                    expanded=expanded
+                )
+            return
 
-    parsed = parse(form)
-    names = list(
-        self.tsh.find_series(self.engine, parsed)
-    )
+        parsed = parse(form)
+        names = list(
+            self.tsh.find_series(cn, parsed)
+        )
 
-    # compute expansion of the remotely defined formula
-    remotes = [
-        name for name in names
-        if not self.tsh.exists(self.engine, name)
-        and self.formula(name)
-    ]
+        # compute expansion of the remotely defined formula
+        remotes = [
+            name for name in names
+            if not self.tsh.exists(cn, name)
+            and self.formula(name)
+        ]
     if remotes:
         # remote names will be replaced with their expansion
         rnames = []

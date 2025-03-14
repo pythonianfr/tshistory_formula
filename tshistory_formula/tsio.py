@@ -120,6 +120,7 @@ class timeseries(basets):
 
         return first_tzaware
 
+    @tx
     def formula_stats(self, cn, name):
         autos = helper.find_autos(cn, self, name)
         nodes = helper.scan_descendant_nodes(cn, self, name)
@@ -342,6 +343,7 @@ class timeseries(basets):
             name=name
         ).scalar()
 
+    @tx
     def formula(self, cn, name):
         return cn.execute(
             f'select internal_metadata->\'formula\' '
@@ -350,6 +352,7 @@ class timeseries(basets):
             name=name
         ).scalar()
 
+    @tx
     def list_series(self, cn):
         series = super().list_series(cn)
         sql = (
@@ -358,16 +361,18 @@ class timeseries(basets):
         )
         series.update({
             name: 'formula'
-            for name, in cn.execute(sql)
+            for name in cn.execute(sql).scalars()
         })
         return series
 
+    @tx
     def type(self, cn, name):
         if self.formula(cn, name):
             return 'formula'
 
         return super().type(cn, name)
 
+    @tx
     def exists(self, cn, name):
         return super().exists(cn, name) or bool(self.formula(cn, name))
 
@@ -384,6 +389,7 @@ class timeseries(basets):
         if self.patch.exists(cn, name):
             self.patch.delete(cn, name)
 
+    @tx
     def update(self, cn, updatets, name, author, **k):
         if self.type(cn, name) == 'formula':
             # that was premature, and will return in a later version
@@ -429,6 +435,7 @@ class timeseries(basets):
 
         return ts
 
+    @tx
     def interval(self, cn, name, notz=False):
         formula = self.formula(cn, name)
         if not formula:
@@ -447,6 +454,7 @@ class timeseries(basets):
 
         return pd.Interval(mindate, maxdate)
 
+    @tx
     def eval_formula(self, cn, formula, tz=None, **kw):
         i = kw.get('__interpreter__') or interpreter.Interpreter(cn, self, kw)
         ts = i.evaluate(
@@ -474,6 +482,7 @@ class timeseries(basets):
             )
         return exp
 
+    @tx
     def expanded_formula(self, cn, name, stopnames=(), display=True, remote=False,
                          level=-1, **kw):
         formula = self.formula(cn, name)
@@ -486,6 +495,7 @@ class timeseries(basets):
 
         return serialize(tree)
 
+    @tx
     def depth(self, cn, name):
         formula = self.formula(cn, name)
         if formula is None:

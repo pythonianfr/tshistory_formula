@@ -614,24 +614,22 @@ def new_bound_formula(cn, ns, groupid, formulaname, binding):
     ).scalar()
 
     # collect series ids
-    names = tuple(binding.series.values)
     seriesmap = {
         name: sid for name, sid in
         cn.execute(
             f'select name, id from "{ns}".registry '
-            'where name in %(names)s',
-            names=names
+            'where name = ANY(%(names)s)',
+            names=list(binding.series.values)
         ).fetchall()
     }
 
     # group ids
-    names = tuple(binding.group.values)
     groupmap = {
         name: grid for name, grid in
         cn.execute(
             f'select name, id from "{ns}".group_registry '
-            'where name in %(names)s',
-            names=tuple(binding.group.values)
+            'where name = ANY(%(names)s)',
+            names=list(binding.group.values)
         ).fetchall()
     }
 

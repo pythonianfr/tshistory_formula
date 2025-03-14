@@ -13,29 +13,30 @@ def pure(engine):
 
 
 def test_tables(engine, pure):
-    assert tables(engine) == [
-        ('pure', 'basket'),
-        ('pure', 'dependent'),
-        ('pure', 'group_binding'),
-        ('pure', 'group_registry'),
-        ('pure', 'group_series_map'),
-        ('pure', 'groupmap'),
-        ('pure', 'registry'),
-        ('pure', 'revision_metadata'),
-        ('pure-formula-patch', 'registry'),
-        ('pure-formula-patch', 'revision_metadata'),
-        ('pure-formula-patch-kvstore', 'kvstore'),
-        ('pure-formula-patch-kvstore', 'things'),
-        ('pure-formula-patch-kvstore', 'version'),
-        ('pure-formula-patch-kvstore', 'vkvstore'),
-        ('pure-kvstore', 'kvstore'),
-        ('pure-kvstore', 'things'),
-        ('pure-kvstore', 'version'),
-        ('pure-kvstore', 'vkvstore'),
-        ('pure.group', 'registry'),
-        ('pure.group', 'revision_metadata'),
-        ('pure.group-kvstore', 'kvstore'),
-        ('pure.group-kvstore', 'things'),
-        ('pure.group-kvstore', 'version'),
-        ('pure.group-kvstore', 'vkvstore')
-    ]
+    with engine.begin() as cn:
+        assert tables(cn) == [
+            ('pure', 'basket'),
+            ('pure', 'dependent'),
+            ('pure', 'group_binding'),
+            ('pure', 'group_registry'),
+            ('pure', 'group_series_map'),
+            ('pure', 'groupmap'),
+            ('pure', 'registry'),
+            ('pure', 'revision_metadata'),
+            ('pure-formula-patch', 'registry'),
+            ('pure-formula-patch', 'revision_metadata'),
+            ('pure-formula-patch-kvstore', 'kvstore'),
+            ('pure-formula-patch-kvstore', 'things'),
+            ('pure-formula-patch-kvstore', 'version'),
+            ('pure-formula-patch-kvstore', 'vkvstore'),
+            ('pure-kvstore', 'kvstore'),
+            ('pure-kvstore', 'things'),
+            ('pure-kvstore', 'version'),
+            ('pure-kvstore', 'vkvstore'),
+            ('pure.group', 'registry'),
+            ('pure.group', 'revision_metadata'),
+            ('pure.group-kvstore', 'kvstore'),
+            ('pure.group-kvstore', 'things'),
+            ('pure.group-kvstore', 'version'),
+            ('pure.group-kvstore', 'vkvstore')
+        ]

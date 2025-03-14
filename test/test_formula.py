@@ -436,17 +436,20 @@ def test_normalization(engine, tsh):
 
 def test_content_hash(engine, tsh):
     tsh.register_formula(engine, 'hash-me', '(+ 2 (series "test"))', False)
-    ch = tsh.content_hash(engine, 'hash-me')
+    with engine.begin() as cn:
+        ch = tsh.content_hash(cn, 'hash-me')
     assert ch == '9f0b50a52e5895f580c7cca75a907267b401cb6a'
 
     # identical
     tsh.register_formula(engine, 'hash-me', '(+ 2 (series "test"))', False)
-    ch = tsh.content_hash(engine, 'hash-me')
+    with engine.begin() as cn:
+        ch = tsh.content_hash(cn, 'hash-me')
     assert ch == '9f0b50a52e5895f580c7cca75a907267b401cb6a'
     assert ch == tsh.live_content_hash(engine, 'hash-me')
 
     tsh.register_formula(engine, 'hash-me', '(+ 2 (series "test-2"))', False)
-    ch = tsh.content_hash(engine, 'hash-me')
+    with engine.begin() as cn:
+        ch = tsh.content_hash(cn, 'hash-me')
     assert ch == '8be58ac4b7ff2f72b68eadca8f98bd7533eca1ba'
     assert ch == tsh.live_content_hash(engine, 'hash-me')
 
