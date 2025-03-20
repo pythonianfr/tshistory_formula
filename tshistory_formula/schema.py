@@ -15,7 +15,7 @@ class formula_schema(tsschema):
         super().create(engine)
 
         with engine.begin() as cn:
-            cn.execute(sqlfile(SCHEMA, ns=self.namespace))
+            cn.execute(sqlfile(SCHEMA, ns=self.namespace), binary=False)
 
         tsschema(f'{self.namespace}-formula-patch').create(
             engine,
