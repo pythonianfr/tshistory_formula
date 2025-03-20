@@ -2323,17 +2323,30 @@ def test_dependants(engine, tsh):
         '(add (series "dep-middle-left") (series "dep-middle-right"))'
     )
     assert tsh.dependents(engine, 'dep-top') == []
+    assert tsh.depends(engine, 'dep-top', direct=True) == ['dep-middle-left', 'dep-middle-right']
+    assert tsh.depends(engine, 'dep-top') == [
+        'dep-base', 'dep-bottom', 'dep-middle-left', 'dep-middle-right'
+    ]
+
     assert tsh.dependents(engine, 'dep-middle-left') == [
         'dep-top',
     ]
+    assert tsh.depends(engine, 'dep-middle-left', direct=True) == ['dep-bottom']
+    assert tsh.depends(engine, 'dep-middle-left') == ['dep-base', 'dep-bottom']
+
     assert tsh.dependents(engine, 'dep-middle-right') == [
         'dep-top',
     ]
+    assert tsh.depends(engine, 'dep-middle-right', direct=True) == ['dep-bottom']
+    assert tsh.depends(engine, 'dep-middle-right') == ['dep-base', 'dep-bottom']
+
     assert tsh.dependents(engine, 'dep-bottom') == [
         'dep-middle-left',
         'dep-middle-right',
         'dep-top'
     ]
+    assert tsh.depends(engine, 'dep-bottom', direct=True) == ['dep-base']
+    assert tsh.depends(engine, 'dep-bottom') == ['dep-base']
 
     assert tsh.dependents(engine, 'dep-bottom', direct=True) == [
         'dep-middle-left',

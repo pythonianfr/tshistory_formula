@@ -202,6 +202,20 @@ class timeseries(basets):
         return sorted(set(deps))
 
     @tx
+    def depends(self, cn, name, direct=False):
+        formula = self.formula(cn, name)
+        tree = parse(formula)
+        deps = set(self.find_series(cn, tree))
+        if direct:
+            return sorted(deps)
+
+        for dep in deps.copy():
+            deps.update(
+                self.depends(cn, dep, direct=direct)
+            )
+        return sorted(deps)
+
+    @tx
     def register_formula(self, cn, name, formula, reject_unknown=True):
         assert isinstance(name, str), 'The name must be a string'
         name = name.strip()
