@@ -1576,3 +1576,17 @@ def test_depends(tsx):
     tsx.delete('depends-middle-right')
     assert tsx.depends('depends-middle-left', reverse=True) == []
     assert tsx.depends('depends-middle-right', reverse=True) is None
+
+
+def test_depends_auto(tsx):
+    tsx.register_formula(
+        'depends-fbase',
+        '(constant 1. (date "2025-1-1") (date "2025-1-3") "D" (date "2025-2-1"))'
+    )
+
+    tsx.register_formula(
+        'use-auto',
+        '(series "depends-fbase")'
+    )
+
+    assert tsx.depends('use-auto') == ['depends-fbase']
