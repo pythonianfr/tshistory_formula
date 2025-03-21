@@ -1471,3 +1471,108 @@ def test_find(tsx):
 
     names = tsx.find('(by.not (by.formula))')
     assert names == ['base.find']
+
+
+def test_depends(tsx):
+    ts = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(utcdt(2022, 1, 1), periods=3, freq='d')
+    )
+
+    tsx.update(
+        'depends-base',
+        ts,
+        'Babar'
+    )
+
+    tsx.register_formula(
+        'depends-bottom',
+        '(series "depends-base")'
+    )
+    tsx.register_formula(
+        'depends-middle-left',
+        '(+ -1 (series "depends-bottom"))'
+    )
+    tsx.register_formula(
+        'depends-middle-right',
+        '(+ 1 (series "depends-bottom"))'
+    )
+    tsx.register_formula(
+        'depends-top',
+        '(add (series "depends-middle-left") (series "depends-middle-right"))'
+    )
+    assert tsx.depends('depends-top', reverse=True) == []
+    assert tsx.depends('depends-top', direct=True) == [
+        'depends-middle-left',
+        'depends-middle-right'
+    ]
+    assert tsx.depends('depends-top') == [
+        'depends-base',
+        'depends-bottom',
+        'depends-middle-left',
+        'depends-middle-right'
+    ]
+
+    assert tsx.depends('depends-middle-left', reverse=True) == [
+        'depends-top',
+    ]
+    assert tsx.depends('depends-middle-left', direct=True) == ['depends-bottom']
+    assert tsx.depends('depends-middle-left') == [
+        'depends-base',
+        'depends-bottom'
+    ]
+
+    assert tsx.depends('depends-middle-right', reverse=True) == [
+        'depends-top',
+    ]
+    assert tsx.depends('depends-middle-right', direct=True) == ['depends-bottom']
+    assert tsx.depends('depends-middle-right') == ['depends-base', 'depends-bottom']
+
+    assert tsx.depends('depends-bottom', reverse=True) == [
+        'depends-middle-left',
+        'depends-middle-right',
+        'depends-top'
+    ]
+    assert tsx.depends('depends-bottom', direct=True) == ['depends-base']
+    assert tsx.depends('depends-bottom') == ['depends-base']
+
+    assert tsx.depends('depends-bottom', reverse=True, direct=True) == [
+        'depends-middle-left',
+        'depends-middle-right'
+    ]
+
+    # update and see
+
+    tsx.register_formula(
+        'depends-bottom-2',  # an alternative to bottom
+        '(series "depends-base")'
+    )
+
+    tsx.register_formula(
+        'depends-middle-left',
+        '(+ -1 (series "depends-bottom-2"))'
+    )
+    tsx.register_formula(
+        'depends-top',
+        '(add'
+        ' (series "depends-middle-right")'
+        ' (series "depends-middle-right"))'
+    )
+    assert tsx.depends('depends-bottom-2', reverse=True) == [
+        'depends-middle-left',
+    ]
+    assert tsx.depends('depends-bottom', reverse=True) == [
+        'depends-middle-right',
+        'depends-top'
+    ]
+
+    # delete things and see
+    tsx.delete('depends-top')
+
+    assert tsx.depends('depends-bottom', reverse=True) == [
+        'depends-middle-right'
+    ]
+
+    tsx.delete('depends-middle-right')
+    assert tsx.depends('depends-middle-left', reverse=True) == []
+    assert tsx.depends('depends-middle-right', reverse=True) is None

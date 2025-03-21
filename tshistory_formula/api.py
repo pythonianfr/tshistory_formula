@@ -169,6 +169,18 @@ def formula_depth(self, name: str):
     return depth
 
 
+@extend(mainsource)
+def depends(self, name: str, direct=False, reverse=False) -> list[str]:
+    with self.engine.begin() as cn:
+        if not self.tsh.exists(cn, name):
+            return
+
+        if reverse:
+            return self.tsh.dependents(cn, name, direct=direct)
+
+        return self.tsh.depends(cn, name, direct=direct)
+
+
 @extend(altsources)
 def formula_depth(self, name: str):  # noqa
     source = self._findsourcefor(name)

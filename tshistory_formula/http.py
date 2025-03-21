@@ -106,6 +106,14 @@ eval_formula.add_argument(
     'format', type=enum('json', 'tshpack'), default='json'
 )
 
+depends = base.copy()
+depends.add_argument(
+    'direct', type=inputs.boolean, default=False
+)
+depends.add_argument(
+    'reverse', type=inputs.boolean, default=False
+)
+
 # groups
 
 groupbase = reqparse.RequestParser()
@@ -247,6 +255,29 @@ class formula_httpapi(httpapi):
                     api.abort(404, f'`{args.name}` does not exists')
 
                 return tsa.formula_depth(args.name)
+
+        @nss.route('/formula_depends')
+        class formula_depends(Resource):
+
+            @api.doc(responses={200: 'Gotcontent', 404: 'Does not exist'})
+            @api.expect(depends)
+            @onerror
+            @required_roles('admin', 'rw', 'ro')
+            def get(self):
+                """return the dependencies (or dependences) of a formula
+
+                A formula can use (be used) directly/indirectly by
+                other series.
+                """
+                args = depends.parse_args()
+                if not tsa.exists(args.name):
+                    api.abort(404, f'`{args.name}` does not exists')
+
+                return tsa.depends(
+                    args.name,
+                    direct=args.direct,
+                    reverse=args.reverse
+                )
 
         @nss.route('/eval_formula')
         class eval_formula_(Resource):
@@ -455,6 +486,17 @@ class formula_httpclient(httpclient):
             return res.json()
 
         return res
+
+    @unwraperror
+    def depends(self, name, direct=False, reverse=False):
+        res = self.session.get(
+            f'{self.uri}/series/formula_depends',
+            params={'name': name, 'direct': direct, 'reverse': reverse}
+        )
+        if res.status_code == 200:
+            return res.json()
+
+        return None
 
     @unwraperror
     def eval_formula(self, formula,
