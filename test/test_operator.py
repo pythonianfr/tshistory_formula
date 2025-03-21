@@ -3153,6 +3153,8 @@ def test_constant(engine, tsh):
         '(constant 1. (date "2020-1-1") (date "2020-1-3") "D" (date "2020-2-1"))'
     )
 
+    assert tsh.tzaware(engine, 'constant-1')
+
     ts = tsh.get(engine, 'constant-1')
     assert_df("""
 2020-01-01 00:00:00+00:00    1.0
@@ -3241,6 +3243,20 @@ insertion_date             value_date
     tsh.get(engine, 'constant-3', revision_date=dt(2020, 2, 1))
     tsh.get(engine, 'constant-3', from_value_date=dt(2020, 2, 1))
     tsh.get(engine, 'constant-3', to_value_date=dt(2020, 2, 1))
+
+
+def test_naive_constant(engine, tsh):
+    tsh.register_formula(
+        engine,
+        'naive-constant',
+        '(constant 1. (date "2025-1-1") '
+        '             (date "2025-1-3" #:tz #nil) '
+        '             "D" '
+        '             (date "2025-2-1" #:tz #nil))'
+    )
+
+    # whoops ... can't we have a naive constant series ?
+    assert tsh.tzaware(engine, 'naive-constant')
 
 
 def test_constant_today_timetravel(engine, tsh):
