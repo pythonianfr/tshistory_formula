@@ -1008,7 +1008,7 @@ def _comparator(
     ts = pd.Series(index=mask.index, dtype='float64')
     ts[mask] = true_value
     ts[~mask] = false_value
-    return ts
+    return ts.dropna()
 
 
 @func('>')

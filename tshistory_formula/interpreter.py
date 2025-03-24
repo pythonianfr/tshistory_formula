@@ -3,6 +3,7 @@ import inspect
 from functools import partial
 from datetime import datetime
 
+import numpy as np
 import pytz
 import pandas as pd
 from psyl.lisp import (
@@ -53,6 +54,7 @@ class Interpreter:
         funcs['#t'] = True
         funcs['#f'] = False
         funcs['nil'] = None
+        funcs['nan'] = np.nan
         self.env = Env(funcs)
         self.vcache = {}
         self.auto = set(registry.AUTO.values())

@@ -4255,6 +4255,20 @@ def test_conditional_operators(engine, tsh):
 2023-01-14    0.00
 """, tsh.get(engine, 'cond1'))
 
+    # with nan as falsy value
+    tsh.register_formula(
+        engine,
+        'cond1',
+        '(<= (series "series-cond") 3 #:true_value 3.14 #:false_value nan)'
+    )
+    assert_df("""
+2023-01-10    3.14
+2023-01-11    3.14
+2023-01-12    3.14
+2023-01-13    3.14
+""", tsh.get(engine, 'cond1'))
+
+
     tsh.register_formula(
         engine,
         'cond2',
