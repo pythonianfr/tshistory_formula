@@ -3622,6 +3622,48 @@ insertion_date             value_date
                            2015-01-10     6.0
 """, hist)
 
+    # delete / rename scenario
+
+    tsh.delete(
+        engine,
+        'flow'
+    )
+
+    ts_flow = pd.Series(
+        [1, 2] * 5,
+        pd.date_range(
+            start=dt(2015, 1, 1),
+            end=dt(2015, 1, 10),
+            freq='D'
+        )
+    )
+
+    tsh.update(
+        engine,
+        ts_flow,
+        'flow2',
+        'test',
+        insertion_date=first_i_date
+    )
+    ts_flow = pd.Series(
+        [0, 1] * 5,
+        pd.date_range(
+            start=dt(2015, 1, 1),
+            end=dt(2015, 1, 10),
+            freq='D'
+        )
+    )
+    tsh.update(
+        engine,
+        ts_flow,
+        'flow2',
+        'test',
+        insertion_date=second_i_date
+    )
+
+    with pytest.raises(ValueError):
+        tsh.rename(engine, 'flow2', 'flow')
+
 
 def test_stock_fill(engine, tsh):
     base = pd.Series(
