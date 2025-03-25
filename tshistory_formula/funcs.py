@@ -250,7 +250,7 @@ def findnames(__interpreter__,
     i = __interpreter__
     names = search.local_search(
         i.cn,
-        i.tsh,
+        i.tsh.find,
         q.expr(),
         'local'
     )

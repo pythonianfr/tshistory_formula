@@ -487,7 +487,7 @@ def substitute_findseries(cn, tsh, tree, kwargs):
         )
     names = search.local_search(
         cn,
-        tsh,
+        tsh.find,
         query.expr(),
         'local'
     )
