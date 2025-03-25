@@ -29,6 +29,11 @@ class with_http_bridge(basebridge):
         )
 
         resp.add_callback(
+            responses.GET, uri + '/series/old_formulas',
+            callback=partial(read_request_bridge, wsgitester)
+        )
+
+        resp.add_callback(
             responses.GET, uri + '/series/formula_depth',
             callback=partial(read_request_bridge, wsgitester)
         )

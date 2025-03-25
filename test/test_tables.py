@@ -17,6 +17,7 @@ def test_tables(engine, pure):
         assert tables(cn) == [
             ('pure', 'basket'),
             ('pure', 'dependent'),
+            ('pure', 'form_history'),
             ('pure', 'group_binding'),
             ('pure', 'group_registry'),
             ('pure', 'group_series_map'),

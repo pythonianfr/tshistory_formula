@@ -8,6 +8,16 @@ create index "ix_{ns}_dependent_sid" on "{ns}".dependent (sid);
 create index "ix_{ns}_dependent_needs" on "{ns}".dependent (needs);
 
 
+-- formula history
+create table "{ns}".form_history (
+  sid int not null references "{ns}".registry(id) on delete cascade,
+  archivedate timestamptz not null default now(),
+  formula text not null
+);
+
+create index "ix_{ns}_form_history_sid" on "{ns}".form_history(sid);
+
+
 -- bound groups
 
 create table "{ns}".group_binding (

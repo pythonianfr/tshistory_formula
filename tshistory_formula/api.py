@@ -1,4 +1,4 @@
-from typing import Optional, Dict
+from typing import Optional, Dict, List, Tuple
 
 import pandas as pd
 
@@ -174,7 +174,7 @@ def formula_depth(self, name: str):
 
 
 @extend(mainsource)
-def depends(self, name: str, direct=False, reverse=False) -> list[str]:
+def depends(self, name: str, direct=False, reverse=False) -> List[str]:
     with self.engine.begin() as cn:
         if not self.tsh.exists(cn, name):
             return
@@ -269,6 +269,23 @@ def formula_components(self,  # noqa: F811
     if source is None:
         return {}
     return source.tsa.formula_components(name, expanded=expanded)
+
+
+@extend(mainsource)
+def oldformulas(self, name: str) -> List[Tuple[str, pd.Timestamp]]:
+    with self.engine.begin() as cn:
+        if self.tsh.exists(cn, name):
+            return self.tsh.oldformulas(cn, name)
+
+    return self.othersources.oldformulas(name)
+
+
+@extend(altsources)
+def oldformulas(self, name):  # noqa: F811
+    source = self._findsourcefor(name)
+    if source is None:
+        return []
+    return source.tsa.oldformulas(name)
 
 
 # groups

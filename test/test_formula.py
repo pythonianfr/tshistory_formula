@@ -249,6 +249,40 @@ def test_metadata(engine, tsh):
     }
 
 
+def test_formula_history(engine, tsh):
+    ts = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='d')
+    )
+
+    tsh.update(
+        engine, ts, 'form-hist-base', 'Babar'
+    )
+
+    tsh.register_formula(
+        engine,
+        'form-hist',
+        '(add (series "form-hist-base") (series "form-hist-base"))'
+    )
+    tsh.register_formula(
+        engine,
+        'form-hist',
+        '(* 2 (series "form-hist-base"))'
+    )
+    tsh.register_formula(
+        engine,
+        'form-hist',
+        '(+ .1 (* 2 (series "form-hist-base")))'
+    )
+
+    hist = tsh.oldformulas(engine, 'form-hist')
+    assert hist[0][0] == '(add (series "form-hist-base") (series "form-hist-base"))'
+    assert hist[1][0] == '(* 2 (series "form-hist-base"))'
+
+    tsh.delete(engine, 'form-hist')
+    assert tsh.oldformulas(engine, 'form-hist') == []
+
+
 def test_user_meta(engine, tsh):
     ts = pd.Series(
         [1, 2, 3],

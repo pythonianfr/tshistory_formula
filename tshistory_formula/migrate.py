@@ -34,7 +34,28 @@ class Migrator(_Migrator):
 
 
 @version('tshistory-formula', '0.18.0')
-def migrate_bound_groups(engine, namespace, interactive):
+def migrate_0180(engine, namespace, interactive):
+    _migrate_formula_history(engine, namespace, interactive)
+    _migrate_bound_groups(engine, namespace, interactive)
+
+
+def _migrate_formula_history(engine, namespace, interactive):
+    ns = namespace
+    sql = (
+        f'create table if not exists "{ns}".form_history ('
+        f'  sid int not null references "{ns}".registry(id) on delete cascade,'
+        f'  archivedate timestamptz not null unique default now(),'
+        f'  formula text not null'
+        f');'
+    )
+    with engine.begin() as cn:
+        cn.execute(sql)
+        cn.execute(
+            f'create index if not exists "ix_{ns}_form_history_sid" on "{ns}".form_history(sid)'
+        )
+
+
+def _migrate_bound_groups(engine, namespace, interactive):
     import json
     import pandas as pd
     from tshistory_formula.tsio import timeseries

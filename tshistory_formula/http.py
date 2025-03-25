@@ -80,6 +80,8 @@ register_formula.add_argument(
     help='fail if the referenced series do not exist'
 )
 
+oldformulas = base.copy()
+
 formula_depth = base.copy()
 
 eval_formula = reqparse.RequestParser()
@@ -234,6 +236,25 @@ class formula_httpapi(httpapi):
                     raise
 
                 return '', 200 if exists else 201
+
+        @nss.route('/old_formulas')
+        class old_formulas(Resource):
+
+            @api.doc(responses={200: 'Got content', 404: 'Does not exist'})
+            @api.expect(oldformulas)
+            @onerror
+            @required_roles('admin', 'rw', 'ro')
+            def get(self):
+                """return history of a formula
+
+                Comes as a list of tuples of formula, time stamp, time
+                zone of the replacement.
+                """
+                args = oldformulas.parse_args()
+                return [
+                    (form, stamp.isoformat(), str(stamp.tzinfo))
+                    for form, stamp in tsa.oldformulas(args.name)
+                ]
 
         @nss.route('/formula_depth')
         class formula_depth_(Resource):
@@ -473,6 +494,20 @@ class formula_httpclient(httpclient):
 
         if res.status_code in (200, 204):
             return
+
+        return res
+
+    @unwraperror
+    def oldformulas(self, name):
+        res = self.session.get(
+            f'{self.uri}/series/old_formulas',
+            params={'name': name}
+        )
+        if res.status_code == 200:
+            return [
+                (form, pd.Timestamp(dt, tz=tz))
+                for form, dt, tz in res.json()
+            ]
 
         return res
 

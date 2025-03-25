@@ -360,6 +360,66 @@ def test_findseries_bysource(tsa, engine):
     assert len(ts) == 3
 
 
+def test_oldformulas(tsx):
+    ts = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='d')
+    )
+
+    tsx.update(
+        'form-hist-base', ts, 'Babar'
+    )
+
+    tsx.register_formula(
+        'form-hist',
+        '(add (series "form-hist-base") (series "form-hist-base"))'
+    )
+    tsx.register_formula(
+        'form-hist',
+        '(* 2 (series "form-hist-base"))'
+    )
+    tsx.register_formula(
+        'form-hist',
+        '(+ .1 (* 2 (series "form-hist-base")))'
+    )
+
+    hist = tsx.oldformulas('form-hist')
+    assert hist[0][0] == '(add (series "form-hist-base") (series "form-hist-base"))'
+    assert hist[1][0] == '(* 2 (series "form-hist-base"))'
+
+    tsx.delete('form-hist')
+    assert tsx.oldformulas('form-hist') == []
+
+
+def test_remote_oldformulas(tsa):
+    rtsh = timeseries('remote')
+    ts = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='d')
+    )
+    engine = tsa.engine
+    rtsh.update(
+        engine,
+        ts,
+        'form-hist-base', 'Babar'
+    )
+
+    rtsh.register_formula(
+        engine,
+        'form-hist',
+        '(add (series "form-hist-base") (series "form-hist-base"))'
+    )
+    rtsh.register_formula(
+        engine,
+        'form-hist',
+        '(* 2 (series "form-hist-base"))'
+    )
+
+    hist = tsa.oldformulas('form-hist')
+    assert len(hist) == 1
+
+
+
 def test_formula_components(tsa):
     series = pd.Series(
         [1, 2, 3],

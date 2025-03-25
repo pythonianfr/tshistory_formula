@@ -221,8 +221,8 @@ class timeseries(basets):
         assert isinstance(name, str), 'The name must be a string'
         name = name.strip()
         assert len(name), 'The new name must contain non whitespace items'
-        exists = self.exists(cn, name)
 
+        exists = self.exists(cn, name)
         if exists and self.type(cn, name) == 'primary':
             raise TypeError(
                 f'primary series `{name}` cannot be overriden by a formula'
@@ -286,13 +286,20 @@ class timeseries(basets):
 
     def _register_formula(self, cn, name, internal_meta, exists):
         if exists:
+            oldformula = self.formula(cn, name)
             # update
-            cn.execute(
+            sid = cn.execute(
                 f'update "{self.namespace}".registry '
                 'set internal_metadata = %(imeta)s '
-                'where name=%(name)s',
+                'where name=%(name)s '
+                'returning id',
                 name=name,
                 imeta=json.dumps(internal_meta)
+            ).scalar()
+            cn.execute(
+                f'insert into "{self.namespace}".form_history '
+                '(sid, formula) values (%s, %s)',
+                sid, oldformula
             )
             return
 
@@ -306,6 +313,21 @@ class timeseries(basets):
             json.dumps(internal_meta),
             json.dumps({})
         )
+
+    @tx
+    def oldformulas(self, cn, name):
+        return [
+            (form, pd.Timestamp(tstamp))
+            for form, tstamp in cn.execute(
+                    'select formula, archivedate '
+                    f'from "{self.namespace}".form_history as fh,'
+                    f'     "{self.namespace}".registry as reg '
+                    'where fh.sid = reg.id and '
+                    '      reg.name = %(name)s '
+                    'order by archivedate',
+                    name=name
+            ).fetchall()
+        ]
 
     def live_content_hash(self, cn, name):
         return hashlib.sha1(
