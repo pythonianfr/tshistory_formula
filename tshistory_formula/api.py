@@ -177,7 +177,7 @@ def formula_depth(self, name: str):
 def depends(self, name: str, direct=False, reverse=False) -> List[str]:
     with self.engine.begin() as cn:
         if not self.tsh.exists(cn, name):
-            return
+            return []
 
         if reverse:
             return self.tsh.dependents(cn, name, direct=direct)
@@ -189,7 +189,7 @@ def depends(self, name: str, direct=False, reverse=False) -> List[str]:
 def formula_depth(self, name: str):  # noqa
     source = self._findsourcefor(name)
     if source is None:
-        return
+        return []
     return source.tsa.formula_depth(name)
 
 

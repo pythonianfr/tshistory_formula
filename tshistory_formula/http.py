@@ -291,9 +291,6 @@ class formula_httpapi(httpapi):
                 other series.
                 """
                 args = depends.parse_args()
-                if not tsa.exists(args.name):
-                    api.abort(404, f'`{args.name}` does not exists')
-
                 return tsa.depends(
                     args.name,
                     direct=args.direct,

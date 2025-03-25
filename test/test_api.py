@@ -1635,7 +1635,7 @@ def test_depends(tsx):
 
     tsx.delete('depends-middle-right')
     assert tsx.depends('depends-middle-left', reverse=True) == []
-    assert tsx.depends('depends-middle-right', reverse=True) is None
+    assert tsx.depends('depends-middle-right', reverse=True) == []
 
 
 def test_depends_auto(tsx):
