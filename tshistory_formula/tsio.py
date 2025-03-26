@@ -559,6 +559,7 @@ class timeseries(basets):
                         to_insertion_date=None,
                         from_value_date=None,
                         to_value_date=None,
+                        limit=None,
                         **kw):
         if self.type(cn, name) != 'formula':
             return super().insertion_dates(
@@ -567,6 +568,7 @@ class timeseries(basets):
                 to_insertion_date=to_insertion_date,
                 from_value_date=from_value_date,
                 to_value_date=to_value_date,
+                limit=limit,
                 **kw
             )
 
@@ -583,9 +585,11 @@ class timeseries(basets):
                         to_insertion_date=to_insertion_date,
                         from_value_date=from_value_date,
                         to_value_date=to_value_date,
+                        limit=limit,
                         **kw
                     )
                 continue
+
             if self.formula(cn, name):
                 allrevs += self.insertion_dates(
                     cn, name,
@@ -593,6 +597,7 @@ class timeseries(basets):
                     to_insertion_date=to_insertion_date,
                     from_value_date=from_value_date,
                     to_value_date=to_value_date,
+                    limit=limit,
                     **kw
                 )
             else:
@@ -603,7 +608,8 @@ class timeseries(basets):
                             from_insertion_date=from_insertion_date,
                             to_insertion_date=to_insertion_date,
                             from_value_date=from_value_date,
-                            to_value_date=to_value_date
+                            to_value_date=to_value_date,
+                            limit=limit
                     )]
 
         # autotrophic operators
@@ -622,8 +628,10 @@ class timeseries(basets):
                 allrevs += revs
 
         # /auto
-
-        return sorted(set(allrevs))
+        allrevs = sorted(set(allrevs))
+        if limit:
+            return allrevs[len(allrevs)-limit:]
+        return allrevs
 
     @tx
     def latest_insertion_date(self, cn, name):

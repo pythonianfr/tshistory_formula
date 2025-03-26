@@ -373,6 +373,11 @@ def test_first_latest_insertion_date(engine, tsh):
     assert tsh.first_insertion_date(engine, name) == idates[0]
     assert tsh.latest_insertion_date(engine, name) == idates[-1]
 
+    idates2 = tsh.insertion_dates(engine, name, limit=1)
+    assert idates2 == [
+        pd.Timestamp('2022-01-03 00:00:00+0000', tz='UTC')
+    ]
+
 
 def test_series_options(engine, tsh):
     test = pd.Series(
@@ -1475,6 +1480,12 @@ insertion_date             value_date
         pd.Timestamp('2020-01-01 00:00:00+0000', tz='UTC'),
         pd.Timestamp('2020-01-02 00:00:00+0000', tz='UTC'),
         pd.Timestamp('2020-01-03 00:00:00+0000', tz='UTC')
+    ]
+
+    idates = tsh.insertion_dates(engine, 'made-up-history', limit=2)
+    assert idates == [
+        pd.Timestamp('2020-01-02 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2020-01-03 00:00:00+0000', tz='UTC'),
     ]
 
     tsh.register_formula(
