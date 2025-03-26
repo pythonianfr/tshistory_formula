@@ -32,6 +32,10 @@ class BasketName(str):
     pass
 
 
+class cronrule(str):
+    pass
+
+
 class BadKeyword(Exception):
     pass
 

@@ -15,8 +15,9 @@ import tshistory.search as search
 
 from tshistory_formula.registry import FUNCS
 from tshistory_formula.helper import (
+    BasketName,
+    cronrule,
     seriesname,
-    BasketName
 )
 
 
@@ -35,7 +36,8 @@ PROPOSAL_TYPES = (
     seriesname,
     search.Source,
     search.MetaKey,
-    BasketName
+    BasketName,
+    cronrule
 )
 
 def constant_fold(tree):

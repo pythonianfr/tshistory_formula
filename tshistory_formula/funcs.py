@@ -11,6 +11,7 @@ import pycountry
 import pytz
 from dateutil.relativedelta import relativedelta
 
+from icron import croniter_range
 from psyl.lisp import (
     buildargs,
     Keyword,
@@ -39,8 +40,9 @@ from tshistory_formula.types import (
     Number
 )
 from tshistory_formula.helper import (
-    seriesname,
     BasketName,
+    cronrule,
+    seriesname,
     zonename
 )
 from tshistory_formula.interpreter import Interpreter
@@ -619,6 +621,61 @@ def end_of_month(date: pd.Timestamp) -> pd.Timestamp:
     """
     _, end = calendar.monthrange(date.year, date.month)
     return date.replace(day=end)
+
+
+@func('date-filter')
+def date_filter(series: pd.Series,
+                rule: cronrule,
+                tzone: Optional[str]='UTC',
+                ) -> pd.Series:
+    """
+    Filter a series on index. The condition is given with a crontab vocabulary.
+
+    For tzaware series, utc timezone is taken by default.
+
+    How to use the `rule` field: six specifiers must be provided.
+    Each one specifies a part of the rule.
+
+    ┌───────────── minute (0 - 59)
+    │ ┌───────────── hour (0 - 23)
+    │ │ ┌───────────── day of the month (1 - 31)
+    │ │ │ ┌───────────── month (1 - 12)
+    │ │ │ │ ┌───────────── day of the week (0 - 6 or sun,mon,tue,wed,thu,fri,sat)
+    │ │ │ │ │
+    │ │ │ │ │
+    │ │ │ │ │
+    * * * * *
+
+    Examples:
+    - for Q1 : `(date-filter (series "a") "* * * 1,2,3 *")`
+
+    - for peak hours: `(date-filter (series "a") "* 8-22 * * 1-5" #:tzone "CET")`
+
+    """
+    if not len(series):
+        return series
+
+    options = series.options.copy()
+
+    if tzaware_series(series):
+        series.index = series.index.tz_convert(tzone)
+
+    valid_datetimes = croniter_range(
+        series.index[0],
+        series.index[-1],
+        rule
+    )
+    ts_valid_datetimes = pd.Series(
+        index=valid_datetimes,
+        data=0
+    )
+
+    series = series.loc[np.isin(series.index, ts_valid_datetimes.index)]
+    if tzaware_series(series):
+        series.index = series.index.tz_convert('UTC')
+    series.options = options
+    return series
+
 
 
 @func('constant', auto=True)

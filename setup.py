@@ -22,7 +22,8 @@ setup(name='tshistory_formula',
           'tshistory >= 0.20.0',
           'holidays == 0.62',
           'pycountry >= 24.6.1',
-          'psyl >= 0.8'
+          'psyl >= 0.8',
+          'python-icron',
       ],
       package_data={'tshistory_formula': [
           'schema.sql'

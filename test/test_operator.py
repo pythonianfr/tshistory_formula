@@ -4645,3 +4645,171 @@ def test_sub(engine, tsh):
 
     meta = tsh.internal_metadata(engine, 'series-sub')
     assert meta['tzaware'] is True
+
+def test_date_filter(engine, tsh):
+    # base series
+    ts5 = pd.Series(
+        [1.0, -2, 0, -3, -2, 0, -3],
+        index=pd.date_range(
+            start=pd.Timestamp('2025-03-28'),
+            freq='D',
+            periods=7
+        )
+    )
+    tsh.update(engine, ts5, 'series5', 'test')
+
+    # on day-week
+    tsh.register_formula(
+        engine, 'only_mondays_and_wed',
+        '(date-filter (series "series5") "* * * * 0,2")'
+    )
+
+    ts = tsh.get(
+        engine,
+        'only_mondays_and_wed'
+    )
+
+    assert_df("""
+2025-03-30    0.0
+2025-04-01   -2.0
+""", ts)
+
+
+    meta = tsh.internal_metadata(engine, 'only_mondays_and_wed')
+    assert meta['tzaware'] is False
+
+    # on month
+    tsh.register_formula(
+        engine, 'only_april',
+        '(date-filter (series "series5") "* * * 4 *")'
+    )
+
+    ts = tsh.get(
+        engine,
+        'only_april'
+    )
+
+    assert_df("""
+2025-04-01   -2.0
+2025-04-02    0.0
+2025-04-03   -3.0
+""", ts)
+
+    # on day_month
+    tsh.register_formula(
+        engine, 'only_first_of_month',
+        '(date-filter (series "series5") "* * 1 * *")'
+    )
+
+    ts = tsh.get(
+        engine,
+        'only_first_of_month'
+    )
+
+    assert_df("""
+2025-04-01   -2.0
+""", ts)
+
+    # on minute or hour
+    ts1 = pd.Series(
+        data=0,
+        index=pd.date_range(
+            start=utcdt(2025, 3, 23),
+            freq='15min',
+            periods=500
+        )
+    )
+    tsh.update(engine, ts1, 'series6', 'test')
+
+    tsh.register_formula(
+        engine, 'only_hour_4_utc',
+        '(date-filter (series "series6") "* 4 * * *")'
+    )
+
+    ts = tsh.get(
+        engine,
+        'only_hour_4_utc'
+    )
+
+    assert_df("""
+2025-03-23 04:00:00+00:00    0.0
+2025-03-23 04:15:00+00:00    0.0
+2025-03-23 04:30:00+00:00    0.0
+2025-03-23 04:45:00+00:00    0.0
+2025-03-24 04:00:00+00:00    0.0
+2025-03-24 04:15:00+00:00    0.0
+2025-03-24 04:30:00+00:00    0.0
+2025-03-24 04:45:00+00:00    0.0
+2025-03-25 04:00:00+00:00    0.0
+2025-03-25 04:15:00+00:00    0.0
+2025-03-25 04:30:00+00:00    0.0
+2025-03-25 04:45:00+00:00    0.0
+2025-03-26 04:00:00+00:00    0.0
+2025-03-26 04:15:00+00:00    0.0
+2025-03-26 04:30:00+00:00    0.0
+2025-03-26 04:45:00+00:00    0.0
+2025-03-27 04:00:00+00:00    0.0
+2025-03-27 04:15:00+00:00    0.0
+2025-03-27 04:30:00+00:00    0.0
+2025-03-27 04:45:00+00:00    0.0
+2025-03-28 04:00:00+00:00    0.0
+2025-03-28 04:15:00+00:00    0.0
+2025-03-28 04:30:00+00:00    0.0
+2025-03-28 04:45:00+00:00    0.0
+""", ts)
+
+    tsh.register_formula(
+        engine, 'only_hour_4_cet',
+        '(date-filter (series "series6") "* 4 * * *" #:tzone "CET")'
+    )
+
+    ts = tsh.get(
+        engine,
+        'only_hour_4_cet'
+    )
+
+    assert_df("""
+2025-03-23 03:00:00+00:00    0.0
+2025-03-23 03:15:00+00:00    0.0
+2025-03-23 03:30:00+00:00    0.0
+2025-03-23 03:45:00+00:00    0.0
+2025-03-24 03:00:00+00:00    0.0
+2025-03-24 03:15:00+00:00    0.0
+2025-03-24 03:30:00+00:00    0.0
+2025-03-24 03:45:00+00:00    0.0
+2025-03-25 03:00:00+00:00    0.0
+2025-03-25 03:15:00+00:00    0.0
+2025-03-25 03:30:00+00:00    0.0
+2025-03-25 03:45:00+00:00    0.0
+2025-03-26 03:00:00+00:00    0.0
+2025-03-26 03:15:00+00:00    0.0
+2025-03-26 03:30:00+00:00    0.0
+2025-03-26 03:45:00+00:00    0.0
+2025-03-27 03:00:00+00:00    0.0
+2025-03-27 03:15:00+00:00    0.0
+2025-03-27 03:30:00+00:00    0.0
+2025-03-27 03:45:00+00:00    0.0
+2025-03-28 03:00:00+00:00    0.0
+2025-03-28 03:15:00+00:00    0.0
+2025-03-28 03:30:00+00:00    0.0
+2025-03-28 03:45:00+00:00    0.0
+""", ts)
+
+    # combination of two filters
+    tsh.register_formula(
+        engine, 'peak_hours',
+        '(date-filter (series "series6") "* 8-22 * * 1-5" #:tzone "CET")'
+    )
+
+    ts = tsh.get(
+        engine,
+        'peak_hours'
+    )
+
+    assert_df("""
+2025-03-24 07:00:00+00:00    0.0
+2025-03-24 07:15:00+00:00    0.0
+2025-03-24 07:30:00+00:00    0.0
+2025-03-24 07:45:00+00:00    0.0
+2025-03-24 08:00:00+00:00    0.0
+""", ts.head())
