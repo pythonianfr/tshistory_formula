@@ -3154,6 +3154,8 @@ def test_constant(engine, tsh):
     )
 
     assert tsh.tzaware(engine, 'constant-1')
+    with pytest.raises(ValueError):
+        tsh.interval(engine, 'constant-1')
 
     ts = tsh.get(engine, 'constant-1')
     assert_df("""
