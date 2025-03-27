@@ -228,6 +228,8 @@ class timeseries(basets):
                 f'primary series `{name}` cannot be overriden by a formula'
             )
 
+        istzaware = self.tzaware(cn, name) if exists else None
+
         # basic syntax check
         tree = parse(formula)
         helper.validate(tree)
@@ -265,6 +267,15 @@ class timeseries(basets):
             )
 
         tzaware = self.check_tz_compatibility(cn, tree)
+        if exists and (tzaware != istzaware):
+            # tzawareness change
+            if self.dependents(cn, name, direct=True):
+                oldtzstat = 'tzaware' if istzaware else 'tznaive'
+                newtzstat = 'tzaware' if tzaware else 'tznaive'
+                raise ValueError(
+                    f'Formula `{name}` has dependents and is changing: {oldtzstat} -> {newtzstat}'
+                )
+
         etree = self._expanded_formula(cn, formula, remote=False)
         ch = hashlib.sha1(
             serialize(etree).encode()

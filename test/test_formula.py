@@ -2785,6 +2785,50 @@ def test_diagnose(engine, tsh):
     }
 
 
+def test_flipflop_tzaware(engine, tsh):
+    ts = pd.Series(
+        range(3),
+        index=pd.date_range(
+            start=utcdt(2025, 1, 1),
+            freq='d',
+            periods=3
+        )
+    )
+    tsh.update(engine, ts, 'flipflop-base', 'Babar')
+
+    tsh.register_formula(
+        engine,
+        'flipflop',
+        '(series "flipflop-base")'
+    )
+    assert tsh.tzaware(engine, 'flipflop')
+
+    # we can tzaare -> naive (or the opposite)
+    tsh.register_formula(
+        engine,
+        'flipflop',
+        '(naive (series "flipflop-base"))'
+    )
+    assert not tsh.tzaware(engine, 'flipflop')
+
+    # let's have a dependent
+    tsh.register_formula(
+        engine,
+        'uses-flipflop',
+        '(* 2 (series "flipflop"))'
+    )
+
+    with pytest.raises(ValueError) as err:
+        tsh.register_formula(
+            engine,
+            'flipflop',
+            '(series "flipflop-base")'
+        )
+    assert err.value.args[0] == (
+        'Formula `flipflop` has dependents and is changing: tznaive -> tzaware'
+    )
+
+
 def test_formula_patch(engine, tsh):
     ts = pd.Series(
         range(5),
