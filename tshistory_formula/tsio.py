@@ -465,6 +465,10 @@ class timeseries(basets):
 
         tree = parse(formula)
         series = self.find_series(cn, tree)
+        if not series:
+            # e.g. '(constant ...)' series
+            return None
+
         tz = 'utc' if self.tzaware(cn, name) else None
         mindate = pd.Timestamp('2262-1-1', tz=tz)
         maxdate = pd.Timestamp('1677-09-23', tz=tz)
