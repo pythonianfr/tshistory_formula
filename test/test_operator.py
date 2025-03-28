@@ -4704,7 +4704,7 @@ def test_date_filter(engine, tsh):
     # on day-week
     tsh.register_formula(
         engine, 'only_mondays_and_wed',
-        '(date-filter (series "series5") "* * * * 0,2")'
+        '(date-filter (series "series5") (cronrule #:day_week "0,2"))'
     )
 
     ts = tsh.get(
@@ -4724,7 +4724,7 @@ def test_date_filter(engine, tsh):
     # on month
     tsh.register_formula(
         engine, 'only_april',
-        '(date-filter (series "series5") "* * * 4 *")'
+        '(date-filter (series "series5") (cronrule #:month "4"))'
     )
 
     ts = tsh.get(
@@ -4741,7 +4741,7 @@ def test_date_filter(engine, tsh):
     # on day_month
     tsh.register_formula(
         engine, 'only_first_of_month',
-        '(date-filter (series "series5") "* * 1 * *")'
+        '(date-filter (series "series5") (cronrule #:day_month "1"))'
     )
 
     ts = tsh.get(
@@ -4766,7 +4766,7 @@ def test_date_filter(engine, tsh):
 
     tsh.register_formula(
         engine, 'only_hour_4_utc',
-        '(date-filter (series "series6") "* 4 * * *")'
+        '(date-filter (series "series6") (cronrule #:minute "*" #:hour "4"))'
     )
 
     ts = tsh.get(
@@ -4803,7 +4803,7 @@ def test_date_filter(engine, tsh):
 
     tsh.register_formula(
         engine, 'only_hour_4_cet',
-        '(date-filter (series "series6") "* 4 * * *" #:tzone "CET")'
+        '(date-filter (series "series6") (cronrule #:minute "*" #:hour "4") #:tzone "CET")'
     )
 
     ts = tsh.get(
@@ -4841,7 +4841,7 @@ def test_date_filter(engine, tsh):
     # combination of two filters
     tsh.register_formula(
         engine, 'peak_hours',
-        '(date-filter (series "series6") "* 8-22 * * 1-5" #:tzone "CET")'
+        '(date-filter (series "series6") (cronrule #:minute "*" #:hour "8-22" #:day_week "1-5") #:tzone "CET")'
     )
 
     ts = tsh.get(

@@ -41,7 +41,7 @@ from tshistory_formula.types import (
 )
 from tshistory_formula.helper import (
     BasketName,
-    cronrule,
+    cronrule as Cronrule,
     seriesname,
     zonename
 )
@@ -623,9 +623,39 @@ def end_of_month(date: pd.Timestamp) -> pd.Timestamp:
     return date.replace(day=end)
 
 
+@func('cronrule')
+def cronrule(minute: Optional[str]='0',
+             hour: Optional[str]='*',
+             day_month: Optional[str]='*',
+             month: Optional[str]='*',
+             day_week: Optional[str]='*'
+            ) -> Cronrule:
+    """
+    Define a cronrule: five specifiers can be provided.
+    Each one specifies a part of the rule.
+
+    - minute (0 - 59)
+    - hour (0 - 23)
+    - day_month (1 - 31)
+    - month (1 - 12)
+    - day_week (0 - 6 or sun,mon,tue,wed,thu,fri,sat)
+
+    You can pick several values by listing them with commas (first example below).
+    You can select a range of values by giving the min and the max separated with a dash (second example below).
+
+    Examples:
+    - for Q1 : `(cronrule #:month "1,2,3")`
+    - for peak hours: `(cronrule #:hour "8-22" #:day_week "1-5")`
+
+    """
+    cron_expression = f'{minute} {hour} {day_month} {month} {day_week}'
+
+    return Cronrule(cron_expression)
+
+
 @func('date-filter')
 def date_filter(series: pd.Series,
-                rule: cronrule,
+                cronrule: Cronrule,
                 tzone: Optional[str]='UTC',
                 ) -> pd.Series:
     """
@@ -633,23 +663,10 @@ def date_filter(series: pd.Series,
 
     For tzaware series, utc timezone is taken by default.
 
-    How to use the `rule` field: six specifiers must be provided.
-    Each one specifies a part of the rule.
-
-    ┌───────────── minute (0 - 59)
-    │ ┌───────────── hour (0 - 23)
-    │ │ ┌───────────── day of the month (1 - 31)
-    │ │ │ ┌───────────── month (1 - 12)
-    │ │ │ │ ┌───────────── day of the week (0 - 6 or sun,mon,tue,wed,thu,fri,sat)
-    │ │ │ │ │
-    │ │ │ │ │
-    │ │ │ │ │
-    * * * * *
-
     Examples:
-    - for Q1 : `(date-filter (series "a") "* * * 1,2,3 *")`
+    - for Q1 : `(date-filter (series "a") (cronrule #:month "1,2,3"))`
 
-    - for peak hours: `(date-filter (series "a") "* 8-22 * * 1-5" #:tzone "CET")`
+    - for peak hours: `(date-filter (series "a") (cronrule #:hour "8-22" #:day_week "1-5") #:tzone "CET")`
 
     """
     if not len(series):
@@ -663,7 +680,7 @@ def date_filter(series: pd.Series,
     valid_datetimes = croniter_range(
         series.index[0],
         series.index[-1],
-        rule
+        cronrule
     )
     ts_valid_datetimes = pd.Series(
         index=valid_datetimes,
