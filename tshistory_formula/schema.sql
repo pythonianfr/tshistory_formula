@@ -35,7 +35,7 @@ create table "{ns}".group_series_map (
   parent int not null references "{ns}".group_binding(id) on delete cascade,
   groupid int not null references "{ns}".group_registry(id) on delete cascade,
   seriesid int not null references "{ns}".registry(id) on delete cascade,
-  unique(family, groupid, seriesid)
+  unique(family, parent, groupid, seriesid)
 );
 
 create index "ix_{ns}_group_series_map_parent" on "{ns}".group_series_map (parent);
