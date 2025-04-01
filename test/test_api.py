@@ -1131,6 +1131,14 @@ def test_group_bound_formula(tsa):
         binding
     )
 
+    with pytest.raises(Exception):
+        # second bound formula with the same recipe fails
+        tsa.register_formula_bindings(
+            'hijacking2',
+            'hijacked',
+            binding
+        )
+
     ts = tsa.get('hijacked')
     assert_df("""
 2021-01-01 00:00:00+00:00    12.1
