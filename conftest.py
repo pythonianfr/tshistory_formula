@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pytest
 from sqlhelp.pgapi import pgdb as create_engine
+from sqlhelp.testutil import setup_local_pg_cluster
 import webtest
-from pytest_sa_pg import db
 from click.testing import CliRunner
 
 from tshistory import cli as command, api
@@ -25,7 +25,7 @@ DATADIR = Path(__file__).parent / 'test' / 'data'
 @pytest.fixture(scope='session')
 def engine(request):
     port = 5434
-    db.setup_local_pg_cluster(request, DATADIR, port)
+    setup_local_pg_cluster(request, DATADIR, port)
     uri = 'postgresql://localhost:{}/postgres'.format(port)
     e = create_engine(uri)
     return e
