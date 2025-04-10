@@ -29,7 +29,9 @@ Number = typing.TypeVar('Number', int, float)
 
 @dataclass
 class Freq:
+    # pytype: disable=invalid-annotation
     multiplier: typing.Optional[Number]
+    # pytype: enable=invalid-annotation
     period_offset: PERIOD_OFFSETS
 
     def __repr__(self) -> str:

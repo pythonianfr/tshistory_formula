@@ -88,6 +88,7 @@ LEAP_DAY_RULES = typing.Literal[
     'linear',
 ]
 
+# pytype: disable=invalid-annotation
 
 TIMEZONES = typing.Literal[
     *(pytz.all_timezones)
