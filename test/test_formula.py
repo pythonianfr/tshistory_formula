@@ -192,6 +192,8 @@ TZ_FORMS = [
     '(tzaware (series "dev1") "Etc/GMT+4") '
     '(tzaware (series "dev2") #:tzone "ETC/GMT+3") '
     '(naive (series "dev3") #:tzone "UTC"))',
+    '(date-filter (series "dev") (cronrule #:hour "1-5") #:tzone "utc")',
+    '(block-staircase "dev" #:revision_tz "ETC/GMT+3")',
 ]
 
 TZ_UPDATED_FORMS = [
@@ -202,6 +204,8 @@ TZ_UPDATED_FORMS = [
     '(tzaware (series "dev1") "Etc/GMT+4") '
     '(tzaware (series "dev2") #:tzone "Etc/GMT+3") '
     '(naive (series "dev3") #:tzone "UTC"))',
+    '(date-filter (series "dev") (cronrule #:hour "1-5") #:tzone "UTC")',
+    '(block-staircase "dev" #:revision_tz "Etc/GMT+3")',
 ]
 
 def test_migrate_timezone():

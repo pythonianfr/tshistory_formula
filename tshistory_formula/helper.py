@@ -204,6 +204,8 @@ TIMEZONE_OPS = {
     'tzaware': ([2], ['tzone']),
     'date': ([], ['tz']),
     'now': ([], ['tz']),
+    'date-filter': ([], ['tzone']),
+    'block-staircase': ([], ['revision_tz']),
 }
 
 

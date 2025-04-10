@@ -667,7 +667,7 @@ def cronrule(minute: Optional[str]='0',
 @func('date-filter')
 def date_filter(series: pd.Series,
                 cronrule: Cronrule,
-                tzone: Optional[str]='UTC',
+                tzone: Optional[TIMEZONES]='UTC',
                 ) -> pd.Series:
     """
     Filter a series on index. The condition is given with a crontab vocabulary.
@@ -2363,7 +2363,7 @@ def block_staircase(__interpreter__,
                     revision_freq_days: Optional[int] = None,
                     revision_time_hours: Optional[int] = None,
                     revision_time_days: Optional[int] = None,
-                    revision_tz: str = 'UTC',
+                    revision_tz: Optional[TIMEZONES] = 'UTC',
                     maturity_offset_hours: Optional[int] = None,
                     maturity_offset_days: Optional[int] = None,
                     maturity_time_hours: Optional[int] = None,
