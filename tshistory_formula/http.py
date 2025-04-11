@@ -14,7 +14,6 @@ from tshistory.util import (
 from tshistory.codecs import unpack_series
 from tshistory.http.client import httpclient, unwraperror
 from tshistory.http.util import (
-    enum,
     onerror,
     required_roles,
     series_response,
@@ -105,7 +104,7 @@ eval_formula.add_argument(
     'tz', type=str, default=None
 )
 eval_formula.add_argument(
-    'format', type=enum('json', 'tshpack'), default='json'
+    'format', type=str, choices=('json', 'tshpack'), default='json'
 )
 
 depends = base.copy()
