@@ -1711,7 +1711,8 @@ def upsample_adjusted_stamp(
 def upsample_transform(tree):
     """Enlarge the from_value_date <-> to_value_date range to get
     consistent upsampling data
-    To extend it correctly, we need the "origin_freq" info that 
+
+    To extend it correctly, we need the "origin_freq" info that
     correspond to the initial frequency.
     """
     posargs, kwargs = buildargs(tree[1:])
@@ -1719,8 +1720,7 @@ def upsample_transform(tree):
     top = [
         Symbol('let'),
         Symbol('origin_freq'),
-            origin_freq
-        ,
+        origin_freq,
         [
             Symbol('let'),
             Symbol('from_value_date'), [
