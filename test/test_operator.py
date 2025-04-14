@@ -1795,17 +1795,17 @@ def test_resample(engine, tsh):
     tsh.register_formula(
         engine,
         'hourly2daily',
-        '(resample (series "hourly") "D")'
+        '(resample (series "hourly") (freq "D"))'
     )
     tsh.register_formula(
         engine,
         'hourly2dailysum',
-        '(resample (series "hourly") "D" "sum")'
+        '(resample (series "hourly") (freq "D") "sum")'
     )
     tsh.register_formula(
         engine,
         'gasdaytoday',
-        '(resample (series "gasday") "D")'
+        '(resample (series "gasday") (freq "D"))'
     )
 
     assert_df("""
@@ -1828,7 +1828,7 @@ def test_resample(engine, tsh):
         tsh.register_formula(
             engine,
             'badmethod',
-            '(resample (series "gasday") "D" "NO-SUCH-METHOD")'
+            '(resample (series "gasday") (freq "D") "NO-SUCH-METHOD")'
         )
     assert err.value.args[0] == \
         f"'NO-SUCH-METHOD' not a {typename(CALCULATION_METHODS)}"
@@ -1886,7 +1886,7 @@ Freq: 3h, Name: hourlynas3h, dtype: float64
     tsh.register_formula(
         engine,
         'hourlynas3h_wt_option',
-        '(resample (series "hourly_missing_values" #:fill 0) "3h")'
+        '(resample (series "hourly_missing_values" #:fill 0) (nfreq 3 "h"))'
     )
 
     assert_df("""
@@ -1901,7 +1901,7 @@ Freq: 3h, Name: hourlynas3h_wt_option, dtype: float64
     tsh.register_formula(
         engine,
         'hourlynas3h_wt_option',
-        '(resample (series "hourly_missing_values" #:fill "ffill") "3h")'
+        '(resample (series "hourly_missing_values" #:fill "ffill") (nfreq 3 "h"))'
     )
 
     assert_df("""
@@ -1916,7 +1916,7 @@ Freq: 3h, Name: hourlynas3h_wt_option, dtype: float64
     tsh.register_formula(
         engine,
         'hourlynas3h_wt_options',
-        '(resample (series "hourly_missing_values" #:fill 0 #:limit 3) "3h")'
+        '(resample (series "hourly_missing_values" #:fill 0 #:limit 3) (nfreq 3 "h"))'
     )
 
     assert_df("""
@@ -1939,7 +1939,7 @@ Name: hourlynas3h_wt_options, dtype: float64
     tsh.register_formula(
         engine,
         'daily2monthly',
-        '(resample (series "daily_missing_values" #:fill 0) "MS")'
+        '(resample (series "daily_missing_values" #:fill 0) (freq "MS"))'
     )
 
     assert_df("""
@@ -1963,7 +1963,7 @@ Freq: MS, Name: daily2monthly, dtype: float64
     tsh.register_formula(
         engine,
         'monthly2yearly',
-        '(resample (series "monthly_missing_values" #:fill 0) "YS")'
+        '(resample (series "monthly_missing_values" #:fill 0) (freq "YS"))'
     )
 
     assert_df("""
@@ -1997,7 +1997,7 @@ def test_resample_boundaries(tsh, engine):
     tsh.register_formula(
         engine,
         formula_name,
-        f'(resample (series "{series_name}") "D" "sum")',
+        f'(resample (series "{series_name}") (freq "D") "sum")',
     )
 
     ts = tsh.get(
@@ -2051,7 +2051,7 @@ def test_resample_interpolate(tsh, engine):
     tsh.register_formula(
         engine,
         '3hourly_interpolated',
-        '(resample (series "three-hourly-series") "h" #:method "interpolate")'
+        '(resample (series "three-hourly-series") (freq "h") #:method "interpolate")'
     )
 
     assert_df("""
@@ -2115,7 +2115,8 @@ def test_upsample_with_resample(engine, tsh):
     tsh.register_formula(
         engine,
         'upsample-bug',
-        '(resample (series "upsample-yearly") "h" #:method "ffill" #:origin_freq "YE")'
+        '(resample '
+        '(series "upsample-yearly") "h" #:method "ffill" #:origin_freq (freq "YE"))'
     )
     ts2 = tsh.get(engine, 'upsample-bug')
 
@@ -2161,7 +2162,7 @@ def test_upsample(engine, tsh):
     tsh.register_formula(
         engine,
         'upsample-formula-yearstart',
-        '(upsample (series "upsample-yearstart") "h" "YS" #:method "ffill")'
+        '(upsample (series "upsample-yearstart") (freq "h") (freq "YS") #:method "ffill")'
     )
     ts2 = tsh.get(engine, 'upsample-formula-yearstart')
 
@@ -2204,7 +2205,7 @@ Freq: h, Name: upsample-formula-yearstart, dtype: float64
     tsh.register_formula(
         engine,
         'upsample-formula-yearend',
-        '(upsample (series "upsample-yearend") "h" "YE" #:method "ffill")'
+        '(upsample (series "upsample-yearend") (freq "h") (freq "YE") #:method "ffill")'
     )
     ts2 = tsh.get(engine, 'upsample-formula-yearend')
 
@@ -2247,7 +2248,7 @@ Freq: h, Name: upsample-formula-yearend, dtype: float64
     tsh.register_formula(
         engine,
         'upsample-formula-monthstart',
-        '(upsample (series "upsample-monthstart") "d" "MS" #:method "ffill")'
+        '(upsample (series "upsample-monthstart") (freq "d") (freq "MS") #:method "ffill")'
     )
     ts2 = tsh.get(engine, 'upsample-formula-monthstart')
 
@@ -2290,7 +2291,7 @@ Freq: D, Name: upsample-formula-monthstart, dtype: float64
     tsh.register_formula(
         engine,
         'upsample-formula-daily',
-        '(upsample (series "upsample-daily") "3h" "d")'
+        '(upsample (series "upsample-daily") (nfreq 3 "h") (freq "d"))'
     )
     ts2 = tsh.get(engine, 'upsample-formula-daily')
 
@@ -2342,7 +2343,7 @@ def test_upsample_fillopt(engine, tsh):
     tsh.register_formula(
         engine,
         'yearlynas3h',
-        '(upsample (series "yearly_missing_values") "3h" "YS")'
+        '(upsample (series "yearly_missing_values") (nfreq 3 "h") (freq "YS"))'
     )
 
     assert_df("""
@@ -2386,7 +2387,7 @@ Freq: 3h, Name: yearlynas3h, dtype: float64
     tsh.register_formula(
         engine,
         'yearlynas3h_wt_option',
-        '(upsample (series "yearly_missing_values" #:fill 0) "3h" "YS")'
+        '(upsample (series "yearly_missing_values" #:fill 0) (nfreq 3 "h") (freq "YS"))'
     )
 
     # here we are requesting data with a fromdate located in the "hole"
@@ -2429,7 +2430,8 @@ Freq: 3h, Name: yearlynas3h_wt_option, dtype: float64
     tsh.register_formula(
         engine,
         'yearlynas3h_wt_option',
-        '(upsample (series "yearly_missing_values" #:fill "ffill") "3h" "YS")'
+        '(upsample '
+        '(series "yearly_missing_values" #:fill "ffill") (nfreq 3 "h") (freq "YS"))'
     )
 
     ts = tsh.get(
@@ -2457,7 +2459,8 @@ Freq: 3h, Name: yearlynas3h_wt_option, dtype: float64
     tsh.register_formula(
         engine,
         'yearlynas3h_wt_option',
-        '(upsample (series "yearly_missing_values" #:fill 0 #:limit 1) "3h" "YS")'
+        '(upsample '
+        '(series "yearly_missing_values" #:fill 0 #:limit 1) (nfreq 3 "h") (freq "YS"))'
     )
 
     ts = tsh.get(
@@ -3152,7 +3155,7 @@ def test_constant(engine, tsh):
     tsh.register_formula(
         engine,
         'constant-1',
-        '(constant 1. (date "2020-1-1") (date "2020-1-3") "D" (date "2020-2-1"))'
+        '(constant 1. (date "2020-1-1") (date "2020-1-3") (freq "D") (date "2020-2-1"))'
     )
 
     assert tsh.tzaware(engine, 'constant-1')
@@ -3230,7 +3233,7 @@ insertion_date             value_date
     tsh.register_formula(
         engine,
         'constant-2',
-        '(constant 2. (date "2020-1-5") (date "2020-1-3") "D" (date "2020-2-1"))'
+        '(constant 2. (date "2020-1-5") (date "2020-1-3") (freq "D") (date "2020-2-1"))'
     )
 
     ts = tsh.get(engine, 'constant-2')
@@ -3239,7 +3242,7 @@ insertion_date             value_date
     tsh.register_formula(
         engine,
         'constant-3',
-        '(constant 3. (date "2020-1-1") (now) "D" (date "2020-2-1"))'
+        '(constant 3. (date "2020-1-1") (now) (freq "D") (date "2020-2-1"))'
     )
 
     # no crash wrt naive revision_date
@@ -3254,7 +3257,7 @@ def test_naive_constant(engine, tsh):
         'naive-constant',
         '(constant 1. (date "2025-1-1") '
         '             (date "2025-1-3" #:tz "Europe/Paris") '
-        '             "D" '
+        '             (freq "D") '
         '             (date "2025-2-1" #:tz "Europe/Paris"))'
     )
 
@@ -3266,7 +3269,7 @@ def test_constant_today_timetravel(engine, tsh):
     tsh.register_formula(
         engine,
         'constant-with-today',
-        '(constant 1. (date "2021-1-1") (now) "D" (date "2020-2-1"))'
+        '(constant 1. (date "2021-1-1") (now) (freq "D") (date "2020-2-1"))'
     )
 
     ts = tsh.get(

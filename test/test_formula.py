@@ -1763,8 +1763,8 @@ def test_history_nr(engine, tsh):
     tsh.register_formula(
         engine,
         'hist-nr-form',
-        '(row-mean (resample (naive (series "hist-nr-1") "CET") "D") '
-        '          (resample (naive (series "hist-nr-2") "CET") "D")) '
+        '(row-mean (resample (naive (series "hist-nr-1") "CET") (freq "D")) '
+        '          (resample (naive (series "hist-nr-2") "CET") (freq "D"))) '
     )
 
     top = tsh.get(engine, 'hist-nr-form')
@@ -1890,8 +1890,8 @@ def test_history_autotrophic_nr(engine, tsh):
     tsh.register_formula(
         engine,
         'hist-nr-form2',
-        '(row-mean (resample (naive (hist-nr2-1) "CET") "D") '
-        '          (resample (naive (hist-nr2-2) "CET") "D"))'
+        '(row-mean (resample (naive (hist-nr2-1) "CET") (freq "D")) '
+        '          (resample (naive (hist-nr2-2) "CET") (freq "D")))'
     )
 
     top = tsh.get(engine, 'hist-nr-form2')
@@ -2805,7 +2805,7 @@ def test_diagnose(engine, tsh):
     formula = '(add (series "diag-C") (series "diag-D"))'
     tsh.register_formula(engine, 'diag-B', formula)
 
-    formula = '(resample (series "prim-diag-1") "D")'
+    formula = '(resample (series "prim-diag-1") (freq "D"))'
     tsh.register_formula(engine, 'diag-G', formula)
 
     formula = '(* 3.14 (series "diag-G"))'

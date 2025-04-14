@@ -1248,7 +1248,7 @@ def test_more_group_errors(tsx):
 
     tsx.register_formula(
         'toto',
-        '(constant 42.5 (date "1900-1-1") (date "2039-12-31") "D" (date "1900-1-1"))'
+        '(constant 42.5 (date "1900-1-1") (date "2039-12-31") (freq "D") (date "1900-1-1"))'
     )
 
     with pytest.raises(Exception) as excinfo:
@@ -1329,7 +1329,7 @@ def test_more_group_errors(tsx):
     # goes smoothly
     tsx.register_formula(
         'tata',
-        '(constant 42.5 (date "1900-1-1") (date "2039-12-31") "D" (date "1900-1-1"))'
+        '(constant 42.5 (date "1900-1-1") (date "2039-12-31") (freq "D") (date "1900-1-1"))'
     )
     tsx.register_formula_bindings(
         'conflict-name-binding',
@@ -1648,7 +1648,7 @@ def test_depends(tsx):
 def test_depends_auto(tsx):
     tsx.register_formula(
         'depends-fbase',
-        '(constant 1. (date "2025-1-1") (date "2025-1-3") "D" (date "2025-2-1"))'
+        '(constant 1. (date "2025-1-1") (date "2025-1-3") (freq "D") (date "2025-2-1"))'
     )
 
     tsx.register_formula(

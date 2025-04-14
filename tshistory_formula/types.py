@@ -34,7 +34,7 @@ class Freq:
     # pytype: enable=invalid-annotation
     period_offset: PERIOD_OFFSETS
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         """Render Freq as pandas input"""
         return '%s%s' % (self.multiplier or '', self.period_offset)
 

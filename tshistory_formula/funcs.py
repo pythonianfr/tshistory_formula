@@ -1514,7 +1514,7 @@ def resample_adjust(tstamp, freq):
 @func('resample_adjusted_stamp')
 def resample_adjusted_stamp(
         tstamp: Optional[pd.Timestamp],
-        freq: str,
+        freq: Union[str, pd.Timedelta],
         direction: str) -> Optional[pd.Timestamp]:
     # Return timestamp compensated to account for the resampling
     # operation (we must provide enough data outside the strict query
@@ -1540,7 +1540,7 @@ def resample_adjusted_stamp(
 
 @func('_infer_freq')
 def _infer_freq(series: pd.Series,
-                resample_freq: FreqType) -> pd.Timedelta:
+                resample_freq: FreqType) -> Union[str, pd.Timedelta]:
     resample_freq = str(resample_freq)
     if len(series) < 2:
         return resample_freq
@@ -1587,7 +1587,7 @@ def resample_transform(tree):
     posargs, kwargs = buildargs(tree[1:])
     if 'origin_freq' in kwargs:
         #upsample
-        needed_freq = str(kwargs['origin_freq'])
+        needed_freq = kwargs['origin_freq']
         adjusted_stamp_func = 'upsample_adjusted_stamp'
     else:
         needed_freq = [
@@ -1697,8 +1697,9 @@ def resample(__interpreter__,
 @func('upsample_adjusted_stamp')
 def upsample_adjusted_stamp(
         tstamp: Optional[pd.Timestamp],
-        origin_freq: str,
+        origin_freq: FreqType,
         direction: str) -> Optional[pd.Timestamp]:
+    origin_freq = str(origin_freq)
     assert direction in ('left', 'right')
     if tstamp is None:
         return tstamp
@@ -1716,7 +1717,7 @@ def upsample_transform(tree):
     correspond to the initial frequency.
     """
     posargs, kwargs = buildargs(tree[1:])
-    origin_freq = str(posargs[2])
+    origin_freq = posargs[2]
     top = [
         Symbol('let'),
         Symbol('origin_freq'),
