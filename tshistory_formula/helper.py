@@ -126,7 +126,6 @@ PERIOD_CHANGES = {
     'H':'h',
     'T': 'min',
     'S': 's',
-    'L': 'ms',
     'U': 'us',
     'N': 'ns',
     'M': 'ME',
@@ -141,6 +140,7 @@ PERIOD_CHANGES = {
     'A': 'YE',
     'BAS': 'BYS',
     'BA': 'BYE',
+    'd': 'D',
 }
 
 

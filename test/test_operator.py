@@ -2248,7 +2248,7 @@ Freq: h, Name: upsample-formula-yearend, dtype: float64
     tsh.register_formula(
         engine,
         'upsample-formula-monthstart',
-        '(upsample (series "upsample-monthstart") (freq "d") (freq "MS") #:method "ffill")'
+        '(upsample (series "upsample-monthstart") (freq "D") (freq "MS") #:method "ffill")'
     )
     ts2 = tsh.get(engine, 'upsample-formula-monthstart')
 
@@ -2291,7 +2291,7 @@ Freq: D, Name: upsample-formula-monthstart, dtype: float64
     tsh.register_formula(
         engine,
         'upsample-formula-daily',
-        '(upsample (series "upsample-daily") (nfreq 3 "h") (freq "d"))'
+        '(upsample (series "upsample-daily") (nfreq 3 "h") (freq "D"))'
     )
     ts2 = tsh.get(engine, 'upsample-formula-daily')
 

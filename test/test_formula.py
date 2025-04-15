@@ -122,7 +122,7 @@ def test_add_freq():
         ('15T', '(nfreq 15 "min")'),
         ('min', '(freq "min")'),
         ('1.5H', '(nfreq 1.5 "h")'),
-        ('d', '(freq "d")'),
+        ('D', '(freq "D")'),
         ('10SM', '(nfreq 10 "SME")'),
         ('A', '(freq "YE")'),
     ]
@@ -147,11 +147,11 @@ FREQ_FORMS = [
     '(resample (series "dev") #:origin_freq "BY" #:freq "12SM")',
 
     '(constant 3 (now) (now) "1.5H" (now))',
-    '(constant 3 (now) (now) #:revdate (now) #:freq "1.5L")',
+    '(constant 3 (now) (now) #:revdate (now) #:freq "1.5S")',
 
     '(priority '
-    '(resample (series "dev1") "30.1U") '
-    '(resample (series "dev2") "30.2N") '
+    '(resample (series "dev1") "30.1S") '
+    '(resample (series "dev2") "30.2S") '
     '(resample (series "dev3") "30.3M"))',
 ]
 
@@ -164,11 +164,11 @@ FREQ_UPDATED_FORMS = [
     '(resample (series "dev") (freq "QE") #:origin_freq (freq "YE"))',
     '(resample (series "dev") #:origin_freq (freq "BYE") #:freq (nfreq 12 "SME"))',
     '(constant 3 (now) (now) (nfreq 1.5 "h") (now))',
-    '(constant 3 (now) (now) #:revdate (now) #:freq (nfreq 1.5 "ms"))',
+    '(constant 3 (now) (now) #:revdate (now) #:freq (nfreq 1.5 "s"))',
 
     '(priority '
-    '(resample (series "dev1") (nfreq 30.1 "us")) '
-    '(resample (series "dev2") (nfreq 30.2 "ns")) '
+    '(resample (series "dev1") (nfreq 30.1 "s")) '
+    '(resample (series "dev2") (nfreq 30.2 "s")) '
     '(resample (series "dev3") (nfreq 30.3 "ME")))',
 ]
 
