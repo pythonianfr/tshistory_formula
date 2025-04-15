@@ -154,6 +154,8 @@ def add_freq(arg_str):
     """Add a `Freq` object by using `freq` and `nfreq` functions
     in case the string argument is valid.
     """
+    if type(arg_str) is list:
+        return arg_str
     res = FREQ_PTN.fullmatch(arg_str)
     if res:
         (multiplier_str, period) = res.groups()

@@ -178,10 +178,8 @@ def test_migrate_freq():
 
 
 def test_double_migration():
-    for form, updated_form in zip(FREQ_FORMS, FREQ_UPDATED_FORMS):
-        with pytest.raises(TypeError) as err:
-            assert lisp.serialize(migrate_freq(lisp.parse(updated_form))) == updated_form
-        assert str(err.value) == "expected string or bytes-like object, got 'list'"
+    for updated_form in FREQ_UPDATED_FORMS:
+        assert lisp.serialize(migrate_freq(lisp.parse(updated_form))) == updated_form
 
 
 def test_change_timezone():
