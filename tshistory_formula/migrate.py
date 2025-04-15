@@ -36,41 +36,12 @@ class Migrator(_Migrator):
         migrate_sub_formulas(self.engine, self.namespace, self.interactive)
         migrate_group_formula_schema(self.engine, self.namespace, self.interactive)
 
-@version('tshistory-formula', '0.18.0')
-def migrate_freq_and_timezone(engine, namespace, interactive):
-    formulas = engine.execute(
-        f'select name, internal_metadata '
-        f'from "{namespace}".registry '
-        'where internal_metadata->\'formula\' is not null'
-    ).fetchall()
-
-    op_names = list(FREQ_OPS) + list(TIMEZONE_OPS)
-    for name, imeta in formulas:
-        text = imeta['formula']
-        do_migrate = False
-        for op_name in op_names:
-            if op_name in text:
-                do_migrate = True
-        if not do_migrate:
-            continue
-
-        print(f'migrating {name} to 0.18.0')
-        tree = migrate_timezone(migrate_freq(parse(text)))
-        imeta['formula'] = serialize(tree)
-        with engine.begin() as cn:
-            cn.execute(
-                f'update "{namespace}".registry '
-                'set internal_metadata = %(metadata)s '
-                'where name = %(name)s',
-                metadata=json.dumps(imeta),
-                name=name
-            )
-
 
 @version('tshistory-formula', '0.18.0')
 def migrate_0180(engine, namespace, interactive):
     _migrate_formula_history(engine, namespace, interactive)
     _migrate_bound_groups(engine, namespace, interactive)
+    _migrate_freq_and_timezone(engine, namespace, interactive)
 
 
 def _migrate_formula_history(engine, namespace, interactive):
@@ -153,6 +124,36 @@ create index if not exists "ix_{ns}_group_series_map_seriesid" on "{ns}".group_s
                 'set internal_metadata = %(imeta)s '
                 f'where name = %(name)s',
                 imeta=json.dumps(imeta),
+                name=name
+            )
+
+
+def _migrate_freq_and_timezone(engine, namespace, interactive):
+    with engine.begin() as cn:
+        formulas = cn.execute(
+            f'select name, internal_metadata '
+            f'from "{namespace}".registry '
+            'where internal_metadata->\'formula\' is not null'
+        ).fetchall()
+    op_names = list(FREQ_OPS) + list(TIMEZONE_OPS)
+    for name, imeta in formulas:
+        text = imeta['formula']
+        do_migrate = False
+        for op_name in op_names:
+            if op_name in text:
+                do_migrate = True
+        if not do_migrate:
+            continue
+
+        print(f'migrating {name} to 0.18.0')
+        tree = migrate_timezone(migrate_freq(parse(text)))
+        imeta['formula'] = serialize(tree)
+        with engine.begin() as cn:
+            cn.execute(
+                f'update "{namespace}".registry '
+                'set internal_metadata = %(metadata)s '
+                'where name = %(name)s',
+                metadata=json.dumps(imeta),
                 name=name
             )
 
