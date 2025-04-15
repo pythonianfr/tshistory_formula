@@ -25,6 +25,8 @@ def test_tables(engine, pure):
             ('pure', 'groupmap'),
             ('pure', 'registry'),
             ('pure', 'revision_metadata'),
+            ('pure', 'tree'),
+            ('pure', 'tree_series_map'),
             ('pure', 'ts_oldmeta'),
             ('pure-formula-patch', 'registry'),
             ('pure-formula-patch', 'revision_metadata'),
