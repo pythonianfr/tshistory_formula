@@ -3845,13 +3845,16 @@ FREQ_FORMS = [
     '(upsample (series "dev") "A" "15min")',
     '(upsample (series "dev") #:origin_freq "15T" #:freq "AS")',
     '(upsample (series "dev") "5min" #:origin_freq "1M")',
+    '(upsample (series "dev") "d" #:origin_freq "d")',
 
     '(resample (series "dev") "30T")',
     '(resample (series "dev") "Q" #:origin_freq "Y")',
     '(resample (series "dev") #:origin_freq "BY" #:freq "12SM")',
+    '(resample (series "dev") #:origin_freq "d" #:freq "d")',
 
     '(constant 3 (now) (now) "1.5H" (now))',
     '(constant 3 (now) (now) #:revdate (now) #:freq "1.5S")',
+    '(constant 3 (now) (now) #:revdate (now) #:freq "d")',
 
     '(priority '
     ' (resample (series "dev1") "30.1S") '
@@ -3863,12 +3866,16 @@ FREQ_UPDATED_FORMS = [
     '(upsample (series "dev") (freq "YE") (nfreq 15 "min"))',
     '(upsample (series "dev") #:origin_freq (nfreq 15 "min") #:freq (freq "YS"))',
     '(upsample (series "dev") (nfreq 5 "min") #:origin_freq (nfreq 1 "ME"))',
+    '(upsample (series "dev") (freq "D") #:origin_freq (freq "D"))',
 
     '(resample (series "dev") (nfreq 30 "min"))',
     '(resample (series "dev") (freq "QE") #:origin_freq (freq "YE"))',
     '(resample (series "dev") #:origin_freq (freq "BYE") #:freq (nfreq 12 "SME"))',
+    '(resample (series "dev") #:origin_freq (freq "D") #:freq (freq "D"))',
+
     '(constant 3 (now) (now) (nfreq 1.5 "h") (now))',
     '(constant 3 (now) (now) #:revdate (now) #:freq (nfreq 1.5 "s"))',
+    '(constant 3 (now) (now) #:revdate (now) #:freq (freq "D"))',
 
     '(priority '
     ' (resample (series "dev1") (nfreq 30.1 "s")) '

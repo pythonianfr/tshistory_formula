@@ -105,8 +105,7 @@ def migrate_arg(tree, op_args_dct, change_arg_func):
         pos_args_len = len(
             buildargs(tree[1:])[0]
         )
-
-        (pos_idxs, keys) = op_args
+        pos_idxs, keys = op_args
         for pos_idx in pos_idxs:
             if pos_idx <= pos_args_len:
                 tree[pos_idx] = change_arg_func(tree[pos_idx])
