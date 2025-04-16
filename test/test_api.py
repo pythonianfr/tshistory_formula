@@ -1657,3 +1657,50 @@ def test_depends_auto(tsx):
     )
 
     assert tsx.depends('use-auto') == ['depends-fbase']
+
+
+# tree
+
+def test_tree_api(tsx, engine):
+    tsx.set_tree_attribute(None)
+    assert tsx.tree_attribute() is None
+    tsx.set_tree_attribute('folder')
+    assert tsx.tree_attribute() == 'folder'
+
+    ts = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(utcdt(2020, 1, 1), freq='d', periods=3)
+    )
+
+    for name in (
+            'UE.Italy',
+            'UE.France'
+    ):
+        sname = name.lower()
+        tsx.update(
+            sname,
+            ts,
+            'Babar'
+        )
+        tsx.update_metadata(sname, {'folder': name})
+
+    assert tsx.path_series('UE.France') == ['ue.france']
+    assert tsx.path_series('UE.Italy') == ['ue.italy']
+    assert tsx.path_series('UE') == []
+
+    assert tsx.series_path('ue.france') == 'UE.France'
+    assert tsx.series_path('ue.italy') == 'UE.Italy'
+
+    assert tsx.tree() == ['UE.Italy', 'UE.France']
+
+    tsx.delete_path('UE.Italy')
+    assert tsx.tree() == ['UE.France']
+
+    sl = tsx.find('(by.metaitem "folder" "UE.Italy")')
+    assert sl == ['ue.italy']
+
+    assert tsx.path_series('UE.France') == ['ue.france']
+    assert tsx.path_series('UE.Italy') == []
+
+    assert tsx.series_path('ue.france') == 'UE.France'
+    assert tsx.series_path('ue.italy') is None
