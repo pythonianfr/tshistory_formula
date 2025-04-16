@@ -119,11 +119,16 @@ def test_find_from_expr(engine, tsh):
         tsh.find(engine, query.fromexpr(expr))
 
 
-def test_basket_by_value(engine, tsx):
+def test_basket_by_lt(engine, tsx):
     basket_definition = '(<  "whatever" 37)'
-    # with pytest.raises(Exception) as error:
     tsx.register_basket('basket-by-value', basket_definition)
-    # assert str(error.value) == "'by.value"
+
+
+def test_basket_by_value(engine, tsx):
+    basket_definition = '(by.value  "whatever" 37)'
+    with pytest.raises(Exception) as error:
+        tsx.register_basket('basket-by-value', basket_definition)
+    assert str(error.value) == "'by.value"
 
 
 def test_expanded_and_find(engine, tsh):
