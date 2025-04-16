@@ -17,6 +17,7 @@ from tshistory_formula.helper import (
     migrate_freq,
     TIMEZONE_OPS,
     migrate_timezone,
+    migrate_fix_day_freq,
     rename_operator,
     rewrite_sub_formula,
     rewrite_trig_formula
@@ -42,6 +43,7 @@ def migrate_0180(engine, namespace, interactive):
     _migrate_formula_history(engine, namespace, interactive)
     _migrate_bound_groups(engine, namespace, interactive)
     _migrate_freq_and_timezone(engine, namespace, interactive)
+    _migrate_fix_bad_day_freq(engine, namespace, interactive)
 
 
 def _migrate_formula_history(engine, namespace, interactive):
@@ -136,6 +138,7 @@ def _migrate_freq_and_timezone(engine, namespace, interactive):
             'where internal_metadata->\'formula\' is not null'
         ).fetchall()
     op_names = list(FREQ_OPS) + list(TIMEZONE_OPS)
+
     for name, imeta in formulas:
         text = imeta['formula']
         do_migrate = False
@@ -146,6 +149,28 @@ def _migrate_freq_and_timezone(engine, namespace, interactive):
             continue
 
         tree = migrate_timezone(migrate_freq(parse(text)))
+        imeta['formula'] = serialize(tree)
+        with engine.begin() as cn:
+            cn.execute(
+                f'update "{namespace}".registry '
+                'set internal_metadata = %(metadata)s '
+                'where name = %(name)s',
+                metadata=json.dumps(imeta),
+                name=name
+            )
+
+
+def _migrate_fix_bad_day_freq(engine, namespace, interactive):
+    with engine.begin() as cn:
+        formulas = cn.execute(
+            f'select name, internal_metadata '
+            f'from "{namespace}".registry '
+            'where internal_metadata->\'formula\' is not null'
+        ).fetchall()
+
+    for name, imeta in formulas:
+        text = imeta['formula']
+        tree = migrate_fix_day_freq(parse(text))
         imeta['formula'] = serialize(tree)
         with engine.begin() as cn:
             cn.execute(

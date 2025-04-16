@@ -34,6 +34,7 @@ from tshistory_formula.helper import (
     has_names,
     _name_from_signature_and_args,
     add_freq,
+    migrate_fix_day_freq,
     migrate_freq,
     change_timezone,
     migrate_timezone,
@@ -3895,6 +3896,13 @@ def test_double_migration():
         assert lisp.serialize(
             migrate_freq(lisp.parse(updated_form))
         ) == lisp.serialize(lisp.parse(updated_form))
+
+
+def test_fix_day_period():
+    f = '(upsample (series "dev") (freq "d") #:origin_freq (freq "d"))'
+    lisp.serialize(
+        migrate_fix_day_freq(lisp.parse(f))
+    ) == '(upsample (series "dev") (freq "D") #:origin_freq (freq "D"))'
 
 
 def test_change_timezone():

@@ -214,6 +214,28 @@ def migrate_timezone(tree):
     return migrate_arg(tree, TIMEZONE_OPS, change_timezone)
 
 
+def migrate_fix_day_freq(tree):
+    if not isinstance(tree, list):
+        return tree
+
+    op = tree[0]
+    if op == 'freq':
+        newtree = [op]
+        newtree.append(PERIOD_CHANGES.get(tree[1], tree[1]))
+        return newtree
+
+    if op == 'nfreq':
+        newtree = [op]
+        newtree.append(tree[1])
+        newtree.append(PERIOD_CHANGES.get(tree[2], tree[2]))
+        return newtree
+
+    return [
+        migrate_fix_day_freq(item)
+        for item in tree
+    ]
+
+
 def extract_auto_options(tree):
     options = []
     optnames = ('fill', 'limit', 'weight')
