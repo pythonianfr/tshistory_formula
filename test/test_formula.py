@@ -3854,9 +3854,9 @@ FREQ_FORMS = [
     '(constant 3 (now) (now) #:revdate (now) #:freq "1.5S")',
 
     '(priority '
-    '(resample (series "dev1") "30.1S") '
-    '(resample (series "dev2") "30.2S") '
-    '(resample (series "dev3") "30.3M"))',
+    ' (resample (series "dev1") "30.1S") '
+    ' (resample (series "dev2") "30.2S") '
+    ' (resample (series "dev3") "30.3M"))',
 ]
 
 FREQ_UPDATED_FORMS = [
@@ -3871,19 +3871,23 @@ FREQ_UPDATED_FORMS = [
     '(constant 3 (now) (now) #:revdate (now) #:freq (nfreq 1.5 "s"))',
 
     '(priority '
-    '(resample (series "dev1") (nfreq 30.1 "s")) '
-    '(resample (series "dev2") (nfreq 30.2 "s")) '
-    '(resample (series "dev3") (nfreq 30.3 "ME")))',
+    ' (resample (series "dev1") (nfreq 30.1 "s")) '
+    ' (resample (series "dev2") (nfreq 30.2 "s")) '
+    ' (resample (series "dev3") (nfreq 30.3 "ME")))',
 ]
 
 def test_migrate_freq():
     for form, updated_form in zip(FREQ_FORMS, FREQ_UPDATED_FORMS):
-        assert lisp.serialize(migrate_freq(lisp.parse(form))) == updated_form
+        assert lisp.serialize(
+            migrate_freq(lisp.parse(form))
+        ) == lisp.serialize(lisp.parse(updated_form))
 
 
 def test_double_migration():
     for updated_form in FREQ_UPDATED_FORMS:
-        assert lisp.serialize(migrate_freq(lisp.parse(updated_form))) == updated_form
+        assert lisp.serialize(
+            migrate_freq(lisp.parse(updated_form))
+        ) == lisp.serialize(lisp.parse(updated_form))
 
 
 def test_change_timezone():

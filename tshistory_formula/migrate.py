@@ -145,7 +145,6 @@ def _migrate_freq_and_timezone(engine, namespace, interactive):
         if not do_migrate:
             continue
 
-        print(f'migrating {name} to 0.18.0')
         tree = migrate_timezone(migrate_freq(parse(text)))
         imeta['formula'] = serialize(tree)
         with engine.begin() as cn:

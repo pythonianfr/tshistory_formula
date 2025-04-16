@@ -160,7 +160,7 @@ def add_freq(arg_str):
     if res:
         (multiplier_str, period) = res.groups()
 
-        period = PERIOD_CHANGES.get(period) or period
+        period = PERIOD_CHANGES.get(period, period)
 
         if period not in typing.get_args(PERIOD_OFFSETS):
             raise TypeError(f"'{period}' not a valid {PERIOD_OFFSETS}")
