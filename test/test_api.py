@@ -1539,6 +1539,11 @@ def test_find(tsx):
     names = tsx.find('(by.not (by.formula))')
     assert names == ['base.find']
 
+    # basket
+    tsx.register_basket('integration', '(by.formulacontents "integration")')
+    names = tsx.basket('integration')
+    assert names == ['find.bycontent.integration']
+
 
 def test_depends(tsx):
     ts = pd.Series(
