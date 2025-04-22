@@ -5228,3 +5228,49 @@ def test_options_transmission(engine, tsh):
 2025-04-28    0.0
 2025-04-29   -3.0
 """, ts)
+
+    # all
+    tsh.register_formula(
+        engine, 'formula-keep_options',
+        '''(add
+                (resample
+                    (upsample
+                        (slice
+                            (rolling
+                                (tzaware (series "series8" #:fill 0) "UTC")
+                            2)
+                        #:fromdate (date "2025-04-19"))
+                    (freq "h")(freq "D"))
+                (freq "D"))
+                (time-shifted
+                    (cumsum 
+                        (>
+                            (tzaware
+                                (naive (series "series7" #:fill 0) "UTC")
+                            "UTC")
+                        -10)
+                    )
+                #:days 2)
+                (asof (date "2025-04-01") (series "series7" #:fill 0))
+            )'''
+    )
+
+    ts = tsh.get(
+        engine,
+        'formula-keep_options'
+    )
+
+    assert_df("""
+2025-04-20 00:00:00+00:00   -1.239583
+2025-04-21 00:00:00+00:00   -1.979167
+2025-04-22 00:00:00+00:00   -1.781250
+2025-04-23 00:00:00+00:00   -1.239583
+2025-04-24 00:00:00+00:00   -1.500000
+2025-04-25 00:00:00+00:00    1.000000
+2025-04-26 00:00:00+00:00    2.000000
+2025-04-27 00:00:00+00:00    3.000000
+2025-04-28 00:00:00+00:00    4.000000
+2025-04-29 00:00:00+00:00    5.000000
+2025-04-30 00:00:00+00:00    6.000000
+2025-05-01 00:00:00+00:00    7.000000
+""", ts)
