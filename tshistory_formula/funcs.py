@@ -1809,8 +1809,10 @@ def cumsum(series: pd.Series) -> pd.Series:
     Example: `(cumsum (series "sum-me"))`
 
     """
-
-    return series.cumsum()
+    options = series.options.copy()
+    ts = series.cumsum()
+    ts.options = options
+    return ts
 
 
 def time_shifted_transform(tree):

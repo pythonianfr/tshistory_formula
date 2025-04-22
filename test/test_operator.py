@@ -5134,3 +5134,29 @@ def test_options_transmission(engine, tsh):
 2025-04-29   -3.00
 """, ts)
 
+    #cumsum
+    tsh.register_formula(
+        engine, 'fill-with-cumsum',
+        '(add (cumsum (series "series8" #:fill 0)) (naive (series "series7" #:fill 0) "UTC"))'
+    )
+
+    ts = tsh.get(
+        engine,
+        'fill-with-cumsum'
+    )
+
+    assert_df("""
+2025-04-18     1.0
+2025-04-19    -1.0
+2025-04-20    -1.0
+2025-04-21    -4.0
+2025-04-22    -6.0
+2025-04-23    -5.0
+2025-04-24   -11.0
+2025-04-25     0.0
+2025-04-26    -3.0
+2025-04-27    -2.0
+2025-04-28     0.0
+2025-04-29    -3.0
+""", ts)
+
