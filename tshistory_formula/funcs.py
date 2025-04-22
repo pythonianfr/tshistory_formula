@@ -1880,12 +1880,15 @@ def rolling(series: pd.Series,
     Example: `(rolling (series "foo") 30 #:method "median"))`
 
     """
+    options = series.options.copy()
     if not len(series):
         return series
 
     rolled = series.rolling(window)
     df = rolled.agg((method,)).dropna()
-    return df[df.columns[0]]
+    ts = df[df.columns[0]]
+    ts.options = options
+    return ts
 
 
 # integration -- a somewhat hairy operator :)

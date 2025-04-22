@@ -5110,3 +5110,27 @@ def test_options_transmission(engine, tsh):
 2025-04-28    0.0
 2025-04-29   -3.0
 """, ts.tail())
+
+    # rolling
+    tsh.register_formula(
+        engine, 'fill-with-rolling',
+        '(add (rolling (series "series8" #:fill 0) 4) (naive (series "series7" #:fill 0) "UTC"))'
+    )
+
+    ts = tsh.get(
+        engine,
+        'fill-with-rolling'
+    )
+
+    assert_df("""
+2025-04-21   -1.00
+2025-04-22   -1.75
+2025-04-23   -0.25
+2025-04-24   -4.00
+2025-04-25    0.00
+2025-04-26   -3.00
+2025-04-27   -2.00
+2025-04-28    0.00
+2025-04-29   -3.00
+""", ts)
+
