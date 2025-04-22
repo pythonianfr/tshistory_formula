@@ -4790,6 +4790,7 @@ def test_sub(engine, tsh):
     meta = tsh.internal_metadata(engine, 'series-sub')
     assert meta['tzaware'] is True
 
+
 def test_date_filter(engine, tsh):
     # base series
     ts5 = pd.Series(
@@ -4957,3 +4958,80 @@ def test_date_filter(engine, tsh):
 2025-03-24 07:45:00+00:00    0.0
 2025-03-24 08:00:00+00:00    0.0
 """, ts.head())
+
+
+def test_options_transmission(engine, tsh):
+    # base series
+    ts6 = pd.Series(
+        [1.0, -2, 0, -3, -2, 0, -3],
+        index=pd.date_range(
+            start=pd.Timestamp('2025-04-18'),
+            freq='D',
+            periods=7
+        )
+    )
+    tsh.update(engine, ts6, 'series8', 'test')
+
+    ts7 = pd.Series(
+        [1.0, -2, 0, -3, -2, 0, -3],
+        index=pd.date_range(
+            start=pd.Timestamp('2025-04-23'),
+            freq='D',
+            periods=7,
+            tz='UTC'
+        )
+    )
+    tsh.update(engine, ts7, 'series7', 'test')
+
+    # naive
+    tsh.register_formula(
+        engine, 'fill-with-naive',
+        '(add (naive (series "series7" #:fill 0) "UTC") (series "series8" #:fill 0))'
+    )
+
+    ts = tsh.get(
+        engine,
+        'fill-with-naive'
+    )
+
+    assert_df("""
+2025-04-18    1.0
+2025-04-19   -2.0
+2025-04-20    0.0
+2025-04-21   -3.0
+2025-04-22   -2.0
+2025-04-23    1.0
+2025-04-24   -5.0
+2025-04-25    0.0
+2025-04-26   -3.0
+2025-04-27   -2.0
+2025-04-28    0.0
+2025-04-29   -3.0
+""", ts)
+
+    # tzaware
+    tsh.register_formula(
+        engine, 'fill-with-tzaware',
+        '(add (tzaware (series "series8" #:fill 0) "UTC") (series "series7" #:fill 0))'
+    )
+
+    ts = tsh.get(
+        engine,
+        'fill-with-tzaware'
+    )
+
+    assert_df("""
+2025-04-18 00:00:00+00:00    1.0
+2025-04-19 00:00:00+00:00   -2.0
+2025-04-20 00:00:00+00:00    0.0
+2025-04-21 00:00:00+00:00   -3.0
+2025-04-22 00:00:00+00:00   -2.0
+2025-04-23 00:00:00+00:00    1.0
+2025-04-24 00:00:00+00:00   -5.0
+2025-04-25 00:00:00+00:00    0.0
+2025-04-26 00:00:00+00:00   -3.0
+2025-04-27 00:00:00+00:00   -2.0
+2025-04-28 00:00:00+00:00    0.0
+2025-04-29 00:00:00+00:00   -3.0
+""", ts)
+

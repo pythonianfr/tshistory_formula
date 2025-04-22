@@ -491,8 +491,11 @@ def naive(series: pd.Series, tzone: TIMEZONES) -> pd.Series:
     Example: `(naive (series "tz-aware-series-from-poland") "Europe/Warsaw")`
 
     """
+    options = series.options.copy()
     if not len(series):
-        return empty_series(False)
+        ts = empty_series(False)
+        ts.options = options
+        return ts
 
     if not tzaware_series(series):
         return dedupe(series)
@@ -511,8 +514,11 @@ def tzaware(series: pd.Series, tzone: TIMEZONES) -> pd.Series:
     Example: `(tzaware (series "tz-naive-series-from-poland") "Europe/Warsaw")`
 
     """
+    options = series.options.copy()
     if not len(series):
-        return empty_series(False)
+        ts = empty_series(False)
+        ts.options = options
+        return ts
 
     if tzaware_series(series):
         return series
