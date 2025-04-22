@@ -5061,4 +5061,52 @@ def test_options_transmission(engine, tsh):
 2025-04-29   -3.0
 """, ts)
 
+    # resample 
+    tsh.register_formula(
+        engine, 'fill-with-resample',
+        '(add (resample (series "series8" #:fill 0) (nfreq 3 "D")) (naive (series "series7" #:fill 0) "UTC"))'
+    )
 
+    ts = tsh.get(
+        engine,
+        'fill-with-resample'
+    )
+
+    assert_df("""
+2025-04-18   -0.333333
+2025-04-21   -1.666667
+2025-04-23    1.000000
+2025-04-24   -5.000000
+2025-04-25    0.000000
+2025-04-26   -3.000000
+2025-04-27   -2.000000
+2025-04-28    0.000000
+2025-04-29   -3.000000
+""", ts)
+
+    # upsample
+    tsh.register_formula(
+        engine, 'fill-with-upsample',
+        '(add (upsample (series "series8" #:fill 0) (nfreq 3 "h") (freq "D")) (naive (series "series7" #:fill 0) "UTC"))'
+    )
+
+    ts = tsh.get(
+        engine,
+        'fill-with-upsample'
+    )
+
+    assert_df("""
+2025-04-18 00:00:00    1.000
+2025-04-18 03:00:00    0.625
+2025-04-18 06:00:00    0.250
+2025-04-18 09:00:00   -0.125
+2025-04-18 12:00:00   -0.500
+""", ts.head())
+
+    assert_df("""
+2025-04-25    0.0
+2025-04-26   -3.0
+2025-04-27   -2.0
+2025-04-28    0.0
+2025-04-29   -3.0
+""", ts.tail())

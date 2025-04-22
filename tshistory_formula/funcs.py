@@ -1669,6 +1669,7 @@ def resample(__interpreter__,
     """
     if not len(series):
         return series
+    options = series.options.copy()
 
     freq = str(freq)
     if origin_freq:
@@ -1696,9 +1697,12 @@ def resample(__interpreter__,
 
     if origin_freq:
         #upsampling case
-        return resampled.apply(method).dropna().iloc[:-1]
+        ts = resampled.apply(method).dropna().iloc[:-1]
     else:
-        return resampled.apply(method).dropna()
+        ts = resampled.apply(method).dropna()
+
+    ts.options = options
+    return ts
 
 
 # UPSAMPLE
@@ -1768,6 +1772,7 @@ def upsample(__interpreter__,
     Example: `(upsample (series "yearly") #:freq "3h" #:origin-freq "Y")`
 
     """
+    options = series.options.copy()
     freq = str(freq)
     origin_freq = str(origin_freq)
 
@@ -1791,7 +1796,9 @@ def upsample(__interpreter__,
     if meth is None:
         raise ValueError(f'bad resampling method `{method}`')
 
-    return upsampled.apply(method).dropna().iloc[:-1]
+    ts = upsampled.apply(method).dropna().iloc[:-1]
+    ts.options = options
+    return ts
 
 
 @func('cumsum')
