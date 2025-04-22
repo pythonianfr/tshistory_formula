@@ -64,178 +64,6 @@ def validate(tree):
         raise BadKeyword(f'keyword `#:{kw}` not followed by a value')
 
 
-def rename_operator(tree, oldname, newname):
-    if not isinstance(tree, list):
-        return tree
-
-    op = tree[0]
-    if op == Symbol(oldname):
-        tree[0] = Symbol(newname)
-
-    return [
-        rename_operator(item, oldname, newname)
-        for item in tree
-    ]
-
-
-def fix_holidays(tree):
-    if not isinstance(tree, list):
-        return tree
-
-    op = tree[0]
-    if op == 'holidays':
-        # insert positionnally fromdate and todate
-        # with reasonnable constants
-        tree.insert(2, [Symbol('date'), "2020-1-1"])
-        tree.insert(3, [Symbol('now')])
-
-    return [
-        fix_holidays(item)
-        for item in tree
-    ]
-
-
-def migrate_arg(tree, op_args_dct, change_arg_func):
-    if not isinstance(tree, list):
-        return tree
-
-    op = tree[0]
-    op_args = op_args_dct.get(op)
-    if op_args:
-        pos_args_len = len(
-            buildargs(tree[1:])[0]
-        )
-        pos_idxs, keys = op_args
-        for pos_idx in pos_idxs:
-            if pos_idx <= pos_args_len:
-                tree[pos_idx] = change_arg_func(tree[pos_idx])
-        for key in keys:
-            try:
-                karg_idx = tree.index(Keyword(key)) + 1
-            except ValueError:
-                pass
-            else:
-                tree[karg_idx] = change_arg_func(tree[karg_idx])
-    return [migrate_arg(item, op_args_dct, change_arg_func) for item in tree]
-
-
-PERIOD_CHANGES = {
-    'BH': 'bh',
-    'CBH': 'cbh',
-    'H':'h',
-    'T': 'min',
-    'S': 's',
-    'U': 'us',
-    'N': 'ns',
-    'M': 'ME',
-    'BM': 'BME',
-    'SM': 'SME',
-    'CBM': 'CBME',
-    'Q': 'QE',
-    'BQ': 'BQE',
-    'Y': 'YE',
-    'BY': 'BYE',
-    'AS':'YS',
-    'A': 'YE',
-    'BAS': 'BYS',
-    'BA': 'BYE',
-    'd': 'D',
-}
-
-
-FREQ_PTN = re.compile(r"""
-    ([0-9.]*) # Optional multiplier (int or float)
-    ([\w]+)   # Period offset
-    """, re.X)
-
-
-def add_freq(arg_str):
-    """Add a `Freq` object by using `freq` and `nfreq` functions
-    in case the string argument is valid.
-    """
-    if type(arg_str) is list:
-        return arg_str
-    res = FREQ_PTN.fullmatch(arg_str)
-    if res:
-        (multiplier_str, period) = res.groups()
-
-        period = PERIOD_CHANGES.get(period, period)
-
-        if period not in typing.get_args(PERIOD_OFFSETS):
-            raise TypeError(f"'{period}' not a valid {PERIOD_OFFSETS}")
-
-        freq = [Symbol("freq"), period]
-        if multiplier_str:
-            multiplier = float(multiplier_str)
-            if multiplier_str.isnumeric():
-                multiplier = int(multiplier_str)
-            freq = [Symbol("nfreq"), multiplier, period]
-        return freq
-    return arg_str
-
-
-FREQ_OPS = {
-    'upsample': ([2, 3], ['freq', 'origin_freq']),
-    'resample': ([2], ['freq', 'origin_freq']),
-    'constant': ([4], ['freq']),
-}
-
-
-def migrate_freq(tree):
-    return migrate_arg(tree, FREQ_OPS, add_freq)
-
-
-TIMEZONE_MAPPING = {
-    'utc': 'UTC',
-    'ETC/GMT+3': 'Etc/GMT+3',
-}
-
-
-def change_timezone(tz_str):
-    tz_str = TIMEZONE_MAPPING.get(tz_str) or tz_str
-
-    if tz_str not in typing.get_args(TIMEZONES):
-        raise TypeError(f"'{tz_str}' not a valid {TIMEZONES}")
-
-    return tz_str
-
-
-TIMEZONE_OPS = {
-    'naive': ([2], ['tzone']),
-    'tzaware': ([2], ['tzone']),
-    'date': ([], ['tz']),
-    'now': ([], ['tz']),
-    'date-filter': ([], ['tzone']),
-    'block-staircase': ([], ['revision_tz']),
-}
-
-
-def migrate_timezone(tree):
-    return migrate_arg(tree, TIMEZONE_OPS, change_timezone)
-
-
-def migrate_fix_day_freq(tree):
-    if not isinstance(tree, list):
-        return tree
-
-    op = tree[0]
-    if op == 'freq':
-        newtree = [op]
-        newtree.append(PERIOD_CHANGES.get(tree[1], tree[1]))
-        return newtree
-
-    if op == 'nfreq':
-        newtree = [op]
-        newtree.append(tree[1])
-        newtree.append(PERIOD_CHANGES.get(tree[2], tree[2]))
-        return newtree
-
-    return [
-        migrate_fix_day_freq(item)
-        for item in tree
-    ]
-
-
 def extract_auto_options(tree):
     options = []
     optnames = ('fill', 'limit', 'weight')
@@ -891,6 +719,8 @@ class ThreadPoolExecutor:
         return False
 
 
+# migration
+
 def rewrite_trig_formula(tree):
     if not isinstance(tree, list):
         return tree
@@ -954,5 +784,177 @@ def rewrite_sub_formula(tree):
 
     return [
         rewrite_sub_formula(item)
+        for item in tree
+    ]
+
+
+def rename_operator(tree, oldname, newname):
+    if not isinstance(tree, list):
+        return tree
+
+    op = tree[0]
+    if op == Symbol(oldname):
+        tree[0] = Symbol(newname)
+
+    return [
+        rename_operator(item, oldname, newname)
+        for item in tree
+    ]
+
+
+def fix_holidays(tree):
+    if not isinstance(tree, list):
+        return tree
+
+    op = tree[0]
+    if op == 'holidays':
+        # insert positionnally fromdate and todate
+        # with reasonnable constants
+        tree.insert(2, [Symbol('date'), "2020-1-1"])
+        tree.insert(3, [Symbol('now')])
+
+    return [
+        fix_holidays(item)
+        for item in tree
+    ]
+
+
+def migrate_arg(tree, op_args_dct, change_arg_func):
+    if not isinstance(tree, list):
+        return tree
+
+    op = tree[0]
+    op_args = op_args_dct.get(op)
+    if op_args:
+        pos_args_len = len(
+            buildargs(tree[1:])[0]
+        )
+        pos_idxs, keys = op_args
+        for pos_idx in pos_idxs:
+            if pos_idx <= pos_args_len:
+                tree[pos_idx] = change_arg_func(tree[pos_idx])
+        for key in keys:
+            try:
+                karg_idx = tree.index(Keyword(key)) + 1
+            except ValueError:
+                pass
+            else:
+                tree[karg_idx] = change_arg_func(tree[karg_idx])
+    return [migrate_arg(item, op_args_dct, change_arg_func) for item in tree]
+
+
+PERIOD_CHANGES = {
+    'BH': 'bh',
+    'CBH': 'cbh',
+    'H':'h',
+    'T': 'min',
+    'S': 's',
+    'U': 'us',
+    'N': 'ns',
+    'M': 'ME',
+    'BM': 'BME',
+    'SM': 'SME',
+    'CBM': 'CBME',
+    'Q': 'QE',
+    'BQ': 'BQE',
+    'Y': 'YE',
+    'BY': 'BYE',
+    'AS':'YS',
+    'A': 'YE',
+    'BAS': 'BYS',
+    'BA': 'BYE',
+    'd': 'D',
+}
+
+
+FREQ_PTN = re.compile(r"""
+    ([0-9.]*) # Optional multiplier (int or float)
+    ([\w]+)   # Period offset
+    """, re.X)
+
+
+def add_freq(arg_str):
+    """Add a `Freq` object by using `freq` and `nfreq` functions
+    in case the string argument is valid.
+    """
+    if type(arg_str) is list:
+        return arg_str
+    res = FREQ_PTN.fullmatch(arg_str)
+    if res:
+        (multiplier_str, period) = res.groups()
+
+        period = PERIOD_CHANGES.get(period, period)
+
+        if period not in typing.get_args(PERIOD_OFFSETS):
+            raise TypeError(f"'{period}' not a valid {PERIOD_OFFSETS}")
+
+        freq = [Symbol("freq"), period]
+        if multiplier_str:
+            multiplier = float(multiplier_str)
+            if multiplier_str.isnumeric():
+                multiplier = int(multiplier_str)
+            freq = [Symbol("nfreq"), multiplier, period]
+        return freq
+    return arg_str
+
+
+FREQ_OPS = {
+    'upsample': ([2, 3], ['freq', 'origin_freq']),
+    'resample': ([2], ['freq', 'origin_freq']),
+    'constant': ([4], ['freq']),
+}
+
+
+def migrate_freq(tree):
+    return migrate_arg(tree, FREQ_OPS, add_freq)
+
+
+TIMEZONE_MAPPING = {
+    'utc': 'UTC',
+    'ETC/GMT+3': 'Etc/GMT+3',
+}
+
+
+def change_timezone(tz_str):
+    tz_str = TIMEZONE_MAPPING.get(tz_str) or tz_str
+
+    if tz_str not in typing.get_args(TIMEZONES):
+        raise TypeError(f"'{tz_str}' not a valid {TIMEZONES}")
+
+    return tz_str
+
+
+TIMEZONE_OPS = {
+    'naive': ([2], ['tzone']),
+    'tzaware': ([2], ['tzone']),
+    'date': ([], ['tz']),
+    'now': ([], ['tz']),
+    'date-filter': ([], ['tzone']),
+    'block-staircase': ([], ['revision_tz']),
+}
+
+
+def migrate_timezone(tree):
+    return migrate_arg(tree, TIMEZONE_OPS, change_timezone)
+
+
+def migrate_fix_day_freq(tree):
+    if not isinstance(tree, list):
+        return tree
+
+    op = tree[0]
+    if op == 'freq':
+        newtree = [op]
+        newtree.append(PERIOD_CHANGES.get(tree[1], tree[1]))
+        return newtree
+
+    if op == 'nfreq':
+        newtree = [op]
+        newtree.append(tree[1])
+        newtree.append(PERIOD_CHANGES.get(tree[2], tree[2]))
+        return newtree
+
+    return [
+        migrate_fix_day_freq(item)
         for item in tree
     ]
