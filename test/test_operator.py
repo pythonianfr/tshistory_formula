@@ -366,6 +366,102 @@ def test_tzaware(engine, tsh):
     assert meta['tzaware'] == True  # noqa
 
 
+def test_naive_and_tzaware(engine, tsh):
+    ts = pd.Series(
+        [1, 2, 3],
+        pd.date_range(
+            pd.Timestamp('2024-1-1'),
+            periods=3,
+            freq='h'
+        )
+    )
+    tsh.update(engine, ts, 'tznaive', 'Babar')
+
+    tsh.register_formula(
+        engine,
+        'naive2aware',
+        '(tzaware (series "tznaive") #:tzone "CET")'
+    )
+
+    tsh.register_formula(
+        engine,
+        'aware2naive',
+        '(naive (series "naive2aware") #:tzone "CET")'
+    )
+    ts = tsh.get(engine, 'aware2naive')
+    assert_df("""
+2024-01-01 00:00:00    1.0
+2024-01-01 01:00:00    2.0
+2024-01-01 02:00:00    3.0
+""", ts)
+
+    meta = tsh.internal_metadata(engine, 'aware2naive')
+    assert meta['tzaware'] == False  # noqa
+
+    tsh.register_formula(
+        engine,
+        'aware2naive2',
+        '(naive (tzaware (series "tznaive") #:tzone "CET") #:tzone "CET")'
+    )
+    ts = tsh.get(engine, 'aware2naive2')
+    assert_df("""
+2024-01-01 00:00:00    1.0
+2024-01-01 01:00:00    2.0
+2024-01-01 02:00:00    3.0
+""", ts)
+
+    meta = tsh.internal_metadata(engine, 'aware2naive2')
+    assert meta['tzaware'] == False  # noqa
+
+    # other way
+    ts = pd.Series(
+        [1, 2, 3],
+        pd.date_range(
+            pd.Timestamp('2024-1-1'),
+            periods=3,
+            freq='h',
+            tz="UTC"
+        )
+    )
+    tsh.update(engine, ts, 'tzaware', 'Babar')
+
+    tsh.register_formula(
+        engine,
+        'aware2naive',
+        '(naive (series "tzaware") #:tzone "CET")'
+    )
+
+    tsh.register_formula(
+        engine,
+        'naive2aware',
+        '(tzaware (series "aware2naive") #:tzone "CET")'
+    )
+    ts = tsh.get(engine, 'naive2aware')
+    assert_df("""
+2024-01-01 01:00:00+01:00    1.0
+2024-01-01 02:00:00+01:00    2.0
+2024-01-01 03:00:00+01:00    3.0
+""", ts)
+
+    meta = tsh.internal_metadata(engine, 'naive2aware')
+    assert meta['tzaware'] == True  # noqa
+
+    tsh.register_formula(
+        engine,
+        'naive2aware2',
+        '(tzaware (naive (series "tzaware") #:tzone "CET") #:tzone "CET")'
+    )
+    ts = tsh.get(engine, 'naive2aware2')
+    assert_df("""
+2024-01-01 01:00:00+01:00    1.0
+2024-01-01 02:00:00+01:00    2.0
+2024-01-01 03:00:00+01:00    3.0
+""", ts)
+
+    meta = tsh.internal_metadata(engine, 'naive2aware2')
+    assert meta['tzaware'] == True  # noqa
+
+
 def test_add(engine, tsh):
     tsh.register_formula(
         engine,

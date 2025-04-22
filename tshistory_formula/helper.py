@@ -729,6 +729,9 @@ def find_tz(self, cn, tree, tzmap, path=()):
     if metas:
         for name, metadata in metas(cn, self, tree).items():
             tzaware = metadata['tzaware'] if metadata else None
+            if ('naive' in path) and ('tzaware' in path):
+                tzmap[(name, path)] = path.index('naive') > path.index('tzaware')
+                break
             if 'naive' in path:
                 tzaware = False
             if 'tzaware' in path:
