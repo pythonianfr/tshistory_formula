@@ -5160,3 +5160,71 @@ def test_options_transmission(engine, tsh):
 2025-04-29    -3.0
 """, ts)
 
+    #asof
+    tsh.register_formula(
+        engine, 'fill-with-asof',
+        '(add (asof (date "2025-04-01") (series "series8" #:fill 0)) (naive (series "series7" #:fill 0) "UTC"))'
+    )
+
+    ts = tsh.get(
+        engine,
+        'fill-with-asof'
+    )
+
+    assert_df("""
+2025-04-23    1.0
+2025-04-24   -2.0
+2025-04-25    0.0
+2025-04-26   -3.0
+2025-04-27   -2.0
+2025-04-28    0.0
+2025-04-29   -3.0
+""", ts)
+
+    #slice
+    tsh.register_formula(
+        engine, 'fill-with-slice',
+        '(add (slice (series "series8" #:fill 0) #:fromdate (date "2025-04-20")) (naive (series "series7" #:fill 0) "UTC"))'
+    )
+
+    ts = tsh.get(
+        engine,
+        'fill-with-slice'
+    )
+
+    assert_df("""
+2025-04-20    0.0
+2025-04-21   -3.0
+2025-04-22   -2.0
+2025-04-23    1.0
+2025-04-24   -5.0
+2025-04-25    0.0
+2025-04-26   -3.0
+2025-04-27   -2.0
+2025-04-28    0.0
+2025-04-29   -3.0
+""", ts)
+
+    #time-shifted
+    tsh.register_formula(
+        engine, 'fill-with-timeshifted',
+        '(add (time-shifted (series "series8" #:fill 0) #:days 2) (naive (series "series7" #:fill 0) "UTC"))'
+    )
+
+    ts = tsh.get(
+        engine,
+        'fill-with-timeshifted'
+    )
+
+    assert_df("""
+2025-04-20    1.0
+2025-04-21   -2.0
+2025-04-22    0.0
+2025-04-23   -2.0
+2025-04-24   -4.0
+2025-04-25    0.0
+2025-04-26   -6.0
+2025-04-27   -2.0
+2025-04-28    0.0
+2025-04-29   -3.0
+""", ts)
