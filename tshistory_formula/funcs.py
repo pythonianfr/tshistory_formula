@@ -1075,6 +1075,7 @@ def _comparator(
     false_value,
     true_value,
 ):
+    options = series.options.copy()
     if isinstance(num_or_series, pd.Series):
         # pandas only allows comparison of series with the same index
         # hence we restrict each series to their commmon part
@@ -1100,7 +1101,9 @@ def _comparator(
     ts = pd.Series(index=mask.index, dtype='float64')
     ts[mask] = true_value
     ts[~mask] = false_value
-    return ts.dropna()
+    ts = ts.dropna()
+    ts.options = options
+    return ts
 
 
 @func('>')
