@@ -42,13 +42,24 @@ def group_add(*grouplist: Union[pd.DataFrame, pd.Series]) -> pd.DataFrame:
         df for df in grouplist
         if isinstance(df, pd.DataFrame)
     ]
+
+    if not len(dfs):
+        # by default, yield an empty timezone aware group
+        empty_df = pd.DataFrame(
+            [],
+            index=pd.DatetimeIndex(
+                [],
+                tz='UTC'
+            ),
+            dtype='float64',
+            columns=None
+        )
+        return empty_df
+
     tss = [
         ts for ts in grouplist
         if isinstance(ts, pd.Series)
     ]
-
-    if not len(dfs):
-        raise Exception('group-add: at least one argument must be a group')
 
     sumdf = sum(dfs)
     sumts = sum(tss)
