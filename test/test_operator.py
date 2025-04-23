@@ -25,6 +25,24 @@ from tshistory_formula.funcs import compute_bounds
 from tshistory_formula.vocabulary import CALCULATION_METHODS
 
 
+def test_simple_series_with_nans(engine, tsh):
+    ts = pd.Series(
+        [np.nan],
+        index=pd.date_range(
+            start=dt(2025, 1, 2),
+            end=dt(2025, 1, 2),
+            freq='D'
+        )
+    )
+    tsh.update(engine, ts, 'series-only-nans', 'test', keepnans=True)
+    tsh.register_formula(
+        engine,
+        'series-operator-only-nans',
+        '(series "series-only-nans")'
+    )
+    assert len(tsh.get(engine, 'series-operator-only-nans', keepnans=True)) == 0
+
+
 def test_naive_tzone(engine, tsh):
     x = pd.Series(
         [1, 2, 3],
