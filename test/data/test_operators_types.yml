@@ -12,6 +12,7 @@ output_spec:
     fill: Default[Union[Literal['ffill', 'bfill', 'ffill, bfill', 'bfill, ffill'],
       Number]=None]
     limit: Default[int=None]
+    keepnans: Default[bool=False]
     weight: Default[Number=None]
   findseries:
     return: List[Series]

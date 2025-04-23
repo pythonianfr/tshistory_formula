@@ -138,6 +138,7 @@ def series(__interpreter__,
            name: seriesname,
            fill: Union[FILL_METHODS, Number, NONETYPE]=None,
            limit: Optional[int]=None,
+           keepnans: Optional[bool]=False,
            weight: Optional[Number]=None) -> pd.Series:
     """
     Returns a time series by name.
@@ -148,6 +149,10 @@ def series(__interpreter__,
       series will be `add`ed with others; accepted values are
       `"ffill"` (forward-fill), `"bfill"` (backward-fill) or any
       floating value.
+
+    * `keepnans`: if true, the Nans from the series will be available
+      in the formula (for example to mask an underlying series in
+      a priority).
 
     * `limit`: if `fill` is specified, this is the maximum number of
       consecutive NaN values to forward/backward fill. In other words,
@@ -184,7 +189,8 @@ def series(__interpreter__,
     args = {
         'from_value_date': __from_value_date__,
         'to_value_date': __to_value_date__,
-        'revision_date': __revision_date__
+        'revision_date': __revision_date__,
+        'keepnans': keepnans,
     }
 
     ts = i.get(name, args)

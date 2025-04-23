@@ -38,9 +38,16 @@ def test_simple_series_with_nans(engine, tsh):
     tsh.register_formula(
         engine,
         'series-operator-only-nans',
-        '(series "series-only-nans")'
+        '(series "series-only-nans" #:keepnans #t)'
     )
-    assert len(tsh.get(engine, 'series-operator-only-nans', keepnans=True)) == 0
+
+    assert_df("""
+2025-01-02   NaN
+""", tsh.get(engine, 'series-operator-only-nans', keepnans=True))
+
+    assert len(
+        tsh.get(engine, 'series-operator-only-nans', keepnans=False)
+    ) == 0
 
 
 def test_naive_tzone(engine, tsh):

@@ -81,6 +81,7 @@ def test_function_types():
     types = function_types(f)
     assert types == {
         'fill': f'Default[Union[{typename(FILL_METHODS)}, Number]=None]',
+        'keepnans': 'Default[bool=False]',
         'limit': 'Default[int=None]',
         'name': 'seriesname',
         'return': 'Series',

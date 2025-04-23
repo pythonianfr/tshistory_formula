@@ -433,6 +433,7 @@ class timeseries(basets):
     @tx
     def get(self, cn, name, **kw):
         formula = self.formula(cn, name)
+        keepnans = kw.get('keepnans', False)
         if formula:
             if helper.has_loop(
                     cn,
@@ -456,6 +457,8 @@ class timeseries(basets):
                 compatible_date(tzaware, kw.get('from_value_date')):
                 compatible_date(tzaware, kw.get('to_value_date'))
             ]
+            if not keepnans:
+                ts = ts.dropna()
             ts.options = opts
             return ts
 
@@ -466,6 +469,8 @@ class timeseries(basets):
                 name, **kw
             )
 
+        if ts is not None and not keepnans:
+            ts = ts.dropna()
         return ts
 
     @tx

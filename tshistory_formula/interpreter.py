@@ -134,7 +134,9 @@ class FastStaircaseInterpreter(Interpreter):
     def get(self, name, getargs):
         if self.tsh.type(self.cn, name) == 'primary':
             # true enough, .staircase does not handle revision_date
+            # nor keepnans
             getargs.pop('revision_date')
+            getargs.pop('keepnans')
             return self.tsh.staircase(
                 self.cn, name, delta=self.delta, **getargs
             )
