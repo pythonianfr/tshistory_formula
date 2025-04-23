@@ -1141,6 +1141,36 @@ def test_priority_one_series(engine, tsh):
 """, a)
 
 
+def test_priority_with_nas(engine, tsh):
+    ts = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(
+            start=dt(2025, 1, 1),
+            end=dt(2025, 1, 3),
+            freq='D'
+        )
+    )
+    tsh.update(engine, ts, 'series-to-be-masked', 'test')
+    ts = pd.Series(
+        [np.nan],
+        index=pd.date_range(
+            start=dt(2025, 1, 2),
+            end=dt(2025, 1, 2),
+            freq='D'
+        )
+    )
+    tsh.update(engine, ts, 'series-mask', 'test', keepnans=True)
+
+    formula = '(priority (series "series-mask") (series "series-to-be-masked"))'
+    tsh.register_formula(engine, 'mask-with-na', formula)
+
+    assert_df("""
+2025-01-01    1.0
+2025-01-02    2.0
+2025-01-03    3.0
+""",  tsh.get(engine, 'mask-with-na'))
+
+
 def test_clip(engine, tsh):
     tsh.register_formula(
         engine,
