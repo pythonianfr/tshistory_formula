@@ -1186,14 +1186,22 @@ def test_priority_with_nas(engine, tsh):
     )
     tsh.update(engine, ts, 'series-mask', 'test', keepnans=True)
 
-    formula = '(priority (series "series-mask") (series "series-to-be-masked"))'
+    formula = ('(priority '
+               '(series "series-mask" #:keepnans #t) '
+               '(series "series-to-be-masked"))'
+   )
     tsh.register_formula(engine, 'mask-with-na', formula)
 
     assert_df("""
 2025-01-01    1.0
-2025-01-02    2.0
 2025-01-03    3.0
-""",  tsh.get(engine, 'mask-with-na'))
+""", tsh.get(engine, 'mask-with-na'))
+
+    assert_df("""
+2025-01-01    1.0
+2025-01-02    NaN
+2025-01-03    3.0
+""", tsh.get(engine, 'mask-with-na', keepnans=True))
 
 
 def test_clip(engine, tsh):
