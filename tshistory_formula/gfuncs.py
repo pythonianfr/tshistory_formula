@@ -2,6 +2,8 @@ from typing import Union
 
 import pandas as pd
 
+from tshistory_formula.funcs import _fill
+from tshistory_formula.types import Bind
 from tshistory_formula.registry import (
     gfunc,
     gfinder,
@@ -71,3 +73,55 @@ def group_add(*grouplist: Union[pd.DataFrame, pd.Series]) -> pd.DataFrame:
 def group_finder(cn, tsh, stree):
     name = stree[1]
     return {name: stree}
+
+
+@gfunc('bind')
+def bind(scenario_name: str, series: pd.Series) -> Bind:
+    """
+    Build a bind from a scenario name and a series.
+    """
+    return Bind(scenario_name, series)
+
+
+@gfunc('group-from-series')
+def group_from_series(*bindlist: Bind) -> pd.DataFrame:
+    """
+    Group construction from a list of bind.
+
+    Example: `(group-from-series (bind "scenario1" (series "series1")) (bind "scenario2" (series "series2")) (bind "scenario3" (series "series3")))`
+
+    """
+    dfs = []
+    opts = {}
+
+    # join everything
+    for member in bindlist:
+        ts = member.get_ts()
+        if ts.options.get('fill') is None and not len(ts):
+            # no data and no fill
+            continue
+
+        opts[ts.name] = ts.options
+        dfs.append(ts)
+
+    if not len(dfs):
+        # by default, yield an empty timezone aware group
+        empty_df = pd.DataFrame(
+            [],
+            index=pd.DatetimeIndex(
+                [],
+                tz='UTC'
+            ),
+            dtype='float64',
+            columns=None
+        )
+        return empty_df
+
+    df = pd.concat(dfs, axis=1, join='outer')
+
+    # apply the filling rules to series
+    for name, fillopt in opts.items():
+        if fillopt:
+            _fill(df, name, fillopt)
+
+    return df

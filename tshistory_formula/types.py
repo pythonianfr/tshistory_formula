@@ -43,6 +43,19 @@ class Freq:
 FreqType = typing.Union[Freq, str]
 
 
+@dataclass
+class Bind:
+    scenario_name: str
+    series: pd.Series
+
+    def get_ts(self):
+        series = self.series
+        opts = series.options
+        ts = series.rename(self.scenario_name)
+        ts.options = opts
+        return ts
+
+
 _CFOLDENV = Env({
     '+': lambda a, b: a + b,
     '*': lambda a, b: a * b,
@@ -55,6 +68,7 @@ PROPOSAL_TYPES = (
     search.Source,
     search.MetaKey,
     BasketName,
+    Bind,
     cronrule
 )
 
