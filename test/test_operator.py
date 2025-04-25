@@ -390,6 +390,29 @@ def test_tzaware(engine, tsh):
     meta = tsh.internal_metadata(engine, 'naive2aware')
     assert meta['tzaware'] == True  # noqa
 
+    # use it in a larger formula
+    ts = pd.Series(
+            [1, 2, 3],
+            pd.date_range(
+                pd.Timestamp('2024-1-1', tz='CET'),
+                periods=3,
+                freq='h'
+            )
+        )
+    tsh.update(engine, ts, 'localized-tz-aware', 'Babar')
+    tsh.register_formula(
+        engine,
+        'sum-with-tzaware-operator',
+        '(add (series "naive2aware") (series "localized-tz-aware")) '
+    )
+
+    ts = tsh.get(engine, 'sum-with-tzaware-operator')
+    assert_df("""
+2023-12-31 23:00:00+00:00    2.0
+2024-01-01 00:00:00+00:00    4.0
+2024-01-01 01:00:00+00:00    6.0
+""", ts)
+
 
 def test_naive_and_tzaware(engine, tsh):
     ts = pd.Series(
