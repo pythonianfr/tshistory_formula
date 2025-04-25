@@ -527,7 +527,7 @@ def tzaware(series: pd.Series, tzone: TIMEZONES) -> pd.Series:
     if tzaware_series(series):
         return series
 
-    series.index = series.index.tz_localize(tzone)
+    series.index = series.index.tz_localize(tzone).tz_convert('UTC')
     return dedupe(series)
 
 

@@ -382,9 +382,9 @@ def test_tzaware(engine, tsh):
     )
     ts = tsh.get(engine, 'naive2aware')
     assert_df("""
-2024-01-01 00:00:00+01:00    1.0
-2024-01-01 01:00:00+01:00    2.0
-2024-01-01 02:00:00+01:00    3.0
+2023-12-31 23:00:00+00:00    1.0
+2024-01-01 00:00:00+00:00    2.0
+2024-01-01 01:00:00+00:00    3.0
 """, ts)
 
     meta = tsh.internal_metadata(engine, 'naive2aware')
@@ -486,9 +486,9 @@ def test_naive_and_tzaware(engine, tsh):
     )
     ts = tsh.get(engine, 'naive2aware')
     assert_df("""
-2024-01-01 01:00:00+01:00    1.0
-2024-01-01 02:00:00+01:00    2.0
-2024-01-01 03:00:00+01:00    3.0
+2024-01-01 00:00:00+00:00    1.0
+2024-01-01 01:00:00+00:00    2.0
+2024-01-01 02:00:00+00:00    3.0
 """, ts)
 
     meta = tsh.internal_metadata(engine, 'naive2aware')
@@ -501,9 +501,9 @@ def test_naive_and_tzaware(engine, tsh):
     )
     ts = tsh.get(engine, 'naive2aware2')
     assert_df("""
-2024-01-01 01:00:00+01:00    1.0
-2024-01-01 02:00:00+01:00    2.0
-2024-01-01 03:00:00+01:00    3.0
+2024-01-01 00:00:00+00:00    1.0
+2024-01-01 01:00:00+00:00    2.0
+2024-01-01 02:00:00+00:00    3.0
 """, ts)
 
     meta = tsh.internal_metadata(engine, 'naive2aware2')
