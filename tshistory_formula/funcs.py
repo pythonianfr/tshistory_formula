@@ -265,11 +265,9 @@ def findnames(__interpreter__,
     # Since the search expressions in .find and findseries can be
     # different, we need the full help of the interpreter there.
     i = __interpreter__
-    names = search.local_search(
+    names = i.tsh.find(
         i.cn,
-        i.tsh.find,
-        q.expr(),
-        'local'
+        q
     )
     if i.tsh.othersources is not None:
         other = i.tsh.othersources.find(q.expr())
