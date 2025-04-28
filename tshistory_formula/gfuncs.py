@@ -10,7 +10,7 @@ from tshistory_formula.registry import (
 )
 
 
-@gfunc('group')
+@gfunc('group', auto=True)
 def group(__interpreter__, name: str)-> pd.DataFrame:
     """
     The `group` operator retrieves a group (from local storage,

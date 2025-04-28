@@ -397,3 +397,50 @@ def bindings_for(self, name):  # noqa
     if source is None:
         return None
     return source.tsa.bindings_for(name)
+
+
+@extend(mainsource)
+def group_eval_formula(self,
+                 formula: str,
+                 revision_date: pd.Timestamp=None,
+                 from_value_date: pd.Timestamp=None,
+                 to_value_date: pd.Timestamp=None,
+                 tz=None) -> pd.Series:
+    """Execute a group formula on the spot.
+
+    .. highlight:: python
+    .. code-block:: python
+
+      tsa.group_eval_formula('(group-add (group "group1") (group "group2"))')
+    """
+
+    # basic syntax check
+    tree = parse(formula)
+
+    with self.engine.begin() as cn:
+        # type checking
+        i = interpreter.GroupInterpreter(
+            cn,
+            self,
+            {
+                'revision_date': revision_date,
+                'from_value_date': from_value_date,
+                'to_value_date': to_value_date
+            }
+        )
+        rtype = types.typecheck(tree, env=i.env)
+        if not types.sametype(rtype, pd.DataFrame):
+            # this normalizes the formula
+            formula = serialize(tree)
+            raise TypeError(
+                f'formula `{formula}` must return a `Group`, not `{rtype.__name__}`'
+            )
+
+        return self.tsh.group_eval_formula(
+            cn,
+            formula,
+            revision_date=revision_date,
+            from_value_date=from_value_date,
+            to_value_date=to_value_date,
+            tz=tz,
+        )

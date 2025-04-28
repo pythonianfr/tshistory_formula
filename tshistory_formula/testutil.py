@@ -68,3 +68,7 @@ class with_http_bridge(basebridge):
             callback=write_request_bridge(wsgitester.put)
         )
 
+        resp.add_callback(
+            responses.POST, uri + '/group/eval_formula',
+            callback=write_request_bridge(wsgitester.post)
+        )

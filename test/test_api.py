@@ -1007,6 +1007,87 @@ def test_no_group(tsa):
     # didn't crash ;)
 
 
+def test_group_eval_formula(tsx):
+    df = gengroup(
+        n_scenarios=3,
+        from_date=datetime(2025, 5, 1),
+        length=5,
+        freq='D',
+        seed=2
+    )
+
+    df.columns = ['a', 'b', 'c']
+
+    tsx.group_update('group1', df, 'test')
+
+    df = tsx.group_eval_formula(
+        '(group-add (group "group1") (group "group1"))',
+        from_value_date=pd.Timestamp('2025-5-2', tz='utc'),
+        to_value_date=pd.Timestamp('2025-5-10', tz='utc')
+    )
+    assert_df("""
+               a     b     c
+2025-05-02   6.0   8.0  10.0
+2025-05-03   8.0  10.0  12.0
+2025-05-04  10.0  12.0  14.0
+2025-05-05  12.0  14.0  16.0
+""", df)
+
+    #naive
+    df = tsx.group_eval_formula(
+        '(group-add (group "group1") (group "group1"))',
+        tz='CET'
+    )
+    assert_df("""
+               a     b     c
+2025-05-01   4.0   6.0   8.0
+2025-05-02   6.0   8.0  10.0
+2025-05-03   8.0  10.0  12.0
+2025-05-04  10.0  12.0  14.0
+2025-05-05  12.0  14.0  16.0
+""", df)
+
+    #tzaware
+    df = gengroup(
+        n_scenarios=3,
+        from_date=pd.Timestamp('2025-5-1', tz='utc'),
+        length=5,
+        freq='h',
+        seed=2
+    )
+
+    df.columns = ['a', 'b', 'c']
+
+    tsx.group_update('group-hourly', df, 'test')
+
+    df = tsx.group_eval_formula(
+        '(group-add (group "group-hourly") (group "group-hourly"))',
+        tz='CET'
+    )
+    assert_df("""
+                              a     b     c
+2025-05-01 02:00:00+02:00   4.0   6.0   8.0
+2025-05-01 03:00:00+02:00   6.0   8.0  10.0
+2025-05-01 04:00:00+02:00   8.0  10.0  12.0
+2025-05-01 05:00:00+02:00  10.0  12.0  14.0
+2025-05-01 06:00:00+02:00  12.0  14.0  16.0
+""", df)
+
+    #bogus
+    with pytest.raises(SyntaxError):
+        tsx.group_eval_formula(
+            '(group-add (")'
+        )
+
+    with pytest.raises(TypeError) as err:
+        tsx.group_eval_formula(
+            '(group-add (fake-operator "test-eval") (group "kikou"))'
+        )
+    assert err.value.args[0] == (
+        'expression `(fake-operator "test-eval")` '
+        'refers to unknown operator `fake-operator`'
+    )
+
 def test_group_bound_formula(tsa):
     temp = pd.Series(
         [12, 13, 14],

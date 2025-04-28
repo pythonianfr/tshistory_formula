@@ -179,6 +179,10 @@ class GroupInterpreter(Interpreter):
             GroupInterpreter.FUNCS = dict(registry.FUNCS, **registry.GFUNCS)
         return GroupInterpreter.FUNCS
 
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.auto = set(registry.AUTO.values()).union(set(registry.GAUTO.values()))
+
 
 class BridgeInterpreter(Interpreter):
     """Intepreter that creates a bridge between the group world and the

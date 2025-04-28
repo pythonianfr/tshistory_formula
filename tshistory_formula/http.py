@@ -11,9 +11,10 @@ from tshistory.util import (
     series_metadata,
     tzaware_series
 )
-from tshistory.codecs import unpack_series
+from tshistory.codecs import unpack_group, unpack_series
 from tshistory.http.client import httpclient, unwraperror
 from tshistory.http.util import (
+    group_response,
     onerror,
     required_roles,
     series_response,
@@ -139,6 +140,30 @@ groupformula.add_argument(
     type=inputs.boolean,
     default=False,
     help='return the recursively expanded formula'
+)
+
+group_eval_formula = reqparse.RequestParser()
+group_eval_formula.add_argument(
+    'text',
+    type=str,
+    required=True,
+    help='formula to evaluate'
+)
+group_eval_formula.add_argument(
+    'revision_date', type=utcdt, default=None,
+    help='revision date can be forced'
+)
+group_eval_formula.add_argument(
+    'from_value_date', type=utcdt, default=None
+)
+group_eval_formula.add_argument(
+    'to_value_date', type=utcdt, default=None
+)
+group_eval_formula.add_argument(
+    'tz', type=str, default=None
+)
+group_eval_formula.add_argument(
+    'format', type=str, choices=('json', 'tshpack'), default='json'
 )
 
 boundformula = groupbase.copy()
@@ -395,6 +420,44 @@ class formula_httpapi(httpapi):
 
                 return '', 200 if exists else 201
 
+        @nsg.route('/eval_formula')
+        class group_eval_formula_(Resource):
+
+            @api.doc(responses={200: 'Got content', 400: 'Invalid formula'})
+            @api.expect(group_eval_formula)
+            @onerror
+            @required_roles('admin', 'rw', 'ro')
+            def post(self):
+                """evaluate a formula expression
+
+                You can test a formula expression on the fly without
+                persisting it through the "register_group_formula" API call.
+
+                It can be useful for test purposes or in some other
+                circumstances (e.g. dashboards might find this
+                useful).
+
+                """
+                args = group_eval_formula.parse_args()
+                try:
+                    df = tsa.group_eval_formula(
+                        args.text,
+                        revision_date=args.revision_date,
+                        from_value_date=args.from_value_date,
+                        to_value_date=args.to_value_date,
+                        tz=args.tz
+                    )
+                except SyntaxError as err:
+                    return f'syn:{err}', 400
+                except TypeError as err:
+                    return f'typ:{err}', 400
+
+                return group_response(
+                    args.format,
+                    df,
+                    200
+                )
+
             @nsg.route('/boundformula')
             class bound_formula(Resource):
 
@@ -626,5 +689,38 @@ class formula_httpclient(httpclient):
 
         if res.status_code == 404:
             return None
+
+        return res
+
+    @unwraperror
+    def group_eval_formula(self, formula,
+                     revision_date=None,
+                     from_value_date=None,
+                     to_value_date=None,
+                     tz=None):
+        query = {
+            'text': formula,
+            'revision_date': strft(revision_date) if revision_date else None,
+            'from_value_date': strft(from_value_date) if from_value_date else None,
+            'to_value_date': strft(to_value_date) if to_value_date else None,
+            'tz': tz,
+            'format': 'tshpack'
+        }
+        res = self.session.post(
+            f'{self.uri}/group/eval_formula',
+            data=query
+        )
+        if res.status_code == 200:
+            df = unpack_group(res.content)
+            if tz and tzaware_series(df):
+                df = df.tz_convert(tz)
+            return df
+
+        if res.status_code == 400:
+            msg = res.json()
+            if msg.startswith('syn:'):
+                raise SyntaxError(msg[4:])
+            elif msg.startswith('typ:'):
+                raise TypeError(msg[4:])
 
         return res

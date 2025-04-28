@@ -143,10 +143,9 @@ def gfunc(name, auto=False):
     def decorator(func):
         assert_typed(func)
         GFUNCS[name] = func
+        if auto:
+            GAUTO[name] = func
         return func
-
-    if auto:
-        GAUTO[name] = func
 
     return decorator
 

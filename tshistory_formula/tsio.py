@@ -1131,6 +1131,17 @@ class timeseries(basets):
             )
         return history
 
+    @tx
+    def group_eval_formula(self, cn, formula, tz=None, **kw):
+        i = kw.get('__interpreter__') or interpreter.GroupInterpreter(cn, self, kw)
+        df = self.eval_formula(
+            cn, formula, tz, **kw,
+            __interpreter__=i
+        )
+        if tz and tzaware_series(df):
+            df = df.tz_convert(tz)
+        return df
+
     # group formula binding
 
     @tx
