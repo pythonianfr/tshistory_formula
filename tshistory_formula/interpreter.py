@@ -2,6 +2,7 @@ import json
 import inspect
 from functools import partial
 from datetime import datetime
+from itertools import chain
 
 import numpy as np
 import pytz
@@ -29,6 +30,19 @@ def functypes(all=False):
 
 def jsontypes(all=False):
     return json.dumps(functypes(all=all))
+
+
+
+def gfunctypes(all=False):
+    return {
+        name: types.function_types(func)
+        for name, func in chain(registry.FUNCS.items(), registry.GFUNCS.items())
+        if all or func.__doc__ is not None
+    }
+
+
+def gjsontypes(all=False):
+    return json.dumps(gfunctypes(all=all))
 
 
 class Interpreter:
