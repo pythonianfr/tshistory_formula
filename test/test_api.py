@@ -1183,6 +1183,15 @@ def test_group_bound_formula(tsa):
     assert not tsa.group_exists('hijacking2')
     assert tsa.group_metadata('hijacking2') is None
 
+    # infos
+    info = tsa.info()
+    assert 'local' in info
+    assert 'remote' in info
+    linfo = info['local']
+    assert 'bound_groups' in linfo
+    assert 'formula_groups' in linfo
+    assert 'formula_series' in linfo
+
 
 def test_more_group_errors(tsx):
     tsx.delete('toto')

@@ -128,6 +128,29 @@ class timeseries(basets):
         return nodes
 
     @tx
+    def info(self, cn):
+        info = super().info(cn)
+        info.update(
+            {
+                'formula_series': cn.execute(
+                    f'select count(id) from "{self.namespace}".registry '
+                    f'where internal_metadata->\'formula\' is not null'
+                ).scalar(),
+                'formula_groups': cn.execute(
+                    f'select count(id) from "{self.namespace}".group_registry '
+                    f'where internal_metadata->\'formula\' is not null'
+                ).scalar(),
+                'bound_groups': cn.execute(
+                    f'select count(gr.id) '
+                    f'  from "{self.namespace}".group_registry as gr, '
+                    f'        "{self.namespace}".group_binding as gb '
+                    f'where gb.groupid = gr.id'
+                ).scalar(),
+            }
+        )
+        return info
+
+    @tx
     def register_dependents(self, cn, name, tree):
         cn.execute(
             f'delete from "{self.namespace}".dependent where '
