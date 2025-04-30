@@ -942,7 +942,7 @@ def test_group_formula(tsa):
     # start to test
 
     formula = (
-        '(group-add '
+        '(group-add-series '
         '  (group "groupa") '
         '  (* -1 '
         '    (series "plain_tsa")))'
@@ -965,7 +965,7 @@ def test_group_formula(tsa):
     assert tsa.group_metadata('difference') == {}
     assert tsa.group_internal_metadata('difference') == {
         'tzaware': False,
-        'formula': '(group-add (group "groupa") (* -1 (series "plain_tsa")))',
+        'formula': '(group-add-series (group "groupa") (* -1 (series "plain_tsa")))',
         'index_type': 'datetime64[ns]',
         'value_type': 'float64',
         'index_dtype': '<M8[ns]',
@@ -976,7 +976,7 @@ def test_group_formula(tsa):
     # we add the same series that was substracted,
     # hence we msut retrieve the original dataframe group1
     formula = (
-        '(group-add '
+        '(group-add-series '
         '  (group "difference")'
         '  (series "plain_tsa"))'
     )
@@ -995,7 +995,7 @@ def test_group_formula(tsa):
     tsa.group_rename('groupa', 'groupb')
 
     gf = tsa.group_formula('roundtripeda')
-    assert gf == '(group-add (group "difference2") (series "plain_tsa"))'
+    assert gf == '(group-add-series (group "difference2") (series "plain_tsa"))'
 
     df_roundtrip = tsa.group_get('roundtripeda')
     df_original = tsa.group_get('groupb')

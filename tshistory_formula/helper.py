@@ -20,6 +20,7 @@ from tshistory import search
 
 from tshistory_formula.registry import (
     FUNCS,
+    GFUNCS,
     METAS,
     ARGSCOPES,
     AUTO,
@@ -954,5 +955,43 @@ def migrate_fix_day_freq(tree):
 
     return [
         migrate_fix_day_freq(item)
+        for item in tree
+    ]
+
+
+def rewrite_groupadd_formula(tree):
+    if not isinstance(tree, list):
+        return tree
+
+    op = tree[0]
+    if op == 'group-add':
+        newtree = None
+        group_element = []
+        series_element = []
+        posargs, _kwargs = buildargs(tree[1:])
+        for element in posargs:
+            if element[0] in GFUNCS:
+                group_element.append(element)
+            # check if we identify a function from series spec
+            if element[0] in FUNCS:
+                series_element.append(element)
+        if len(series_element):
+            if len(group_element) == 1:
+                group_part = group_element[0]
+            else:
+                group_part = [Symbol('group-add'), *group_element]
+            if len(series_element) == 1:
+                series_part = series_element[0]
+            else:
+                series_part = [Symbol('add'), *series_element]
+
+            newtree = [
+                    Symbol('group-add-series'), group_part, series_part
+            ]
+            return newtree
+        return tree
+
+    return [
+        rewrite_groupadd_formula(item)
         for item in tree
     ]

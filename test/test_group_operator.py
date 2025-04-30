@@ -234,3 +234,63 @@ def test_group_from_series(engine, tsh):
 2025-04-30 00:00:00        0.0     NaN
 2025-05-01 00:00:00       -3.0     NaN
 """, df)
+
+
+def test_groupaddseries(engine, tsh):
+    df1 = gengroup(
+        n_scenarios=3,
+        from_date=dt(2025, 5, 1),
+        length=5,
+        freq='D',
+        seed=2
+    )
+
+    colnames = ['a', 'b', 'c']
+    df1.columns = colnames
+
+    idate = utcdt(2025, 5, 3)
+
+    tsh.group_replace(engine, df1*2, 'group2', 'test', insertion_date=idate)
+
+    ts1 = pd.Series(
+        [1.0, -2, 0, -3, -2, 0, -3],
+        index=pd.date_range(
+            start=pd.Timestamp('2025-04-25'),
+            freq='D',
+            periods=7
+        )
+    )
+    tsh.update(engine, ts1, 'series1', 'test')
+
+    tsh.register_group_formula(
+        engine,
+        'group-add-series',
+        '''(group-add-series (group "group2") (series "series1"))'''
+    )
+
+    df = tsh.group_get(engine, 'group-add-series')
+
+    assert_df("""
+              a    b    c
+2025-05-01  1.0  3.0  5.0
+""", df)
+
+    # with fill option
+    tsh.register_group_formula(
+        engine,
+        'group-add-series',
+        '''(group-add-series (group "group2") (series "series1" #:fill 0))'''
+    )
+
+    df = tsh.group_get(engine, 'group-add-series')
+
+    assert_df("""
+               a     b     c
+2025-05-01   1.0   3.0   5.0
+2025-05-02   6.0   8.0  10.0
+2025-05-03   8.0  10.0  12.0
+2025-05-04  10.0  12.0  14.0
+2025-05-05  12.0  14.0  16.0
+""", df)
+
+

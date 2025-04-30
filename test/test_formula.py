@@ -41,6 +41,7 @@ from tshistory_formula.helper import (
     name_of_expr,
     rename_operator,
     find_autos,
+    rewrite_groupadd_formula,
     rewrite_sub_formula,
     rewrite_trig_formula,
     scan_descendant_nodes,
@@ -3025,11 +3026,11 @@ def test_group_formula(engine, tsh):
     )
     tsh.update(engine, plain_ts, 'plain_ts', 'Babar')
 
-    # group-add is polymorphic
+    # group-add-series
     tsh.register_group_formula(
         engine,
         'mixed_sum',
-        '(group-add (group "group1") (* -1 (series "plain_ts")))'
+        '(group-add-series (group "group1") (* -1 (series "plain_ts")))'
     )
 
     df = tsh.group_get(engine, 'mixed_sum')
@@ -3238,7 +3239,7 @@ def test_group_and_series_formula_history(engine, tsh):
             insertion_date=idate + timedelta(hours=2)
         )
 
-        formula = '(group-add (group "group_c") (series "series_with_group"))'
+        formula = '(group-add-series (group "group_c") (series "series_with_group"))'
         tsh.register_group_formula(
             engine,
             'history_mixte',
@@ -3939,3 +3940,40 @@ TZ_UPDATED_FORMS = [
 def test_migrate_timezone():
     for form, updated_form in zip(TZ_FORMS, TZ_UPDATED_FORMS):
         assert lisp.serialize(migrate_timezone(lisp.parse(form))) == updated_form
+
+
+def test_groupadd_rewrite():
+    # no rewriting
+    tree0 = lisp.parse('''(group-add (group "group1") (group "group2"))''')
+    tree1 = rewrite_groupadd_formula(tree0)
+
+    assert tree1 == tree0
+
+    tree0 = lisp.parse('(group "group1")')
+    tree1 = rewrite_groupadd_formula(tree0)
+
+    assert tree1 == tree0
+
+    # rewrite first element
+    tree0 = lisp.parse('''(group-add (series "series1") (group "group2"))''')
+    tree1 = rewrite_groupadd_formula(tree0)
+
+    assert lisp.serialize(tree1) == '''(group-add-series (group "group2") (series "series1"))'''
+
+    # rewrite second element
+    tree0 = lisp.parse('''(group-add (group "group2") (series "series1"))''')
+    tree1 = rewrite_groupadd_formula(tree0)
+
+    assert lisp.serialize(tree1) ==  '''(group-add-series (group "group2") (series "series1"))'''
+
+    # rewrite second element
+    tree0 = lisp.parse('''(group-add (group "group2") (+ 1 (series "series1")))''')
+    tree1 = rewrite_groupadd_formula(tree0)
+
+    assert lisp.serialize(tree1) == '(group-add-series (group "group2") (+ 1 (series "series1")))'
+
+    # with more than two elements
+    tree0 = lisp.parse('''(group-add (series "series1") (group "group2") (+ 1 (series "series1"))(group "group1"))''')
+    tree1 = rewrite_groupadd_formula(tree0)
+
+    assert lisp.serialize(tree1) == '(group-add-series (group-add (group "group2") (group "group1")) (add (series "series1") (+ 1 (series "series1"))))'

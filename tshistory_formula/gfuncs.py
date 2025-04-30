@@ -1,5 +1,4 @@
-from typing import Union
-
+import uuid
 import pandas as pd
 
 from tshistory_formula.funcs import _fill
@@ -32,20 +31,15 @@ def group(__interpreter__, name: str)-> pd.DataFrame:
 
 
 @gfunc('group-add')
-def group_add(*grouplist: Union[pd.DataFrame, pd.Series]) -> pd.DataFrame:
+def group_add(*grouplist: pd.DataFrame) -> pd.DataFrame:
     """
     Linear combination of two or more groups. Takes a variable number
-    of groups and series as input. At least one group must be supplied.
+    of groups as input.
 
     Example: `(group-add (group "wallonie") (group "bruxelles") (group "flandres"))`
 
     """
-    dfs = [
-        df for df in grouplist
-        if isinstance(df, pd.DataFrame)
-    ]
-
-    if not len(dfs):
+    if not grouplist:
         # by default, yield an empty timezone aware group
         empty_df = pd.DataFrame(
             [],
@@ -58,15 +52,44 @@ def group_add(*grouplist: Union[pd.DataFrame, pd.Series]) -> pd.DataFrame:
         )
         return empty_df
 
-    tss = [
-        ts for ts in grouplist
-        if isinstance(ts, pd.Series)
-    ]
+    sumdf = sum(grouplist)
 
-    sumdf = sum(dfs)
-    sumts = sum(tss)
+    return sumdf.dropna()
 
-    return sumdf.add(sumts, axis=0).dropna()
+
+@gfunc('group-add-series')
+def group_add_series(group: pd.DataFrame,
+                     series: pd.Series) -> pd.DataFrame:
+    """
+    Linear combination of a group and a series. Takes one group
+    and one series as input. The series will be added to each scenario of the group.
+
+    Example: `(group-add-series (group "belgium_temperature_kelvin") (series "kelvin_to_degree"))`
+
+    """
+
+    if not len(group):
+        # by default, yield an empty timezone aware group
+        empty_df = pd.DataFrame(
+            [],
+            index=pd.DatetimeIndex(
+                [],
+                tz='UTC'
+            ),
+            dtype='float64',
+            columns=None
+        )
+        return empty_df
+
+    fillopt = series.options
+    if 'fill' in fillopt:
+        if fillopt['fill'] is not None:
+            seriesname = str(uuid.uuid4())
+            df = pd.concat([group, series.to_frame(seriesname)], axis=1, join='outer')
+            _fill(df, seriesname, fillopt)
+            return group.add(df[seriesname], axis=0).dropna()
+
+    return group.add(series, axis=0).dropna()
 
 
 @gfinder('group')

@@ -19,6 +19,7 @@ from tshistory_formula.helper import (
     migrate_timezone,
     migrate_fix_day_freq,
     rename_operator,
+    rewrite_groupadd_formula,
     rewrite_sub_formula,
     rewrite_trig_formula
 )
@@ -552,3 +553,36 @@ def migrate_sub_formulas(engine, namespace, interactive):
 
     if series:
         reorganise_sub_series(series)
+
+
+def migrate_groupadd_formulas(engine, namespace, interactive):
+    print('migrate group-add formulas')
+    from tshistory_formula.tsio import timeseries
+    tsh = timeseries(namespace)  # noqa: F841
+
+    def reorganise_groupadd_groups(groups):
+        rewritten = []
+        print(f'Transforming {len(groups)} groups.')
+        for idx, (name, internal_metadata) in enumerate(groups):
+            tree0 = parse(internal_metadata['formula'])
+            tree1 = rewrite_groupadd_formula(tree0)
+            internal_metadata['formula'] = serialize(tree1)
+            rewritten.append(
+                {'name': name, 'internal_metadata': json.dumps(internal_metadata)}
+            )
+
+        with engine.begin() as cn:
+            cn.execute(
+                f'update "{namespace}".registry '
+                f'set internal_metadata = %(internal_metadata)s '
+                f'where name = %(name)s',
+                rewritten
+            )
+
+    groups = engine.execute(
+        f'select name, internal_metadata from "{namespace}".group_registry '
+        'where internal_metadata->\'formula\' is not null'
+    ).fetchall()
+
+    if groups:
+        reorganise_groupadd_groups(groups)
