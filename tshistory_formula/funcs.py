@@ -704,7 +704,7 @@ def date_filter(series: pd.Series,
         data=0
     )
 
-    series = series.loc[np.isin(series.index, ts_valid_datetimes.index)]
+    series = series[series.index.isin(ts_valid_datetimes.index)]
     if tzaware_series(series):
         series.index = series.index.tz_convert('UTC')
     series.options = options
