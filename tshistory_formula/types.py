@@ -18,6 +18,7 @@ from tshistory_formula.registry import FUNCS
 from tshistory_formula.helper import (
     BasketName,
     cronrule,
+    groupname,
     seriesname,
 )
 from tshistory_formula.vocabulary import PERIOD_OFFSETS
@@ -64,6 +65,7 @@ _CFOLDENV = Env({
 
 
 PROPOSAL_TYPES = (
+    groupname,
     seriesname,
     search.Source,
     search.MetaKey,

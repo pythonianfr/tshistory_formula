@@ -39,6 +39,10 @@ class BasketName(str):
     pass
 
 
+class groupname(str):
+    pass
+
+
 class cronrule(str):
     pass
 

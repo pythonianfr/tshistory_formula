@@ -2,6 +2,7 @@ import uuid
 import pandas as pd
 
 from tshistory_formula.funcs import _fill
+from tshistory_formula.helper import groupname
 from tshistory_formula.types import Bind
 from tshistory_formula.registry import (
     gfunc,
@@ -10,7 +11,7 @@ from tshistory_formula.registry import (
 
 
 @gfunc('group', auto=True)
-def group(__interpreter__, name: str)-> pd.DataFrame:
+def group(__interpreter__, name: groupname)-> pd.DataFrame:
     """
     The `group` operator retrieves a group (from local storage,
     formula or bound formula).
