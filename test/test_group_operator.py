@@ -8,6 +8,9 @@ from tshistory.testutil import (
 
 
 def test_group_add(engine, tsh):
+    for name in ('group1', 'group2', 'group3'):
+        tsh.group_delete(engine, name)
+
     df1 = gengroup(
         n_scenarios=3,
         from_date=dt(2025, 5, 1),
