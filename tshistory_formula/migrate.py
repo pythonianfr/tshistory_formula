@@ -94,7 +94,7 @@ create index if not exists "ix_{ns}_group_series_map_groupid" on "{ns}".group_se
 create index if not exists "ix_{ns}_group_series_map_seriesid" on "{ns}".group_series_map (seriesid);
 """
     with engine.begin() as cn:
-        cn.execute(newtables, binary=False)
+        cn.execute(newtables, _binary=False)
 
     with engine.begin() as cn:
         sql = (
