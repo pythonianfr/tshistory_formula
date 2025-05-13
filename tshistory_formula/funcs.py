@@ -2124,8 +2124,8 @@ def integration(
         __from_value_date__,
         __to_value_date__,
         __revision_date__,
-        stock_name: str,
-        flow_name: str,
+        stock_name: seriesname,
+        flow_name: seriesname,
         fill: Optional[bool]=False) -> pd.Series:
     """
     Integrate a given flow series to the last known value of a stock series.

@@ -445,8 +445,8 @@ output_spec:
       'var']="mean"]
   integration:
     return: Series
-    stock_name: str
-    flow_name: str
+    stock_name: seriesname
+    flow_name: seriesname
     fill: Default[bool=False]
   holidays:
     return: Series
