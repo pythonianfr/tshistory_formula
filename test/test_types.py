@@ -192,6 +192,8 @@ def test_operators_types(golden):
     }
     # Update output with :
     #
+    #   $ rm test/data/test_operators_types.yml
+    #   $ touch test/data/test_operators_types.yml
     #   $ pytest --update-goldens -k operators_types
     #
     assert types == golden.out["output_spec"]
