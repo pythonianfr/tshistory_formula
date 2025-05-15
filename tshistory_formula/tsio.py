@@ -240,7 +240,7 @@ class timeseries(basets):
         return sorted(deps)
 
     @tx
-    def register_formula(self, cn, name, formula, reject_unknown=True):
+    def register_formula(self, cn, name, formula, reject_unknown=True, user='no-user'):
         assert isinstance(name, str), 'The name must be a string'
         name = name.strip()
         assert len(name), 'The new name must contain non whitespace items'
@@ -296,7 +296,8 @@ class timeseries(basets):
                 oldtzstat = 'tzaware' if istzaware else 'tznaive'
                 newtzstat = 'tzaware' if tzaware else 'tznaive'
                 raise ValueError(
-                    f'Formula `{name}` has dependents and is changing: {oldtzstat} -> {newtzstat}'
+                    f'Formula `{name}` has dependents and is changing:'
+                    f' {oldtzstat} -> {newtzstat}'
                 )
 
         etree = self._expanded_formula(cn, formula, remote=False)
@@ -315,10 +316,10 @@ class timeseries(basets):
         meta = dict(meta, **coremeta)
         meta['formula'] = formula
         meta['contenthash'] = ch
-        self._register_formula(cn, name, meta, exists)
+        self._register_formula(cn, name, meta, exists, user)
         self.register_dependents(cn, name, tree)
 
-    def _register_formula(self, cn, name, internal_meta, exists):
+    def _register_formula(self, cn, name, internal_meta, exists, user):
         if exists:
             oldformula = self.formula(cn, name)
             # update
@@ -332,8 +333,8 @@ class timeseries(basets):
             ).scalar()
             cn.execute(
                 f'insert into "{self.namespace}".form_history '
-                '(sid, formula) values (%s, %s)',
-                sid, oldformula
+                '(sid, userid, formula) values (%s, %s, %s)',
+                sid, user, oldformula
             )
             return
 
@@ -351,9 +352,9 @@ class timeseries(basets):
     @tx
     def oldformulas(self, cn, name):
         return [
-            (form, pd.Timestamp(tstamp))
-            for form, tstamp in cn.execute(
-                    'select formula, archivedate '
+            (form, pd.Timestamp(tstamp), user)
+            for form, tstamp, user in cn.execute(
+                    'select formula, archivedate, userid '
                     f'from "{self.namespace}".form_history as fh,'
                     f'     "{self.namespace}".registry as reg '
                     'where fh.sid = reg.id and '

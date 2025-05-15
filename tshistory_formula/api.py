@@ -24,7 +24,8 @@ NONETYPE = type(None)
 def register_formula(self,
                      name: str,
                      formula: str,
-                     reject_unknown: bool=True) -> NONETYPE:
+                     reject_unknown: bool=True,
+                     user: str='no-user') -> NONETYPE:
     """Define a series as a named formula.
 
     .. highlight:: python
@@ -38,7 +39,8 @@ def register_formula(self,
             cn,
             name,
             formula,
-            reject_unknown=reject_unknown
+            reject_unknown=reject_unknown,
+            user=user
         )
 
 

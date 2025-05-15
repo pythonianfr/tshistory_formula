@@ -1,6 +1,7 @@
 import io
 import pandas as pd
 
+from flask import request
 from flask_restx import (
     inputs,
     Resource,
@@ -78,6 +79,11 @@ register_formula.add_argument(
     type=inputs.boolean,
     default=True,
     help='fail if the referenced series do not exist'
+)
+register_formula.add_argument(
+    'user',
+    type=str,
+    default='no-user'
 )
 
 oldformulas = base.copy()
@@ -242,11 +248,16 @@ class formula_httpapi(httpapi):
                 args = register_formula.parse_args()
 
                 exists = tsa.formula(args.name)
+                if args.user == 'no-user':
+                    user = request.environ.get('USER')
+                else:
+                    user = args.user
                 try:
                     tsa.register_formula(
                         args.name,
                         args.text,
-                        reject_unknown=args.reject_unknown
+                        reject_unknown=args.reject_unknown,
+                        user=user
                     )
                 except TypeError as err:
                     api.abort(409, repr(err))
@@ -276,8 +287,8 @@ class formula_httpapi(httpapi):
                 """
                 args = oldformulas.parse_args()
                 return [
-                    (form, stamp.isoformat(), str(stamp.tzinfo))
-                    for form, stamp in tsa.oldformulas(args.name)
+                    (form, stamp.isoformat(), str(stamp.tzinfo), user)
+                    for form, stamp, user in tsa.oldformulas(args.name)
                 ]
 
         @nss.route('/formula_depth')
@@ -530,12 +541,14 @@ class formula_httpclient(httpclient):
     @unwraperror
     def register_formula(self, name,
                          formula,
-                         reject_unknown=True):
+                         reject_unknown=True,
+                         user='no-user'):
         res = self.session.patch(
             f'{self.uri}/series/formula', data={
                 'name': name,
                 'text': formula,
-                'reject_unknown': reject_unknown
+                'reject_unknown': reject_unknown,
+                'user': user
             }
         )
         if res.status_code == 400:
@@ -564,8 +577,8 @@ class formula_httpclient(httpclient):
         )
         if res.status_code == 200:
             return [
-                (form, pd.Timestamp(dt, tz=tz))
-                for form, dt, tz in res.json()
+                (form, pd.Timestamp(dt, tz=tz), user)
+                for form, dt, tz, user in res.json()
             ]
 
         return res

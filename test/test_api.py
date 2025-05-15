@@ -358,6 +358,7 @@ def test_oldformulas(tsx):
     hist = tsx.oldformulas('form-hist')
     assert hist[0][0] == '(add (series "form-hist-base") (series "form-hist-base"))'
     assert hist[1][0] == '(* 2 (series "form-hist-base"))'
+    assert hist[0][2] == 'no-user'
 
     tsx.delete('form-hist')
     assert tsx.oldformulas('form-hist') == []

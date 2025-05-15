@@ -39,6 +39,22 @@ class Migrator(_Migrator):
         migrate_group_formula_schema(self.engine, self.namespace, self.interactive)
 
 
+@version('tshistory-formula', '0.19.0')
+def migrate_0190(engine, namespace, interactive):
+    ns = namespace
+    with engine.begin() as cn:
+        cn.execute(f"""
+create table if not exists "{ns}".form_history (
+  sid int not null references "{ns}".registry(id) on delete cascade,
+  archivedate timestamptz not null default now(),
+  userid text,
+  formula text not null
+);
+
+create index if not exists "ix_{ns}_form_history_sid" on "{ns}".form_history(sid);
+""", _binary=False)
+
+
 @version('tshistory-formula', '0.18.0')
 def migrate_0180(engine, namespace, interactive):
     _migrate_formula_history(engine, namespace, interactive)
