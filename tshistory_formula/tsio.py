@@ -359,7 +359,7 @@ class timeseries(basets):
                     f'     "{self.namespace}".registry as reg '
                     'where fh.sid = reg.id and '
                     '      reg.name = %(name)s '
-                    'order by archivedate',
+                    'order by archivedate desc',
                     name=name
             ).fetchall()
         ]

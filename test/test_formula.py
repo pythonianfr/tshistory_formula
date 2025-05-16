@@ -308,8 +308,8 @@ def test_formula_history(engine, tsh):
     )
 
     hist = tsh.oldformulas(engine, 'form-hist')
-    assert hist[0][0] == '(add (series "form-hist-base") (series "form-hist-base"))'
-    assert hist[1][0] == '(* 2 (series "form-hist-base"))'
+    assert hist[-1][0] == '(add (series "form-hist-base") (series "form-hist-base"))'
+    assert hist[0][0] == '(* 2 (series "form-hist-base"))'
 
     tsh.delete(engine, 'form-hist')
     assert tsh.oldformulas(engine, 'form-hist') == []
