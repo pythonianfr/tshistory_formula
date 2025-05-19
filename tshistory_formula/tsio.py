@@ -245,19 +245,24 @@ class timeseries(basets):
         name = name.strip()
         assert len(name), 'The new name must contain non whitespace items'
 
+        oldformula = self.formula(cn, name)
         exists = self.exists(cn, name)
-        if exists and self.type(cn, name) == 'primary':
-            raise TypeError(
-                f'primary series `{name}` cannot be overriden by a formula'
-            )
-
-        istzaware = self.tzaware(cn, name) if exists else None
-
         # basic syntax check
         tree = parse(formula)
         helper.validate(tree)
         # this normalizes the formula
         formula = serialize(tree)
+
+        if exists:
+            if self.type(cn, name) == 'primary':
+                raise TypeError(
+                    f'primary series `{name}` cannot be overriden by a formula'
+                )
+            if formula == oldformula:
+                return  # noop
+
+        istzaware = self.tzaware(cn, name) if exists else None
+
 
         # bad operators
         operators = self.find_operators(cn, tree)
@@ -316,12 +321,11 @@ class timeseries(basets):
         meta = dict(meta, **coremeta)
         meta['formula'] = formula
         meta['contenthash'] = ch
-        self._register_formula(cn, name, meta, exists, user)
+        self._register_formula(cn, name, meta, oldformula, user)
         self.register_dependents(cn, name, tree)
 
-    def _register_formula(self, cn, name, internal_meta, exists, user):
-        if exists:
-            oldformula = self.formula(cn, name)
+    def _register_formula(self, cn, name, internal_meta, oldformula, user):
+        if oldformula:
             # update
             sid = cn.execute(
                 f'update "{self.namespace}".registry '

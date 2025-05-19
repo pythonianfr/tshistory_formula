@@ -351,8 +351,7 @@ def test_oldformulas(tsx):
         'form-hist',
         '(add (series "form-hist-base") (series "form-hist-base"))'
     )
-    # OOPS
-    assert len(tsx.oldformulas('form-hist')) == 1
+    assert len(tsx.oldformulas('form-hist')) == 0
 
     tsx.register_formula(
         'form-hist',
