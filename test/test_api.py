@@ -982,7 +982,7 @@ def test_group_formula(tsa):
 
     # formula of formula
     # we add the same series that was substracted,
-    # hence we msut retrieve the original dataframe group1
+    # hence we must retrieve the original dataframe group1
     formula = (
         '(group-add-series '
         '  (group "difference")'
@@ -1226,6 +1226,10 @@ def test_group_bound_formula(tsa):
 
     assert tsa.group_exists('hijacking')
     assert tsa.group_type('hijacking') == 'bound'
+
+    res = tsa.group_find('(by.name "hijacking")')
+    # outch !
+    assert res[0].kind == 'primary'
 
     cat = list(tsa.group_catalog().values())[0]
     assert ('hijacking', 'bound') in cat
@@ -1565,6 +1569,35 @@ def test_local_group_formula_remote_bound_group(tsa):
         'group': {0: 'remote-group'},
         'family': {0: 'family'}
     }
+
+
+def test_group_find(tsx):
+    df = gengroup(
+        n_scenarios=3,
+        from_date=datetime(2025, 1, 1),
+        length=2,
+        freq='d',
+        seed=2
+    )
+
+    tsx.group_replace('basegroup', df, 'test')
+    formula = (
+        '(group-add '
+        '  (group "basegroup") '
+        '  (group "basegroup")) '
+    )
+
+    tsx.register_group_formula(
+        '2groups',
+        formula
+    )
+
+    res = tsx.group_find('(by.name "basegroup")')
+    assert res[0].kind == 'primary'
+
+    res = tsx.group_find('(by.name "2groups")')
+    # outch !
+    assert res[0].kind == 'primary'
 
 
 def test_find(tsx):
