@@ -1228,8 +1228,9 @@ def test_group_bound_formula(tsa):
     assert tsa.group_type('hijacking') == 'bound'
 
     res = tsa.group_find('(by.name "hijacking")')
-    # outch !
-    assert res[0].kind == 'primary'
+    assert res[0].kind == 'bound'
+    res = tsa.group_find('(by.name "hijacking")', meta=True)
+    assert res[0].kind == 'bound'
 
     cat = list(tsa.group_catalog().values())[0]
     assert ('hijacking', 'bound') in cat
@@ -1596,8 +1597,7 @@ def test_group_find(tsx):
     assert res[0].kind == 'primary'
 
     res = tsx.group_find('(by.name "2groups")')
-    # outch !
-    assert res[0].kind == 'primary'
+    assert res[0].kind == 'formula'
 
 
 def test_find(tsx):

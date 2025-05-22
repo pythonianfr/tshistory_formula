@@ -806,7 +806,15 @@ class timeseries(basets):
 
     # find override
 
-    _find_items = ['name', 'internal_metadata->\'formula\'']
+    _find_items = [
+        'name',
+        'internal_metadata->\'formula\''
+    ]
+    _group_find_items = [
+        'name',
+        'internal_metadata->\'formula\'',
+        'internal_metadata->\'bound\''
+    ]
 
     def _finish_find(self, cn, q, meta, source):
         if not meta:
@@ -818,6 +826,21 @@ class timeseries(basets):
         return [
             ts(name, imeta, umeta, source, kind='formula' if formula else 'primary')
             for name, formula, imeta, umeta in q.do(cn).fetchall()
+        ]
+
+    def _group_finish_find(self, cn, q, meta, source):
+        def gkind(f, b):
+            return 'formula' if f else 'bound' if b else 'primary'
+
+        if not meta:
+            return [
+                ts(name, source=source, kind=gkind(formula, bound))
+                for name, formula, bound in q.do(cn).fetchall()
+            ]
+
+        return [
+            ts(name, imeta, umeta, source, kind=gkind(formula, bound))
+            for name, formula, bound, imeta, umeta in q.do(cn).fetchall()
         ]
 
     # groups
