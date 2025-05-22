@@ -320,19 +320,6 @@ def byname(namequery: str) -> search.query:
     return search.byname(namequery)
 
 
-@func('by.source')
-def bysource(sourcename: search.Source) -> search.query:
-    """
-    Perform the query (or subquery) matching the source name only
-    on the given source.
-
-    Examples: `(by.and (by.name "wind") (by.source "meteo"))`
-
-    The name of the local source is "local".
-    """
-    return search.bysource(sourcename)
-
-
 @func('by.basket')
 def bybasket(__interpreter__,
              basketname: BasketName) -> search.query:

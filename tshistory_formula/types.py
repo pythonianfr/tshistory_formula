@@ -67,7 +67,6 @@ _CFOLDENV = Env({
 PROPOSAL_TYPES = (
     groupname,
     seriesname,
-    search.Source,
     search.MetaKey,
     BasketName,
     Bind,
