@@ -567,9 +567,12 @@ class timeseries(basets):
 
     @tx
     def depth(self, cn, name):
+        if not self.exists(cn, name):
+            return None
         formula = self.formula(cn, name)
         if formula is None:
-            return
+            # this is a primary
+            return - 1
 
         return helper.depth(self, cn, parse(formula))
 

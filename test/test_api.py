@@ -314,7 +314,6 @@ def test_formula_remote_double_expansion(tsa):
 def test_depth_remote(tsa):
     """
     Case with formula that reference a remote primary
-    A primary has a depth of None which could cause problems
     """
     rtsh = timeseries('remote')
     ts_base = pd.Series([0], index = [pd.Timestamp('2025-1-1', tz='UTC')])
@@ -328,9 +327,7 @@ def test_depth_remote(tsa):
         'formula-with-primary-remote',
         '(series "primary-remote")'
     )
-    with pytest.raises(TypeError) as err:
-        tsa.formula_depth('formula-with-primary-remote')
-    assert str(err.value) == 'can only concatenate list (not "int") to list'
+    assert 0 == tsa.formula_depth('formula-with-primary-remote')
 
     rtsh.register_formula(
         tsa.engine,
