@@ -332,6 +332,20 @@ def test_depth_remote(tsa):
         tsa.formula_depth('formula-with-primary-remote')
     assert str(err.value) == 'can only concatenate list (not "int") to list'
 
+    rtsh.register_formula(
+        tsa.engine,
+        'simple-remote-formula',
+        '(+ 1 (series "primary-remote"))'
+    )
+
+    tsa.register_formula(
+        'formula-with-remote-formula',
+        '(+ 2 (series "simple-remote-formula"))'
+    )
+
+    assert 0 == rtsh.depth(tsa.engine, 'simple-remote-formula')
+    assert 1 == tsa.formula_depth('formula-with-remote-formula')
+
 
 def test_findseries_and_remote_byname(tsa, engine):
     ts = pd.Series(
