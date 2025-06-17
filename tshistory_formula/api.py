@@ -188,10 +188,10 @@ def depends(self, name: str, direct=False, reverse=False) -> List[str]:
 
 
 @extend(altsources)
-def formula_depth(self, name: str):  # noqa
+def formula_depth(self, name: str) -> int:  # noqa
     source = self._findsourcefor(name)
     if source is None:
-        return []
+        return 0
     return source.tsa.formula_depth(name)
 
 
