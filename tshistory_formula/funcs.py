@@ -1806,6 +1806,20 @@ def cumsum(series: pd.Series) -> pd.Series:
     return ts
 
 
+@func('cumprod')
+def cumprod(series: pd.Series) -> pd.Series:
+    """
+    Return cumulative product over a series.
+
+    Example: `(cumprod (series "mul-me"))`
+
+    """
+    options = series.options.copy()
+    ts = series.cumprod()
+    ts.options = options
+    return ts
+
+
 def time_shifted_transform(tree):
     _posargs, kwargs = buildargs(tree[1:])
 

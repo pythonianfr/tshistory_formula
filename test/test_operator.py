@@ -2717,6 +2717,71 @@ def test_cumsum(engine, tsh):
 """, s1)
 
 
+def test_cumprod(engine, tsh):
+    series = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(utcdt(2025, 6, 1), periods=3, freq='D')
+    )
+
+    tsh.update(
+        engine,
+        series,
+        'mul-me',
+        'Babar'
+    )
+
+    tsh.register_formula(
+        engine,
+        'test-cumprod',
+        '(cumprod (series "mul-me"))'
+    )
+
+    s1 = tsh.get(engine, 'test-cumprod')
+    assert_df("""
+2025-06-01 00:00:00+00:00    1.0
+2025-06-02 00:00:00+00:00    2.0
+2025-06-03 00:00:00+00:00    6.0
+""", s1)
+
+    # use case
+    series = pd.Series(
+        [3, 4, 3],
+        index=pd.date_range(utcdt(2025, 6, 1), periods=3, freq='MS')
+    )
+
+    tsh.update(
+        engine,
+        series,
+        'ref-stock',
+        'Babar'
+    )
+
+    series = pd.Series(
+        [0.1, 0.4, -0.2],
+        index=pd.date_range(utcdt(2025, 9, 1), periods=3, freq='MS')
+    )
+
+    tsh.update(
+        engine,
+        series,
+        'ref-pct',
+        'Babar'
+    )
+
+    tsh.register_formula(
+        engine,
+        'test-usecase',
+        '(mul (series "ref-stock" #:fill "ffill") (cumprod (+ 1 (* -1 (series "ref-pct")))))'
+    )
+
+    s2 = tsh.get(engine, 'test-usecase')
+    assert_df("""
+2025-09-01 00:00:00+00:00    2.700
+2025-10-01 00:00:00+00:00    1.620
+2025-11-01 00:00:00+00:00    1.944
+""", s2)
+
+
 def test_time_shifted(engine, tsh):
     series = pd.Series(
         [1, 2, 3, 4, 5],
