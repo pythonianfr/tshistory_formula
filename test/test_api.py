@@ -1265,6 +1265,10 @@ def test_group_bound_formula(tsa):
     res = tsa.group_find('(by.name "hijacking")', meta=True)
     assert res[0].kind == 'bound'
 
+    # is the bound-group a formula ?
+    res = tsa.group_find('(by.and (by.name "hijacking") (by.formula))')
+    assert not len(res)
+
     cat = list(tsa.group_catalog().values())[0]
     assert ('hijacking', 'bound') in cat
 
