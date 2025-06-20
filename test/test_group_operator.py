@@ -259,8 +259,7 @@ def test_group_from_series_tzaware(engine, tsh):
         '  (bind "scenario3" (series "tz-series3"))'
         ')'
     )
-    # WHOOPS !
-    assert not tsh.group_internal_metadata(engine, 'tzaware-group-from-series')['tzaware']
+    assert tsh.group_internal_metadata(engine, 'tzaware-group-from-series')['tzaware']
 
 
 def test_groupaddseries(engine, tsh):
