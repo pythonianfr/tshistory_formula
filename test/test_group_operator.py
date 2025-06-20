@@ -129,12 +129,13 @@ def test_group_from_series(engine, tsh):
     tsh.register_group_formula(
         engine,
         'group-from-series',
-        '''(group-from-series 
-                (bind "scenario1" (series "series1"))
-                (bind "scenario2" (series "series2"))
-                (bind "scenario3" (series "series3"))
-            )'''
+        '(group-from-series '
+        '  (bind "scenario1" (series "series1"))'
+        '  (bind "scenario2" (series "series2"))'
+        '  (bind "scenario3" (series "series3"))'
+        ')'
     )
+    assert not tsh.group_internal_metadata(engine, 'group-from-series')['tzaware']
 
     df = tsh.group_get(engine, 'group-from-series')
     assert_df("""
@@ -151,15 +152,15 @@ def test_group_from_series(engine, tsh):
     tsh.update(engine, ts1[:2], 'short-series', 'test')
     tsh.update(engine, ts1.drop(ts1.index[[2]]), 'hole-series', 'test')
 
-    #without fill option
+    # without fill option
     tsh.register_group_formula(
         engine,
         'group-from-series-holes',
-        '''(group-from-series
-                (bind "scenario1" (series "series1"))
-                (bind "short" (series "short-series"))
-                (bind "holes" (series "hole-series"))
-            )'''
+        '(group-from-series '
+        '  (bind "scenario1" (series "series1"))'
+        '  (bind "short" (series "short-series"))'
+        '  (bind "holes" (series "hole-series"))'
+        ')'
     )
 
     df = tsh.group_get(engine, 'group-from-series-holes')
@@ -174,15 +175,15 @@ def test_group_from_series(engine, tsh):
 2025-05-01       -3.0    NaN   -3.0
 """, df)
 
-    #with fill option
+    # with fill option
     tsh.register_group_formula(
         engine,
         'group-from-series-fill',
-        '''(group-from-series 
-                (bind "scenario1" (series "series1"))
-                (bind "short" (series "short-series" #:fill 0))
-                (bind "holes" (series "hole-series" #:fill "ffill"))
-            )'''
+        '(group-from-series '
+        '  (bind "scenario1" (series "series1"))'
+        '  (bind "short" (series "short-series" #:fill 0))'
+        '  (bind "holes" (series "hole-series" #:fill "ffill"))'
+        ')'
     )
 
     df = tsh.group_get(engine, 'group-from-series-fill')
@@ -197,7 +198,7 @@ def test_group_from_series(engine, tsh):
 2025-05-01       -3.0    0.0   -3.0
 """, df)
 
-    #mixed freq
+    # mixed freq
     ts1 = pd.Series(
         [1.0, -2, 0, -3, -2, 0, -3],
         index=pd.date_range(
@@ -211,10 +212,10 @@ def test_group_from_series(engine, tsh):
     tsh.register_group_formula(
         engine,
         'group-from-series-mixedfreq',
-        '''(group-from-series
-                (bind "scenario1" (series "series1" #:fill 0))
-                (bind "hourly" (series "series-hourly"))
-            )'''
+        '(group-from-series '
+        '  (bind "scenario1" (series "series1" #:fill 0))'
+        '  (bind "hourly" (series "series-hourly"))'
+        ')'
     )
 
     df = tsh.group_get(engine, 'group-from-series-mixedfreq')
@@ -234,6 +235,32 @@ def test_group_from_series(engine, tsh):
 2025-04-30 00:00:00        0.0     NaN
 2025-05-01 00:00:00       -3.0     NaN
 """, df)
+
+
+def test_group_from_series_tzaware(engine, tsh):
+    ts1 = pd.Series(
+        [1.0, -2, 0, -3, -2, 0, -3],
+        index=pd.date_range(
+            start=pd.Timestamp('2025-04-25', tz='utc'),
+            freq='D',
+            periods=7
+        )
+    )
+    tsh.update(engine, ts1, 'tz-series1', 'test')
+    tsh.update(engine, ts1*2, 'tz-series2', 'test')
+    tsh.update(engine, ts1*(-2), 'tz-series3', 'test')
+
+    tsh.register_group_formula(
+        engine,
+        'tzaware-group-from-series',
+        '(group-from-series '
+        '  (bind "scenario1" (series "tz-series1"))'
+        '  (bind "scenario2" (series "tz-series2"))'
+        '  (bind "scenario3" (series "tz-series3"))'
+        ')'
+    )
+    # WHOOPS !
+    assert not tsh.group_internal_metadata(engine, 'tzaware-group-from-series')['tzaware']
 
 
 def test_groupaddseries(engine, tsh):
