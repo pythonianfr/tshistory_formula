@@ -47,7 +47,10 @@ class isformula(query):
         return cls()
 
     def sql(self, namespace='tsh'):
-        return 'internal_metadata -> \'formula\' is not null', {}
+        return (
+            '(internal_metadata -> \'formula\' is not null) or '
+            '(internal_metadata -> \'bound\' is not null)'
+        ), {}
 
     @staticmethod
     def __sig__():
