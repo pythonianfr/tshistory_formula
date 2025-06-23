@@ -1,4 +1,7 @@
+from datetime import datetime
+from typing import Optional
 import io
+
 import pandas as pd
 
 from flask import request
@@ -508,7 +511,12 @@ class formula_httpclient(httpclient):
     index = 1
 
     @unwraperror
-    def formula(self, name, display=True, expanded=False, remote=True, level=-1):
+    def formula(self,
+                name: str,
+                display: Optional[bool]=True,
+                expanded: Optional[bool]=False,
+                remote: Optional[bool]=True,
+                level: Optional[int]=-1):
         res = self.session.get(
             f'{self.uri}/series/formula', params={
                 'name': name,
@@ -539,10 +547,11 @@ class formula_httpclient(httpclient):
         return  # None is the reasonable api answer
 
     @unwraperror
-    def register_formula(self, name,
-                         formula,
-                         reject_unknown=True,
-                         user='no-user'):
+    def register_formula(self,
+                         name: str,
+                         formula: str,
+                         reject_unknown: bool=True,
+                         user: str='no-user'):
         res = self.session.patch(
             f'{self.uri}/series/formula', data={
                 'name': name,
@@ -570,7 +579,7 @@ class formula_httpclient(httpclient):
         return res
 
     @unwraperror
-    def oldformulas(self, name):
+    def oldformulas(self, name: str):
         res = self.session.get(
             f'{self.uri}/series/old_formulas',
             params={'name': name}
@@ -584,7 +593,7 @@ class formula_httpclient(httpclient):
         return res
 
     @unwraperror
-    def formula_depth(self, name):
+    def formula_depth(self, name: str):
         res = self.session.get(
             f'{self.uri}/series/formula_depth',
             params={'name': name}
@@ -595,7 +604,10 @@ class formula_httpclient(httpclient):
         return res
 
     @unwraperror
-    def depends(self, name, direct=False, reverse=False):
+    def depends(self,
+                name: str,
+                direct: bool=False,
+                reverse: bool=False):
         res = self.session.get(
             f'{self.uri}/series/formula_depends',
             params={'name': name, 'direct': direct, 'reverse': reverse}
@@ -606,11 +618,12 @@ class formula_httpclient(httpclient):
         return None
 
     @unwraperror
-    def eval_formula(self, formula,
-                     revision_date=None,
-                     from_value_date=None,
-                     to_value_date=None,
-                     tz=None):
+    def eval_formula(self,
+                     formula: str,
+                     revision_date: Optional[datetime]=None,
+                     from_value_date: Optional[datetime]=None,
+                     to_value_date: Optional[datetime]=None,
+                     tz: Optional[str]=None):
         query = {
             'text': formula,
             'revision_date': strft(revision_date) if revision_date else None,
@@ -639,7 +652,7 @@ class formula_httpclient(httpclient):
         return res
 
     @unwraperror
-    def group_formula(self, name, expanded=False):
+    def group_formula(self, name: str, expanded: bool=False):
         res = self.session.get(
             f'{self.uri}/group/formula', params={
                 'name': name,
@@ -655,7 +668,7 @@ class formula_httpclient(httpclient):
         return res
 
     @unwraperror
-    def register_group_formula(self, name, formula):
+    def register_group_formula(self, name: str, formula: str):
         res = self.session.put(
             f'{self.uri}/group/formula', data={
                 'name': name,
@@ -679,7 +692,10 @@ class formula_httpclient(httpclient):
         return res
 
     @unwraperror
-    def register_formula_bindings(self, name, formulaname, bindings):
+    def register_formula_bindings(self,
+                                  name: str,
+                                  formulaname: str,
+                                  bindings: pd.DataFrame):
         res = self.session.put(
             f'{self.uri}/group/boundformula', data={
                 'name': name,
@@ -690,7 +706,7 @@ class formula_httpclient(httpclient):
         return res
 
     @unwraperror
-    def bindings_for(self, name):
+    def bindings_for(self, name: str):
         res = self.session.get(
             f'{self.uri}/group/boundformula', params={
                 'name': name
@@ -706,11 +722,12 @@ class formula_httpclient(httpclient):
         return res
 
     @unwraperror
-    def group_eval_formula(self, formula,
-                     revision_date=None,
-                     from_value_date=None,
-                     to_value_date=None,
-                     tz=None):
+    def group_eval_formula(self,
+                           formula: str,
+                           revision_date: Optional[datetime]=None,
+                           from_value_date: Optional[datetime]=None,
+                           to_value_date: Optional[datetime]=None,
+                           tz: Optional[str]=None):
         query = {
             'text': formula,
             'revision_date': strft(revision_date) if revision_date else None,
