@@ -20,7 +20,7 @@ setup(name='tshistory_formula',
       zip_safe=False,
       install_requires=[
           'tshistory >= 0.20.0',
-          'holidays == 0.62',
+          'holidays == 0.75, < 1',
           'pycountry >= 24.6.1',
           'psyl >= 0.8',
           'python-icron',
