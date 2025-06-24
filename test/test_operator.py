@@ -1950,8 +1950,8 @@ def test_more_today(engine, tsh):
 
 def test_start_of_month(engine, tsh):
     i = Interpreter(engine, tsh, {})
-    a = lisp.evaluate('(start-of-month (date "1973-05-20 09:00"))', i.env)
-    assert a == pd.Timestamp('1973-05-01 09:00:00+0000', tz='UTC')
+    a = lisp.evaluate('(start-of-month (date "1973-05-20 09:01:42"))', i.env)
+    assert a == pd.Timestamp('1973-05-01 00:00:00+0000', tz='UTC')
 
 
 def test_end_of_month(engine, tsh):

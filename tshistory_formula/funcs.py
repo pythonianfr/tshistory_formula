@@ -615,7 +615,7 @@ def start_of_month(date: pd.Timestamp) -> pd.Timestamp:
     Example: `(start-of-month (date "1973-05-20 09:00"))`
 
     """
-    return date.replace(day=1)
+    return date.replace(day=1, hour=0, minute=0, second=0)
 
 
 @func('end-of-month')
