@@ -628,7 +628,7 @@ def end_of_month(date: pd.Timestamp) -> pd.Timestamp:
 
     """
     _, end = calendar.monthrange(date.year, date.month)
-    return date.replace(day=end)
+    return date.replace(day=end, hour=0, minute=0, second=0)
 
 
 @func('cronrule')
