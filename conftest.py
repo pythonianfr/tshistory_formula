@@ -20,14 +20,13 @@ from tshistory_formula import http
 
 
 DATADIR = Path(__file__).parent / 'test' / 'data'
+DBURI = 'postgresql://localhost:5434/postgres'
 
 
 @pytest.fixture(scope='session')
 def engine(request):
-    port = 5434
-    setup_local_pg_cluster(request, DATADIR, port)
-    uri = 'postgresql://localhost:{}/postgres'.format(port)
-    e = create_engine(uri)
+    setup_local_pg_cluster(request, DATADIR, 5434)
+    e = create_engine(DBURI)
     return e
 
 
@@ -72,7 +71,6 @@ def cli():
 
 
 # support for the http extensions
-DBURI = 'postgresql://localhost:5433/postgres'
 
 def make_app(tsa):
     from flask import Flask
@@ -114,6 +112,7 @@ def client(engine):
 
 def _initschema(engine):
     formula_schema('tsh').create(engine)
+    formula_schema('remote').create(engine)
 
 
 tsx = make_tsx(
@@ -122,5 +121,6 @@ tsx = make_tsx(
     timeseries,
     http.formula_httpapi,
     http.formula_httpclient,
-    with_http_bridge=with_http_bridge
+    with_http_bridge=with_http_bridge,
+    sources={'remote': (DBURI, 'remote')}
 )

@@ -132,6 +132,20 @@ def test_bogus_formula(tsx):
     print(err)
 
 
+def test_register_formula_shadowing(tsa):
+    rtsh = timeseries('remote')
+    rtsh.register_formula(
+        tsa.engine,
+        'i-am-remote',
+        '(constant 42.5 (date "1900-1-1") (date "2039-12-31") (freq "D") (date "1900-1-1"))'
+    )
+
+    tsa.register_formula(
+        'i-am-remote',
+        '(constant 42.5 (date "1900-1-1") (date "2039-12-31") (freq "D") (date "1900-1-1"))'
+    )
+
+
 def test_local_formula_remote_series(tsa):
     rtsh = timeseries('remote')
     rtsh.update(
