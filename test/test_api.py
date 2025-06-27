@@ -140,10 +140,12 @@ def test_register_formula_shadowing(tsa):
         '(constant 42.5 (date "1900-1-1") (date "2039-12-31") (freq "D") (date "1900-1-1"))'
     )
 
-    tsa.register_formula(
-        'i-am-remote',
-        '(constant 42.5 (date "1900-1-1") (date "2039-12-31") (freq "D") (date "1900-1-1"))'
-    )
+    with pytest.raises(ValueError):
+        tsa.register_formula(
+            'i-am-remote',
+            '(constant 42.5 (date "1900-1-1") (date "2039-12-31") '
+            '  (freq "D") (date "1900-1-1"))'
+        )
 
 
 def test_local_formula_remote_series(tsa):

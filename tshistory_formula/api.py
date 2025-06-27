@@ -34,6 +34,11 @@ def register_formula(self,
       tsa.register_formula('sales.eu', '(add (series "sales.fr") (series "sales.be"))')
     """
 
+    self.othersources.forbidden(
+        name,
+        'not allowed to register a formula on a secondary source'
+    )
+
     with self.engine.begin() as cn:
         self.tsh.register_formula(
             cn,
