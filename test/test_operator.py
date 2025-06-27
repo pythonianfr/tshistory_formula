@@ -830,7 +830,7 @@ def test_more_filter(engine, tsh):
             '(by.or (> "weight" 42) (by.name "me.A"))'
         )
     )
-    assert names == ['find.me.A', 'find.me.B']
+    assert names == ['find.me.A', 'find.me.B', 'find.me.a']
     tsh.register_formula(
         engine,
         'find.or',
