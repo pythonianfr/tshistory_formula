@@ -304,7 +304,8 @@ zone of the replacement.
         class formula_depth_(Resource):
 
             @api.doc(
-                responses={200: 'Got content', 404: 'Does not exist'},
+                responses={200: 'Got content',
+                           404: 'Does not exist'},
                 description="""Return the depth of a formula
 
 The depth is the number of time "(series \\<name\\>)"
@@ -327,7 +328,8 @@ refer to primary series.
         class formula_depends(Resource):
 
             @api.doc(
-                responses={200: 'Gotcontent', 404: 'Does not exist'},
+                responses={200: 'Gotcontent',
+                           404: 'Does not exist'},
                 description="""Return the dependencies (or dependences) of a formula
 
 A formula can use (be used) directly/indirectly by
@@ -349,7 +351,8 @@ other series.
         class eval_formula_(Resource):
 
             @api.doc(
-                responses={200: 'Got content', 400: 'Invalid formula'},
+                responses={200: 'Got content',
+                           400: 'Invalid formula'},
                 description="""Evaluate a formula expression
 
 You can test a formula expression on the fly without
@@ -388,6 +391,12 @@ useful).
         @nss.route('/formula_components')
         class timeseries_formula_components(Resource):
 
+            @api.doc(
+                responses={200: 'Got content',
+                           404: 'Does not exist',
+                           409: 'Not a formula'},
+                description='Return the components of a formula'
+            )
             @api.expect(formula_components)
             @onerror
             @required_roles('admin', 'rw', 'ro')
@@ -406,6 +415,12 @@ useful).
         @nsg.route('/formula')
         class group_formula(Resource):
 
+            @api.doc(
+                responses={200: 'Got content',
+                           404: 'Does not exist',
+                           409: 'Not a formula'},
+                description='Return a group formula'
+            )
             @api.expect(groupformula)
             @onerror
             @required_roles('admin', 'rw', 'ro')
@@ -420,6 +435,13 @@ useful).
                 form = tsa.group_formula(args.name, args.expanded)
                 return form, 200
 
+            @api.doc(
+                responses={200: 'Updated',
+                           201: 'Created',
+                           400: 'Syntax error',
+                           409: 'Invalid formula'},
+                description='Register a group formula'
+            )
             @api.expect(register_group_formula)
             @onerror
             @required_roles('admin', 'rw')
@@ -449,7 +471,8 @@ useful).
         class group_eval_formula_(Resource):
 
             @api.doc(
-                responses={200: 'Got content', 400: 'Invalid formula'},
+                responses={200: 'Got content',
+                           400: 'Invalid formula'},
                 description="""Evaluate a formula expression
 
 You can test a formula expression on the fly without
@@ -487,6 +510,12 @@ useful).
             @nsg.route('/boundformula')
             class bound_formula(Resource):
 
+                @api.doc(
+                    responses={200: 'Got content',
+                               404: 'Does not exist',
+                               409: 'Not a bound formula'},
+                    description='Get the bindings for a bound formula'
+                )
                 @api.expect(boundformula)
                 @onerror
                 @required_roles('admin', 'rw', 'ro')
@@ -504,6 +533,10 @@ useful).
                         'bindings': bindings.to_dict(orient='records')
                     }, 200
 
+                @api.doc(
+                    responses={200: 'Success'},
+                    description='Register formula bindings for a bound formula'
+                )
                 @api.expect(boundformula)
                 @onerror
                 @required_roles('admin', 'rw')
