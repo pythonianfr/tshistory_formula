@@ -201,21 +201,23 @@ class formula_httpapi(httpapi):
         @nss.route('/formula')
         class timeseries_formula(Resource):
 
-            @api.doc(responses={
-                200: 'Got content',
-                404: 'Does not exist',
-                409: 'Not a formula'
-            })
+            @api.doc(
+                responses={
+                    200: 'Got content',
+                    404: 'Does not exist',
+                    409: 'Not a formula'
+                },
+                description="""Return a formula
+
+The output is a two fields mapping:
+* level : the required level
+* formula : the formula
+"""
+            )
             @api.expect(formula)
             @onerror
             @required_roles('admin', 'rw', 'ro')
             def get(self):
-                """returns a formula
-
-                The output is a two fields mapping:
-                * level : the required level
-                * formula : the formula
-                """
                 args = formula.parse_args()
                 if not tsa.exists(args.name):
                     api.abort(404, f'`{args.name}` does not exists')
@@ -232,22 +234,24 @@ class formula_httpapi(httpapi):
                 )
                 return {'level': args.level, 'formula': form}, 200
 
-            @api.doc(responses={
-                200: 'Updated',
-                201: 'Created',
-                400: 'Malformed Formula',
-                409: 'Invalid Formula'
-            })
+            @api.doc(
+                responses={
+                    200: 'Updated',
+                    201: 'Created',
+                    400: 'Malformed Formula',
+                    409: 'Invalid Formula'
+                },
+                description="""Register a fomula (computed series)
+
+The formula must be a well-formed Lisp expression, use
+known operators and refer to known series, and must
+pass the type checker.
+"""
+            )
             @api.expect(register_formula)
             @onerror
             @required_roles('admin', 'rw')
             def patch(self):
-                """register a fomula (computed series)
-
-                The formula must be a well-formed Lisp expression, use
-                known operators and refer to known series, and must
-                pass the type checker.
-                """
                 args = register_formula.parse_args()
 
                 exists = tsa.formula(args.name)
@@ -278,16 +282,18 @@ class formula_httpapi(httpapi):
         @nss.route('/old_formulas')
         class old_formulas(Resource):
 
-            @api.doc(responses={200: 'Got content', 404: 'Does not exist'})
+            @api.doc(
+                responses={200: 'Got content', 404: 'Does not exist'},
+                description="""Return the history of a formula
+
+Comes as a list of tuples of formula, time stamp, time
+zone of the replacement.
+"""
+            )
             @api.expect(oldformulas)
             @onerror
             @required_roles('admin', 'rw', 'ro')
             def get(self):
-                """return history of a formula
-
-                Comes as a list of tuples of formula, time stamp, time
-                zone of the replacement.
-                """
                 args = oldformulas.parse_args()
                 return [
                     (form, stamp.isoformat(), str(stamp.tzinfo), user)
@@ -297,18 +303,20 @@ class formula_httpapi(httpapi):
         @nss.route('/formula_depth')
         class formula_depth_(Resource):
 
-            @api.doc(responses={200: 'Got content', 404: 'Does not exist'})
+            @api.doc(
+                responses={200: 'Got content', 404: 'Does not exist'},
+                description="""Return the depth of a formula
+
+The depth is the number of time "(series \\<name\\>)"
+expressions must be substited by the underlying formula
+before reaching a state where all series expressions
+refer to primary series.
+"""
+            )
             @api.expect(formula_depth)
             @onerror
             @required_roles('admin', 'rw', 'ro')
             def get(self):
-                """return the depth of a formula
-
-                The depth is the number of time "(series \<name\>)"
-                expressions must be substited by the underlying formula
-                before reaching a state where all series expressions
-                refer to primary series.
-                """
                 args = formula_depth.parse_args()
                 if not tsa.exists(args.name):
                     api.abort(404, f'`{args.name}` does not exists')
@@ -318,16 +326,18 @@ class formula_httpapi(httpapi):
         @nss.route('/formula_depends')
         class formula_depends(Resource):
 
-            @api.doc(responses={200: 'Gotcontent', 404: 'Does not exist'})
+            @api.doc(
+                responses={200: 'Gotcontent', 404: 'Does not exist'},
+                description="""Return the dependencies (or dependences) of a formula
+
+A formula can use (be used) directly/indirectly by
+other series.
+"""
+            )
             @api.expect(depends)
             @onerror
             @required_roles('admin', 'rw', 'ro')
             def get(self):
-                """return the dependencies (or dependences) of a formula
-
-                A formula can use (be used) directly/indirectly by
-                other series.
-                """
                 args = depends.parse_args()
                 return tsa.depends(
                     args.name,
@@ -338,21 +348,22 @@ class formula_httpapi(httpapi):
         @nss.route('/eval_formula')
         class eval_formula_(Resource):
 
-            @api.doc(responses={200: 'Got content', 400: 'Invalid formula'})
+            @api.doc(
+                responses={200: 'Got content', 400: 'Invalid formula'},
+                description="""Evaluate a formula expression
+
+You can test a formula expression on the fly without
+persisting it through the "register_formula" API call.
+
+It can be useful for test purposes or in some other
+circumstances (e.g. dashboards might find this
+useful).
+"""
+            )
             @api.expect(eval_formula)
             @onerror
             @required_roles('admin', 'rw', 'ro')
             def post(self):
-                """evaluate a formula expression
-
-                You can test a formula expression on the fly without
-                persisting it through the "register_formula" API call.
-
-                It can be useful for test purposes or in some other
-                circumstances (e.g. dashboards might find this
-                useful).
-
-                """
                 args = eval_formula.parse_args()
                 try:
                     ts = tsa.eval_formula(
@@ -437,21 +448,22 @@ class formula_httpapi(httpapi):
         @nsg.route('/eval_formula')
         class group_eval_formula_(Resource):
 
-            @api.doc(responses={200: 'Got content', 400: 'Invalid formula'})
+            @api.doc(
+                responses={200: 'Got content', 400: 'Invalid formula'},
+                description="""Evaluate a formula expression
+
+You can test a formula expression on the fly without
+persisting it through the "register_group_formula" API call.
+
+It can be useful for test purposes or in some other
+circumstances (e.g. dashboards might find this
+useful).
+"""
+            )
             @api.expect(group_eval_formula)
             @onerror
             @required_roles('admin', 'rw', 'ro')
             def post(self):
-                """evaluate a formula expression
-
-                You can test a formula expression on the fly without
-                persisting it through the "register_group_formula" API call.
-
-                It can be useful for test purposes or in some other
-                circumstances (e.g. dashboards might find this
-                useful).
-
-                """
                 args = group_eval_formula.parse_args()
                 try:
                     df = tsa.group_eval_formula(
