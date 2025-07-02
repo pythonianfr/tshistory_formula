@@ -1661,7 +1661,35 @@ def test_resample_findseries(engine, tsh):
     tsh.register_formula(engine, 'resample.find', formula)
     with pytest.raises(LookupError) as err:
         tsh.get(engine, 'resample.find')
-    assert str(err.value) == 'needed_freq'
+
+    expanded = tsh._expanded_formula(engine, formula, display=True, qargs={})
+    assert str(expanded) == (
+         "['let, 'needed_freq, ['_infer_freq, 'needed_freq, ['_infer_freq, ['add, "
+         "['series, 'ts.to.be.found']], ['freq, 'D']]], ['let, 'from_value_date, "
+         "['resample_adjusted_stamp, 'from_value_date, 'needed_freq, 'left'], "
+         "'to_value_date, ['resample_adjusted_stamp, 'to_value_date, 'needed_freq, "
+         "'right'], ['let, 'needed_freq, ['_infer_freq, ['add, ['series, "
+         "'ts.to.be.found']], ['freq, 'D']], ['let, 'from_value_date, "
+         "['resample_adjusted_stamp, 'from_value_date, 'needed_freq, 'left'], "
+         "'to_value_date, ['resample_adjusted_stamp, 'to_value_date, 'needed_freq, "
+         "'right'], ['resample, ['add, ['series, 'ts.to.be.found']], ['freq, 'D']]]]]]"
+    )
+
+    # without the findseries:
+    formula = (
+        '(resample (add (series "ts.to.be.found")) (freq "D"))'
+    )
+    expanded2 = tsh._expanded_formula(engine, formula, display=True, qargs={})
+    assert str(expanded2) == (
+        "['let, 'needed_freq, ['_infer_freq, ['add, ['series, 'ts.to.be.found']], "
+        "['freq, 'D']], ['let, 'from_value_date, ['resample_adjusted_stamp, "
+        "'from_value_date, 'needed_freq, 'left'], 'to_value_date, "
+        "['resample_adjusted_stamp, 'to_value_date, 'needed_freq, 'right'], "
+        "['resample, ['add, ['series, 'ts.to.be.found']], ['freq, 'D']]]]"
+    )
+
+    tsh.register_formula(engine, 'resample.without.find', formula)
+    assert len(tsh.get(engine, 'resample.without.find'))
 
 
 def test_history_nr(engine, tsh):
