@@ -13,6 +13,16 @@ FINDERS = {}
 AUTO = {}
 ARGSCOPES = {}
 
+# pre-computed function metadata for performance optimization
+FUNC_METADATA = {}
+
+# environment injectable arguments mapping
+QARGS = {
+    '__from_value_date__': 'from_value_date',
+    '__to_value_date__': 'to_value_date',
+    '__revision_date__': 'revision_date'
+}
+
 
 def _ensure_options(obj):
     if isinstance(obj, pd.Series):
@@ -36,6 +46,17 @@ def func(name, auto=False):
 
         dec = decorate(func, operator)
 
+        # pre-compute function metadata for performance optimization
+        sig = inspect.getfullargspec(func)
+
+        # injectable arguments mapping - only the ones that come from environment
+        injectable_args = [arg for arg in sig.args if arg in QARGS]
+
+        FUNC_METADATA[name] = {
+            'has_varargs': sig.varargs is not None,
+            'injectable_args': injectable_args
+        }
+
         FUNCS[name] = dec
         if auto:
             AUTO[name] = func
@@ -44,7 +65,7 @@ def func(name, auto=False):
                            '__from_value_date__',
                            '__to_value_date__',
                            '__revision_date__'):
-                assert posarg in inspect.getfullargspec(func).args, (
+                assert posarg in sig.args, (
                     f'`{name}` is an autotrophic operator. '
                     f'It should have a `{posarg}` positional argument.'
                 )

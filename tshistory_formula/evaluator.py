@@ -26,6 +26,7 @@ from psyl.lisp import (
 )
 
 from tshistory_formula.helper import ThreadPoolExecutor
+from tshistory_formula.registry import FUNC_METADATA, QARGS
 
 
 NONETYPE = type(None)
@@ -34,13 +35,6 @@ NONETYPE = type(None)
 @cache
 def funcid(func):
     return hash(inspect.getsource(func))
-
-
-QARGS = {
-    '__from_value_date__': 'from_value_date',
-    '__to_value_date__': 'to_value_date',
-    '__revision_date__': 'revision_date'
-}
 
 
 # parallel evaluator
@@ -86,22 +80,30 @@ def _evaluate(tree, env, funcids=(), pool=None):
     proc = exps[0]
     posargs, kwargs = buildargs(newargs)
 
+    # get function name from the expression tree for metadata lookup
+    func_name = str(tree[0])
+
+    # use pre-computed metadata instead of runtime signature inspection
+    metadata = FUNC_METADATA.get(func_name, {})
+
+    # handle varargs using pre-computed metadata
+    if metadata.get('has_varargs', False):
+        if len(posargs) == 1 and isinstance(posargs[0], list):
+            posargs = posargs[0]
+
+    # inject environment arguments using pre-computed list
+    injectable_args = metadata.get('injectable_args', [])
+    if injectable_args:
+        injected = [env.find(QARGS[arg]) for arg in injectable_args]
+        posargs = injected + posargs
+
+    # for async execution, we still need to identify the underlying function
     # open partials to find the true operator on which we can decide
     # to go async
     if hasattr(proc, 'func'):
         func = proc.func
     else:
         func = proc
-
-    signature = inspect.getfullargspec(func)
-    if signature.varargs:
-        if len(posargs) == 1 and isinstance(posargs[0], list):
-            posargs = posargs[0]
-    # prepare args injection from the lisp environment
-    posargs = [
-        env.find(QARGS[arg]) for arg in signature.args
-        if arg in QARGS
-    ] + posargs
 
     # an async function, e.g. series, being I/O oriented
     # can be deferred to a thread
