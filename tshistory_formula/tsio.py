@@ -54,6 +54,8 @@ class timeseries(basets):
     concurrency = 16
 
     def find_series(self, cn, tree):
+        if tree is None:
+            return {}
         tree = helper.replace_findseries(cn, self, tree)
         return self._find_series(cn, tree)
 

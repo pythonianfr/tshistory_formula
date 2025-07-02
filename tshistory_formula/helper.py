@@ -208,6 +208,7 @@ def expanded(
                     stopnames,
                     shownames,
                     scopes=scopes,
+                    scoped=scoped,
                     remote=remote,
                     level=level-1
                 )
@@ -220,6 +221,7 @@ def expanded(
                     stopnames,
                     shownames,
                     scopes=scopes,
+                    scoped=scoped,
                     remote=remote,
                     level=level-1
                 ),
@@ -228,6 +230,8 @@ def expanded(
     # expand findseries
     tree_find = replace_findseries(cn, tsh, tree)
     if tree_find != tree and level:
+        if id(tree) in scoped:
+            scoped.add(id(tree_find))
         return expanded(
             tsh,
             cn,
@@ -235,6 +239,7 @@ def expanded(
             stopnames,
             shownames,
             scopes=scopes,
+            scoped=scoped,
             remote=remote,
             level=level - 1
         )
@@ -250,6 +255,7 @@ def expanded(
                     stopnames,
                     shownames,
                     scopes=scopes,
+                    scoped=scoped,
                     remote=remote,
                     level=level
                 )
