@@ -1647,6 +1647,23 @@ def test_slice_naive(engine, tsh):
     assert ts.index.max() == pd.Timestamp('2022-04-03 00:00:00')
 
 
+def test_resample_findseries(engine, tsh):
+    ts = pd.Series(
+        [1.0] * 24 * 3,
+        index=pd.date_range(utcdt(2022, 4, 1), periods=24 * 3, freq='h')
+    )
+    tsh.update(engine, ts, 'ts.to.be.found', 'test')
+    formula = (
+        '(resample (add (findseries '
+        '(by.name "ts.to.be.found"))) '
+        '(freq "D"))'
+    )
+    tsh.register_formula(engine, 'resample.find', formula)
+    with pytest.raises(LookupError) as err:
+        tsh.get(engine, 'resample.find')
+    assert str(err.value) == 'needed_freq'
+
+
 def test_history_nr(engine, tsh):
     ts1 = pd.Series(
         [1.0] * 24,
