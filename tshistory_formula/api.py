@@ -353,12 +353,12 @@ def register_formula_bindings(self,
     The binding is expressed as a dataframe:
 
         binding = pd.DataFrame(
-        [
-            ['foo', 'foo-group', 'group'],
-            ['bar', 'bar-group', 'group'],
-        ],
-        columns=('series', 'group', 'family')
-    )
+          [
+              ['foo', 'foo-group', 'group'],
+              ['bar', 'bar-group', 'group'],
+          ],
+          columns=('series', 'group', 'family')
+        )
 
     The complete registration looks like:
 

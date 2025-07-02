@@ -1821,6 +1821,68 @@ def test_depends_auto(tsx):
     assert tsx.depends('use-auto') == ['depends-fbase']
 
 
+def test_info(tsx, engine):
+    with engine.begin() as cn:
+        cn.execute('delete from tsh.registry')
+        cn.execute('delete from tsh.group_registry')
+
+    ts = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(utcdt(2020, 1, 1), freq='d', periods=3)
+    )
+    tsx.update(
+        'info-primary-series',
+        ts,
+        'Babar'
+    )
+    tsx.register_formula(
+        'info-formula-series',
+        '(+ 1 (series "info-primary-series"))'
+    )
+
+    df = gengroup(
+        n_scenarios=2,
+        from_date=utcdt(2025, 1, 1),
+        length=3,
+        freq='d',
+        seed=0
+    )
+
+    tsx.group_replace(
+        'info-primary-group',
+        df,
+        'Babar'
+    )
+
+    tsx.register_group_formula(
+        'info-formula-group',
+        '(group-add (group "info-primary-group"))'
+    )
+
+    tsx.register_formula_bindings(
+        'info-bound-group',
+        'info-formula-series',
+        pd.DataFrame(
+            [
+                ['info-primary-series', 'info-primary-group', 'group'],
+            ],
+            columns=('series', 'group', 'family')
+        )
+    )
+
+    info = tsx.info()
+    info.pop('remote')
+    assert info == {
+        'local': {
+            'bound_groups': 1,
+            'formula_groups': 1,
+            'formula_series': 1,
+            'primary_groups': 1,
+            'primary_series': 1
+        }
+    }
+
+
 # tree
 
 def test_tree_api(tsx, engine):
