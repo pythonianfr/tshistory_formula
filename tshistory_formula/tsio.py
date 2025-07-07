@@ -414,12 +414,10 @@ class timeseries(basets):
 
     @tx
     def formula(self, cn, name):
-        return cn.execute(
-            f'select internal_metadata->\'formula\' '
-            f'from "{self.namespace}".registry '
-            f'where name = %(name)s',
-            name=name
-        ).scalar()
+        metadata = self.internal_metadata(cn, name)
+        if metadata:
+            return metadata.get('formula')
+        return None
 
     @tx
     def list_series(self, cn):
