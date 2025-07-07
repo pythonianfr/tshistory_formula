@@ -426,6 +426,8 @@ def scan_descendant_nodes(cn, tsh, name):
 # findseries
 
 def replace_findseries(cn, tsh, tree):
+    if tree is None:
+        return None
     newtree = []
     for elt in tree:
         if isinstance(elt, list):

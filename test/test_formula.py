@@ -2545,6 +2545,136 @@ def test_transitive_closure_dependents(engine, tsh):
     assert deps == ['dep-f2', 'dep-f3']
 
 
+def test_direct_vs_transitive_dependents(engine, tsh):
+    """Test the fundamental difference between direct=True and direct=False"""
+    ts = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(utcdt(2022, 1, 1), periods=3, freq='d')
+    )
+
+    # Setup: base -> f1 -> f2 -> f3
+    tsh.update(engine, ts, 'chain-base', 'author')
+    tsh.register_formula(engine, 'chain-f1', '(series "chain-base")')
+    tsh.register_formula(engine, 'chain-f2', '(series "chain-f1")')
+    tsh.register_formula(engine, 'chain-f3', '(series "chain-f2")')
+
+    # Direct dependencies of base
+    direct_deps = tsh.dependents(engine, 'chain-base', direct=True)
+    assert direct_deps == ['chain-f1']
+
+    # Transitive dependencies of base
+    transitive_deps = tsh.dependents(engine, 'chain-base', direct=False)
+    assert sorted(transitive_deps) == ['chain-f1', 'chain-f2', 'chain-f3']
+
+    # Direct dependencies of f1
+    direct_deps_f1 = tsh.dependents(engine, 'chain-f1', direct=True)
+    assert direct_deps_f1 == ['chain-f2']
+
+    # Transitive dependencies of f1
+    transitive_deps_f1 = tsh.dependents(engine, 'chain-f1', direct=False)
+    assert sorted(transitive_deps_f1) == ['chain-f2', 'chain-f3']
+
+
+def test_diamond_dependency_graph(engine, tsh):
+    """Test diamond-shaped dependency graph"""
+    ts = pd.Series([1, 2], index=pd.date_range(utcdt(2022, 1, 1), periods=2, freq='d'))
+
+    # Setup diamond:
+    #    base
+    #   /    \
+    #  f1    f2
+    #   \    /
+    #    f3
+    tsh.update(engine, ts, 'diamond-base', 'author')
+    tsh.register_formula(engine, 'diamond-f1', '(series "diamond-base")')
+    tsh.register_formula(engine, 'diamond-f2', '(series "diamond-base")')
+    tsh.register_formula(engine, 'diamond-f3', '(add (series "diamond-f1") (series "diamond-f2"))')
+
+    # Direct dependencies of base
+    direct_deps = tsh.dependents(engine, 'diamond-base', direct=True)
+    assert sorted(direct_deps) == ['diamond-f1', 'diamond-f2']
+
+    # Transitive dependencies of base
+    transitive_deps = tsh.dependents(engine, 'diamond-base', direct=False)
+    assert sorted(transitive_deps) == ['diamond-f1', 'diamond-f2', 'diamond-f3']
+
+    # Direct dependencies of f1
+    direct_deps_f1 = tsh.dependents(engine, 'diamond-f1', direct=True)
+    assert direct_deps_f1 == ['diamond-f3']
+
+
+def test_complex_branching_tree_dependents(engine, tsh):
+    """Test complex dependency tree with multiple branches"""
+    ts = pd.Series([1, 2], index=pd.date_range(utcdt(2022, 1, 1), periods=2, freq='d'))
+
+    # Setup complex tree:
+    #      root
+    #    /   |   \
+    #   a    b    c
+    #  / \   |   / \
+    # a1 a2  b1 c1 c2
+    #    |       |
+    #   a2x     c1x
+
+    tsh.update(engine, ts, 'tree-root', 'author')
+
+    # Level 1
+    tsh.register_formula(engine, 'tree-a', '(series "tree-root")')
+    tsh.register_formula(engine, 'tree-b', '(series "tree-root")')
+    tsh.register_formula(engine, 'tree-c', '(series "tree-root")')
+
+    # Level 2
+    tsh.register_formula(engine, 'tree-a1', '(series "tree-a")')
+    tsh.register_formula(engine, 'tree-a2', '(series "tree-a")')
+    tsh.register_formula(engine, 'tree-b1', '(series "tree-b")')
+    tsh.register_formula(engine, 'tree-c1', '(series "tree-c")')
+    tsh.register_formula(engine, 'tree-c2', '(series "tree-c")')
+
+    # Level 3
+    tsh.register_formula(engine, 'tree-a2x', '(series "tree-a2")')
+    tsh.register_formula(engine, 'tree-c1x', '(series "tree-c1")')
+
+    # Test root direct dependencies
+    direct_deps = tsh.dependents(engine, 'tree-root', direct=True)
+    assert sorted(direct_deps) == ['tree-a', 'tree-b', 'tree-c']
+
+    # Test root transitive dependencies (should get everything)
+    transitive_deps = tsh.dependents(engine, 'tree-root', direct=False)
+    expected = ['tree-a', 'tree-b', 'tree-c', 'tree-a1', 'tree-a2', 'tree-b1', 'tree-c1', 'tree-c2', 'tree-a2x', 'tree-c1x']
+    assert sorted(transitive_deps) == sorted(expected)
+
+    # Test intermediate node
+    direct_deps_a = tsh.dependents(engine, 'tree-a', direct=True)
+    assert sorted(direct_deps_a) == ['tree-a1', 'tree-a2']
+
+    transitive_deps_a = tsh.dependents(engine, 'tree-a', direct=False)
+    assert sorted(transitive_deps_a) == ['tree-a1', 'tree-a2', 'tree-a2x']
+
+
+def test_no_dependents(engine, tsh):
+    """Test series with no dependents"""
+    ts = pd.Series([1, 2], index=pd.date_range(utcdt(2022, 1, 1), periods=2, freq='d'))
+
+    tsh.update(engine, ts, 'orphan-series', 'author')
+
+    # Should return empty list
+    direct_deps = tsh.dependents(engine, 'orphan-series', direct=True)
+    assert direct_deps == [], f"Expected [], got {direct_deps}"
+
+    transitive_deps = tsh.dependents(engine, 'orphan-series', direct=False)
+    assert transitive_deps == [], f"Expected [], got {transitive_deps}"
+
+
+def test_nonexistent_series_dependents(engine, tsh):
+    """Test dependents of non-existent series"""
+    # Should return empty list, not crash
+    direct_deps = tsh.dependents(engine, 'does-not-exist', direct=True)
+    assert direct_deps == [], f"Expected [], got {direct_deps}"
+
+    transitive_deps = tsh.dependents(engine, 'does-not-exist', direct=False)
+    assert transitive_deps == [], f"Expected [], got {transitive_deps}"
+
+
 def test_fill_and_clip(engine, tsh):
     # setup:
     # 2 series one of length 2, the other 4

@@ -243,7 +243,9 @@ def test_find_dependents(engine, tsh):
         '(add (findseries (by.name "find-dep-level-3")))'
     )
 
-    assert tsh.dependents(engine, 'find-base-dep') == []
+    assert tsh.dependents(engine, 'find-base-dep') == [
+        'find-dep-level-1', 'find-dep-level-2', 'find-dep-level-3', 'find-dep-level-4'
+    ]
     assert tsh.dependents(engine, 'find-dep-level-1') == [
         'find-dep-level-2', 'find-dep-level-3', 'find-dep-level-4'
     ]

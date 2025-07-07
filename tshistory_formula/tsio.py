@@ -162,72 +162,76 @@ class timeseries(basets):
             f'        where name = %(name)s)',
             name=name
         )
-        for dep in self.find_series(cn, tree):
-            if self.type(cn, dep) != 'formula':
-                continue
-            cn.execute(
-                f'insert into "{self.namespace}".dependent '
-                f'(sid, needs) '
-                f'values ('
-                f' (select id from "{self.namespace}".registry where name = %(name)s),'
-                f' (select id from "{self.namespace}".registry where name = %(dep)s)'
-                f') on conflict do nothing',
-                name=name,
-                dep=dep
+
+        # bulk optimization: collect all dependencies and batch the operations
+        deps = self.find_series(cn, tree)
+        if not deps:
+            return
+
+        # The dependent table tracks: "formula A depends on series B"
+        # But we only register when the DEPENDENT (A) is a formula
+        # Primary series don't have dependents registered in this table
+
+        # single bulk insert - register this formula as depending on its deps
+        cn.execute(
+            f'insert into "{self.namespace}".dependent (sid, needs) '
+            f'select s1.id, s2.id '
+            f'from "{self.namespace}".registry s1, "{self.namespace}".registry s2 '
+            f'where s1.name = %(name)s '
+            f'and s2.name = ANY(%(deps)s) '
+            f'on conflict do nothing',
+            name=name,
+            deps=list(deps)
+        )
+
+    def _direct_dependents(self, cn, name):
+        """Get direct dependents only - the base case"""
+        # Step 1: Static dependencies from dependent table
+        static_deps = list(cn.execute(
+            f'select f.name '
+            f'from "{self.namespace}".registry as f, '
+            f'     "{self.namespace}".registry as f2,'
+            f'     "{self.namespace}".dependent as d '
+            f'where f.id = d.sid and '
+            f'      d.needs = f2.id and '
+            f'      f2.name = %(name)s',
+            name=name
+        ).scalars())
+
+        # Step 2: Dynamic dependencies from findseries
+        formulas_with_findseries = cn.execute(
+            f'select name, internal_metadata->\'formula\' '
+            f'from "{self.namespace}".registry '
+            f'where (internal_metadata->\'formula\')::text LIKE \'%findseries%\'',
+        ).fetchall()
+
+        dynamic_deps = []
+        for formula_name, formula in formulas_with_findseries:
+            rewritten_tree = helper.replace_findseries(
+                cn, self, parse(formula)
             )
+            components = self.find_series(cn, rewritten_tree)
+            if name in components:
+                dynamic_deps.append(formula_name)
+
+        return set(static_deps + dynamic_deps)
 
     @tx
     def dependents(self, cn, name, direct=False):
-        all_formulas = [
-            name
-            for name, type in self.list_series(cn).items()
-            if type == 'formula'
-        ]
-        formulas_find = defaultdict(list)
-        for formula_name in all_formulas:
-            formula = self.formula(cn, formula_name)
-            if 'findseries' in formula:
-                rewritten_tree = helper.replace_findseries(
-                    cn, self, parse(formula)
-                )
-                components = self.find_series(cn, rewritten_tree)
-                for comp in components:
-                    formulas_find[comp].append(formula_name)
-
-        return self._dependents(
-            cn,
-            name,
-            direct=direct,
-            formulas_find=formulas_find,
-        )
-
-    def _dependents(self, cn, name, direct=False, formulas_find={}):
-        deps = [
-            n for n, in cn.execute(
-                f'select f.name '
-                f'from "{self.namespace}".registry as f, '
-                f'     "{self.namespace}".registry as f2,'
-                f'     "{self.namespace}".dependent as d '
-                f'where f.id = d.sid and '
-                f'      d.needs = f2.id and '
-                f'      f2.name = %(name)s',
-                name=name
-            ).fetchall()
-        ]
-        dynamic_deps = formulas_find.get(name, [])
-        deps = deps + dynamic_deps
         if direct:
-            return sorted(set(deps))
+            return sorted(self._direct_dependents(cn, name))
 
-        for dname in deps[:]:
-            deps.extend(
-                self._dependents(
-                    cn,
-                    dname,
-                    formulas_find=formulas_find
-                )
-            )
-        return sorted(set(deps))
+        # Transitive: recursively call direct dependents
+        all_deps = set()
+        direct_deps = self._direct_dependents(cn, name)
+        all_deps.update(direct_deps)
+
+        # Recursively get dependents of each direct dependent
+        for dep in direct_deps:
+            transitive_deps = self.dependents(cn, dep, direct=False)
+            all_deps.update(transitive_deps)
+
+        return sorted(all_deps)
 
     @tx
     def depends(self, cn, name, direct=False):
