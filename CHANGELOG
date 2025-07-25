@@ -1,0 +1,832 @@
+# Changelog
+
+## [Unreleased]
+
+### Added
+- api:
+  - group_formula: federation support
+  - bindings_for: federation support  
+  - group_rename: working integrity-preserving group rename
+  - depends: track (reverse) formula dependencies
+  - oldformulas: access older versions of a formula (with user field)
+  - group_eval_formula: evaluate group formulas on-the-fly
+- operators:
+  - date-filter: new operator with cronrule support
+  - group-from-series: create groups from series
+  - group-add-series: dedicated operator for adding series to groups
+  - cumprod: cumulative product operator
+  - series: keepnans parameter to preserve NaN values
+- tsio:
+  - group_log: avoid crashing on non-primary groups
+  - insertion_dates: support for limit parameter
+  - info: implement info protocol for formulas
+- groups: change group bindings db representation
+- types: implement closed vocabularies with Literal
+- vocabulary: update timezones, period offsets and calculation methods
+- search/group/by.formula: include bound groups in formulas result set
+- http/client: type annotations
+
+### Changed
+- switch from sqlalchemy to sqlhelp throughout
+- operators:
+  - conditionals: accept nan as input
+  - constant: highlight impossibility of naive constant expressions
+  - integration: first 2 inputs are series names
+  - start-of-month: set hour, minute and second to zero
+  - tzaware: ensure results are localized in UTC
+  - options: ensure options are kept in various operators (naive, tzaware, comparators, resample, upsample, rolling, cumsum, asof, time-shifted, slice)
+- api:
+  - depends: always return a list
+  - register_formula: forbid tzawareness change if we have dependents
+- tsio:
+  - interval: return None when no series referenced
+  - register_formula: do not record non-changes
+  - find: fix group kind of results
+- schema: 
+  - switch off binary protocol for multi-statement initialization
+  - bound-groups: add missing column in unique constraint
+- helper:
+  - find_tz: also record when crossing tzaware operator
+  - regroup migration helpers
+  - fix_day_period: correct d vs D period issue
+- gfuncs/group-add: do not raise error when no group provided
+- http: use choices rather than enums for constrained string fields
+- migrate: add Freq and valid timezones for 0.18.0
+- vocabulary: fix date-filter, block-staircase, FreqType transformation
+- pkg: bump holidays version
+
+### Fixed
+- test/bug: tzaware operator returning false metadata info
+- test/integration: issue with delete + rename flow
+- test/constant: failure of .interval with constant series
+- operators/date-filter: optimize index filter with pandas builtin
+- tsio/group-formula: fix tzawareness detection
+- api/formula_depth: fix return type when no source
+- depth: fix federation bug by attributing -1 to primary depth
+- pytype: fix invalid annotation error
+- vocabulary: fix double migration
+- test: fix strange pytest golden error
+
+### Removed
+- operators: remove by.source (following tshistory change)
+
+## [0.17.0] - 2025-02-25
+
+### Added
+- operators/upsample: new operator for upsampling
+- operators/bysource: provide bysource filter to findseries
+- api/eval_formula: tz option
+- migrate/interval: prepare migration for intervals
+- funcs: add BasketName, Source and MetaKey for proposals
+- funcs/doc: add examples for <, >, = operators
+
+### Changed
+- operators/resample: integrate upsample mechanisms
+- operator/findseries: use other sources for remote series support
+- use new configuration object and codecs module
+- conftest: use tempconfig
+- schema: register version at init-db time
+- test: switch PostgreSQL port to 5434 for server usage
+- pkg: bump holidays and pycountry versions
+
+### Fixed
+- operator/findseries: make it work with remote series
+- search/isformula: fix signature (used by tsview)
+- conftest: fix DATADIR and remove unused fixture
+
+### Removed
+- cli: retire the whole module
+
+## [0.16.2] - 2024-10-24
+
+### Added
+- operator/today: re-introduce today operator (distinct from now)
+
+### Fixed
+- operators: do not lower the freq
+- operators/holidays: fix lack of explicit horizon (like constant)
+- operators/resample: 
+  - backout change helping upsampling case (ffill by default)
+  - use fill option parameter in resample
+- test-operators: silence deprecation warnings
+
+### Changed
+- ci: move to heptapod
+
+## [0.16.1] - 2024-09-04
+
+### Fixed
+- tsio/update: inhibit formula patching capability
+- test/operator/add: document odd corner case
+
+### Changed
+- test/api: move test to api level (better placement)
+
+## [0.16.0] - 2024-08-06
+
+### Added
+- operators/tzaware: new operator to convert series to timezone-aware
+- tsio/rename: propagate option (default True) for bw compatibility
+- api/formula: remote parameter to cross federation boundaries (default True)
+- api/formula_depth: cross instance boundaries
+- http: document api points, introduce required roles on relevant routes
+- search: add missing type signatures for UI
+- pandas 2.x support
+
+### Changed
+- operators/today: renamed to "now" (might reintroduce different today later)
+- operators/resample: fix behavior when upsampling (use series freq not provided freq)
+- tsio/history: recast infrastructure in terms of insertion_dates + get (remove complex optimizations)
+- api/formula: switch default value of display to true
+- findseries operator handling:
+  - depth calculation now goes through findseries
+  - expansion now goes through findseries
+  - dependents now account for findseries operator
+  - formula-components and insertion-dates work with findseries
+- pkg: update holidays package
+- build: remove tsview (no longer provides extension to test)
+
+### Fixed
+- tsio/get: honor api contract wrt query boundaries
+- tsio/get: loop detection to avoid self-referencing formulas
+- tsio/register_formula: verify well-formedness of formula keywords
+- operators/findseries: correct handling of naive parameter
+- operators/by.basket: remove unnecessary parameters
+- helper/replace_findseries: make it take and return tree, use cn object
+- tsio/rename: defer metadata updates after iterating (avoid useless computations on error)
+- search: make depth calculus compatible with empty findseries
+- test/rename: fix test transaction control
+- reduce deprecation warnings
+
+### Removed
+- cli: retire old migrations
+
+## [0.15.3] - 2023-11-07
+
+### Fixed
+- migrate: brown-paper-bag fix
+- operators/group_series: fix exit case with empty series
+- migrate/formula-schema: avoid crash on encounter with broken series
+- bug: formula lost tz-awareness with priority operator (3+ members, last one add operator out of bounds)
+
+### Changed
+- migrate: reduce verbosity
+
+### Removed
+- cli/shell: retire (tshistory shell does the job)
+
+## [0.15.2] - 2023-09-25
+
+### Fixed
+- http/client: provide missing index
+- tsio/find: ensure kind is "formula" when needed
+- tsio/bindings_for: do not crash on absentee group
+- operators/findseries: adjust to tshistory change
+
+### Changed
+- operators/findseries: better documentation (missing fill, better naive explanation)
+
+## [0.15.1] - 2023-09-07
+
+### Fixed
+- migrate/groups: actually run and fix the migration
+- pkg: pin holidays package (needs careful revision updates)
+- pkg: better versions for tshistory
+- build: adjust to python 3.11
+
+## [0.15.0] - 2023-08-11
+
+### Added
+- operators:
+  - block-staircase: first version of this operator
+  - holidays: autotrophic operator for holidays
+  - round: round operator (migrated decimals option from trig)
+  - abs: absolute value operator
+  - sub: subtraction operator with migration for * -1 formulas
+  - by.basket: filter using pre-defined basket name
+- operators/findseries:
+  - fill option implementation
+  - #:naive keyword (searches tzaware by default)
+  - allow filters yielding no series
+- tsio:
+  - expanded: allow specifying expansion depth (levels)
+  - depth: compute formula depth (max traversal to bottom)
+- api:
+  - formula_depth: expose method to get formula depth
+  - formula: level parameter to expand to desired depth
+  - update_metadata: new api point (replace_metadata renamed)
+- search: 
+  - filter by formula contents
+  - filter to separate formulas from primaries
+  - namespace parameter to sql method
+- migrate: switch to automatic migration system
+- build: tox and ruff configuration
+- pkg: tshclass and httpclient entry points
+- __version__ attribute in package root
+
+### Changed
+- groups: schema unification (everything into group_registry, metadata split)
+- operators: prepare retirement of findnames and serieslist (findseries does all)
+- types:
+  - function_types: use List[...] annotation for varargs
+  - typename: do not undecorate List types
+  - use Packed rather than List to indicate varargs
+- tshistory/update_metadata: renamed to replace_metadata
+- tsio/metadata: initial metadata must be empty dict
+- operators/slice: simplify implementation and docstring
+- conftest: specialize test machinery for formula specific routes
+- http/formula: return asked level of expansion
+- doc/readme: remove obsolete infos
+
+### Fixed
+- test/slice_vs_tzaware: fixed by tshistory package update
+- test/empty_filter: prepare for allowing formulas on initially empty filters
+- test/operator: align with tshistory/find alignment
+- test/http: repair bound formula group tests
+- operators/holidays: silence deprecation warning
+- operators/round: migrate decimals option from trig
+- api/formula-components: fix typo in docstring
+- tsio: various name errors and cleanups
+- helper/depth: avoid crasher in obscure corner case
+- migrate: remove refs to supervision_status
+
+### Removed
+- operators: retire findnames and serieslist (replaced by findseries)
+
+## [0.14.0] - 2023-02-24
+
+### Added
+- operators:
+  - serieslist, findnames: get series lists using find api
+  - findseries: combo of serieslist + findnames
+  - comparators: <, <=, >, >=, <>, == (compare series to scalar or series)
+  - complete set of filters and logical search operators
+- patch: patch formula values (more basic than supervision)
+  - complete rename and delete methods
+  - verify behavior with patched NaNs
+- psyl SPLICE operator (<|) support for tuple unpacking
+- tsio: tz-aware checker for dynamic series (by filters)
+- cli:
+  - migrate-formula-schema: schema changes for metadata and tables reorg
+  - patch: migration command
+
+### Changed
+- schema: unify formula registry with tshistory stored series registry
+  - internal metadata carries all needed information
+  - search and filters work on unified table and structure
+- tsio/internal_metadata: follow tshistory split of internal vs user metadata
+- group/metadata: fix after series metadata work completed
+- rename: dependant -> dependent throughout
+- interpreter: automatic list unpacking (SPLICE no longer needed)
+- operators: doc fixes, enhancements, missing docstrings
+- types: extract typing helpers to dedicated module
+- operators/add: do not crash when no series (can happen with serieslist)
+- operators/trig: better round operation (clearer code)
+- operators/comparator: specify dtype for future compatibility
+- tsio/check_tz_compat: complete integration of tz aware checks
+
+### Fixed
+- helper/expanded: remove bogus defensive condition
+- type fixes noted through pytype
+- test/formula: use vendored decorator lib
+
+### Removed
+- cli: retire unused command line tools
+
+## [0.13.1] - 2023-02-24
+
+### Fixed
+- tsio/formula_stat: ensure expansion not stopped by cache
+- operators/resample: fix boundary issues
+  - enlarge request boundaries by right amount for complete buckets
+  - prevents wrong results at extremities from incomplete data
+
+## [0.13.0] - 2022-12-26
+
+### Added
+- operators:
+  - trigo: cos, sin, tan, arccos, arcsin, arctan, arctan2
+  - integration: integrate flow series to last known value of stock series
+  - doy: day of year operations
+- tsio:
+  - support for first/latest_insertion_date
+  - complete metadata support for formula and bound formulas groups
+  - helper tools to list primaries and autotrophics
+  - formula_stats: improved counting of repetitions
+- group/formula: metadata protocol for autotrophic group formulas
+- formula/expanded: shownames parameter to prune tree (dual of stopnames)
+- cli:
+  - fix-group-metadata: tool to fix existing groups
+  - migration to fix formula and bound group formula metadata
+  - resurrect group tables creation
+
+### Changed
+- editor: moved to tsview (too much flexibility for own good)
+- interpreter: only expose operators with docstring
+- group/hijacking:
+  - more correct formula expansion with low level helpers
+  - optimization to reduce computation and memory use
+  - cache only named nodes higher in formula tree
+- api/register-formula-bindings: fix docstring
+- tsio/register-formula-bindings:
+  - ensure series and groups exist
+  - ensure tz-compatible groups
+  - nocheck parameter to avoid chicken-egg with metadata
+- http: better json representation for bindings_for api point
+
+### Fixed
+- group/hijacking: getargs not properly propagated through overloaded get method
+- group/insertion_dates: remove irrelevant groups from bindings
+- bound-formula-groups: fix recursion error
+- bound-group/idates: fix limit case excluding first idate
+- http/client: correctly handle type errors at register_formula time
+- cli/rename-operators: groups not properly handled
+
+### Removed
+- cli: retire old migration
+
+## [0.12.0] - 2022-10-11
+
+### Added
+- operators: scalar power operator
+- test/dependants: more corner cases and node deletion tests
+- cli/migrate-to-dependants: step to purge existing entries
+
+### Changed
+- doc/readme: use modern api
+- editor: adaptation to pandas 1.4.1
+- tsio/register-formula,rename: forbid whitespace names
+
+### Fixed
+- operators/time-shifted: do not crash when no keyword parameter provided
+- tsio/register-dependants: cleanup existing dependency records (was only adding cruft)
+- tsio/dependants: on node deletion, disappears from dependencies lists
+
+## [0.11.0] - 2022-06-23
+
+### Added
+- scope mechanism for operators to restrict query boundaries
+  - @argscope decorator for operators
+  - series operator uses scoped parameters (__from_value_date__, __to_value_date__, __revision_date__)
+  - naive, time-shifted operators define scopes
+- operators:
+  - asof: get subexpression series in different revision
+  - options/limit: better fillna tunability
+- groups:
+  - group_insertion_dates: support for group formulas with bounds
+  - group_history: low level api point with from/to bounds
+  - support for hijacked formulas
+- tsio:
+  - dependants: store and compute reverse dependencies between formulas
+  - live_content_hash: compute content-hash on the fly
+  - iter_revisions: internal api point for memory-efficient iteration
+- api:
+  - eval_formula: evaluate formulas on-the-fly before registration
+  - formula: display parameter to inhibit macro-expansion
+  - insertion_dates: accept from/to_value_dates
+- cli:
+  - rename-operators: handle group formulas
+  - migrate-to-content-hash: faster implementation
+  - migrate-to-dependants: handle dependencies between formulas
+- schema: keep hash of expanded formula (content-addressable)
+- evaluator: configure concurrency level
+- license text added
+
+### Changed
+- operators:
+  - rename min/max to row-min/row-max (prepare for scalar min/max)
+  - rename timedelta to shifted
+  - rename shift to time-shifted
+  - series: remove dependency on interpreter.getargs
+  - constant: use scoped query parameters, ensure index not shifted
+  - naive: more robust with tz-aware bounds
+- evaluator:
+  - dispatch threaded/sequential based on concurrency level
+  - replace complex quasiexpreval with lighter resolve function
+  - cache result of funcid (performance)
+- tsio:
+  - history: major refactoring for clarity
+    - extract autotrophic operator history computation
+    - extract gap filling logic
+    - extract diff computation
+    - better naming throughout
+  - insertion_dates: tidy parameter passing
+  - expanded: inject top-level query arguments as variable bindings
+- interpreter:
+  - history: immediately stuff getargs with revision date
+  - groups: simplify implementation
+- registry:
+  - history: require __interpreter__ for auto operators
+  - remove update parameter from register_formula
+- editor: fix behavior with empty series (remove buggy conditional)
+- http: use provided session (important for security context)
+
+### Fixed
+- operator/slice: use tzaware_series predicate
+- evaluator: fix pool parameter in non-threaded path
+- operator/constant: should not adopt shifts of outer query parameter
+- operators/clip: transfer options through operator
+- operators/min-max: fix docstring
+- operators/asof: working implementation for history
+- tsio/log: return empty list on formulas
+- funcs/scope: fix crash with embedded naive in slice
+- repair name builder for autotrophic operators history
+
+### Removed
+- operators/series: retire prune option (replaced by slice)
+- operators: retire tuple operator
+
+## [0.10.0] - 2022-01-13
+
+### Added
+- http: host the client part (tshistory_formula now specializes base api, http rest and client)
+- pkg: missing dependencies for editor part
+
+### Changed
+- tests/formula: avoid creating metadata-less formulas (preparation for future restriction)
+- interpreter/groups: simplify implementation
+- interpreter/today: explain why no caching when time travelling
+
+### Fixed
+- types: adjust for python 3.9 typing change
+- tsio/history: avoid name leak (fixes bogus index type on history output)
+- interpreter/history: fix tzaware attribute
+- interpreter/today: fix crash with constant + today + time travel
+
+### Removed
+- operators: retire tuple operator (premature, annoys formula editor users)
+
+## [0.9.0] - 2021-08-09
+
+### Added
+- groups: comprehensive support for groups defined by formulas
+  - register_group_formula: register group formulas
+  - group_formula: retrieve group formula definition
+  - support in list_groups, group_type, group_exists, group_delete
+  - bound series formula support (mapping series to groups)
+  - group_metadata and update_group_metadata
+  - group operators with docstrings
+  - http api support for group formulas and bound formulas
+- helper/expanded: stopnames argument to limit expansion
+- cli:
+  - update-metadata: specify one series and show tzawareness
+  - migration to groups command for upgrading instances
+- api: type hints and docstrings for group operations
+- blueprint: host formula part of tshistory http api (server side)
+
+### Changed
+- groups: rename group-add to better name
+- cli/typecheck: use pdbshell arg properly
+- tsio/register-formula: preserve previous user metadata on update
+
+### Fixed
+- tsio/history: 
+  - fix issues with formula and lower bounds on insertion dates
+  - handle case with lower bounds and no history (common with autotrophic operators)
+- operators: document skipna keywords where relevant
+- evaluator: cleanup imports
+- interpreter: fix wrong indentation
+
+### Removed
+- cli: retire old migration command
+
+## [0.8.1] - 2021-01-19
+
+### Fixed
+- operators/constant: 
+  - honor from/to value date from query
+  - do not crash on naive query
+- operators/today: fix corner cases yielding naive stamps
+- evaluator: work around broken stdlib ThreadPoolExecutor with stripped down version
+
+## [0.8.0] - 2020-12-11
+
+### Added
+- operators:
+  - rolling: base support for rolling operations
+  - tuple: provide tuple operator (enables multiple aggregation operators)
+  - start-of-month: yield start of month for provided date
+  - end-of-month: yield end of month for provided date
+  - constant: constant series generator with full api support (history, insertion_dates)
+- insertion_dates protocol for autotrophic operators
+  - efficient implementations with from/to parameters
+  - avoids double parse
+- registry/auto: new protocol to distinguish ordinary from autotrophic operators
+- evaluator: thread-pool based concurrency (replaces thread-spawning)
+
+### Changed
+- func/arith: provide better argument names for tsview/formula editor
+- operators/today: 
+  - move implementation to interpreter (special operator)
+  - time-travel support (bound to revision_date)
+  - works with history api point
+- operators/naive: more index deduplication in naive path
+- evaluator: 
+  - evaluate formula on expansion to avoid deadlocks
+  - use auto registry for thread execution decisions
+  - pass trees instead of formula strings (less overhead)
+- helper/expanded: 
+  - do not lose track of expanded series options
+  - only expand on series operator
+- autotrophic formulae: use expression tree as key (not values) for time-travelling today
+
+### Fixed
+- tsio/update: raise ValueError on attempts to update formula (prevents hidden primary)
+- funcs: repair _grouping series when one has no value in requested bounds
+- operators/groups: fix behavior with fill option and bounds out of data
+- operators/constant: handle time-travelling today errors with naive revision dates
+- use empty_series helper to build correct empty series (naive or tzaware)
+
+### Removed
+- cli: remove dead code
+- registry: remove unused leftover
+
+## [0.7.3] - 2020-08-17
+
+### Fixed
+- schema: do not invoke super schema creation (keep steps independent)
+- history: fix autotrophic operators history naming issues
+  - handle multiple autotrophic operators in same formula
+  - automatic history handling via @func decorator
+  - proper name forging using operator name, parameters and call arguments
+  - handle unevaluated subexpressions in auto operator arguments
+  - handle positional arguments fed as keywords
+  - special handling for impure operators (e.g. today) using interpreter-scoped cache
+- interpreter: silence pandas deprecation warning
+- history/auto: fix name handling blunder in _groupby
+
+### Changed
+- history/auto: use local cache for computed names
+- history/auto: delegate name handling to interpreter
+
+## [0.7.2] - 2020-07-30
+
+### Added
+- history: working diff mode support (naive implementation, no propagation)
+
+### Fixed
+- editor: provide proper type info for autotrophic operators (tshistory/api no longer lies)
+- editor: provide name in interpreter path for autotrophic operators (avoids KeyError in components_table)
+
+## [0.7.1] - 2020-07-20
+
+### Fixed
+- meta: remove supervision_status pollution from first series metadata
+- register/metadata: do not use components metadata (prevents bad metadata leaking)
+- editor: fix autotrophic operators series values computation
+- editor: fix handling of mixed naive/tzaware series in components_table
+- editor: do not crash on empty series (plain Index without .tz attribute)
+- tsio/check_tz_compat: exhibit absent tz information
+- cli/update-metadata: use new metadata handling, easier error display
+
+## [0.7.0] - 2020-07-02
+
+### Added
+- operators:
+  - cumsum: expose pandas series cumsum
+  - shift: shift forward index dates (using timedelta for performance)
+  - clip: keywords #:replacemin #:replacemax to fill out-of-bounds with boundaries
+  - min,max,std,mean: supply #:skipna option
+- api:
+  - formula_components: expose find_series protocol, support expanded series and alt sources
+  - insertion_dates: handle all components including remote ones, support autotrophic operators
+- registry: add metadata protocol (separate from finder protocol)
+- types: introduce Default term to handle default values
+- interpreter/history: provide convenience callback for autotrophic operators
+- cli:
+  - migrate: command to fix bad metadata (remove supervision_status)
+  - shell: use timeseries api object (accepts https uris)
+
+### Changed
+- operators/date: remove naive param, impose default UTC for tz parameter
+- operators/resample: do not produce NaNs
+- operators/naive: 
+  - handle duplicates on DST switch using groupby->mean
+  - do not crash on empty series or when applied to naive series
+- operators/priority: 
+  - use patchmany for performance (6.6s to 0.9s)
+  - do not start from empty series
+  - support single series input
+- operators/slice: 
+  - do not attempt to slice empty series
+  - drop tzinfo over tznaive series
+  - handle out-of-bounds slicing
+- operators/min,max,row-mean: drop NaNs at the end
+- operators/mul,div: handle no data situation
+- tsio: overhaul series compatibility check (focus on tzawareness)
+- tsio/register-formula: 
+  - ensure top-level expression is a series
+  - drop compat_excluded items from metadata
+- types: switch from getfullargspec to signature objects
+- api/formula_components: crack the wall of opaque formulas, provide dependencies tree
+
+### Fixed
+- register-formula: forbid registration over existing primary series (TypeError)
+- operators/today: fix naive optionality
+- operators/clip: fix replacemin usage
+- tsio/update_metadata: fix entry removal
+- tsio/history: fix serious issue with custom operator history
+- interpreter: history lookup for autotrophic series more lenient
+- group_series: do not crash on empty series
+- naive: on empty series, do not reuse empty tz-aware index
+- api: fix crash on some autotrophic operators for idates
+
+### Removed
+- migration: remove slice rewriter
+- cli: remove old migration command
+
+## [0.6.0] - 2020-02-04
+
+### Added
+- operators:
+  - resample: resample operator for time series
+- api:
+  - formula accessor for primary and alternative sources
+  - support for altsources (remote series references from formulas)
+- history protocol for autotrophic operators
+  - autotrophic operators can now provide made-up history
+  - opens path to staircase support
+
+### Changed
+- types: replace Union[int,float] with numbers.Number abstract base type
+- types: one-element unions are no longer unions
+- operators/naive: produce correct metadata (naive series)
+- registry/finder: assert changed to warning for missing keys (more lenient)
+- editor:
+  - radical simplification - remove non-working tree display
+  - now shows all involved series with type information
+  - use api object
+  - work around weird autotrophic series
+- api: use tshistory.util.extend helper
+- cli: update csv header documentation for ingest-formulas
+
+### Fixed
+- registry/finder: more explicit message on missing keys
+- operators/series/finder: adapt to altsources.metadata api change
+- test/naive: metadata of naive series is now correctly naive
+
+## [0.5.0] - 2019-11-20
+
+### Added
+- operators:
+  - date: produce timestamps
+  - timedelta: shift timestamps by known quantities
+  - today: get timestamp for current day
+- api:
+  - insertion_dates: implement as union of components insertion dates
+- expanded: metadata flag to signal if series can be expanded
+- psyl: use parallel evaluator for better performance
+
+### Changed
+- operators/slice: fromdate/todate must be timestamps (includes migration)
+- cli: use text column for formula storage (closes #2)
+- registry/finder: ensure metadata has all mandatory keys at registration
+
+### Fixed
+- operators/*: fix options passing
+- operators/naive: fix documentation
+- types: detect missing typing at operator definition time (closes #7)
+- cli: fix fix-slice command
+- test: document index dtype of naive/tzaware indexes
+- expanded: fix completely bogus formula expansion cases
+
+## [0.4.0] - 2019-10-28
+
+### Added
+- operators:
+  - `/`: division operator (separate from div)
+  - row-mean: weighted row-mean over variable number of series
+  - row-min: row minimum across series
+  - row-max: row maximum across series
+  - std: standard deviation operator (removes NaN when N<2)
+  - naive: operator to drop timezone info with target timezone
+- api:
+  - expanded_formula: recursively substitute formulas within formulas
+- typechecker: complete type checking system for formulas
+  - type checking at registration time
+  - normalize types (Optional vs Union)
+  - better error messages for missing return types
+- cli:
+  - update-metadata: add --reset option
+  - complete migration from aliases (rewrite outliers to clip)
+  - safety belt for alias tables drop
+  - typecheck-formula: command to type check all formulas
+- helper: constant-folding rewriter for basic arithmetic
+- documentation:
+  - operators documentation in docstrings
+  - document naive operator
+  - notes on literals syntax
+  - operators ordered lexicographically
+
+### Changed
+- slice: preserve input series options
+- metadata: propagate all metadata (fixes tshistory_client formula fetch)
+- operators: +/* only take series as second argument, allow pure scalar arguments
+- finder: use protocol for series operator
+- editor: 
+  - support new operators out of the box
+  - fix handling of complex subexpressions
+  - use constant folding for meaningful display
+- register_formula: store normalized formula
+- test: move editor tests to own module
+
+### Fixed
+- editor: fix regression
+- std: remove NaN from results when N<2
+- types: fix many typing errors discovered by typechecker
+
+### Removed
+- completely retire tshistory_alias
+
+## [0.3.0] - 2019-09-18
+
+### Added
+- operators:
+  - slice: slice operator for series subsetting
+  - mul: multiplication operator
+  - div: division operator
+  - clip: better name for outliers operator
+- documentation:
+  - comprehensive operator documentation (slice, clip, add, priority, mul, div, *, /)
+  - better introduction section
+  - improved api section
+  - documentation on operator implementation
+
+### Changed
+- tsio: extract formula evaluation method to get value by formula (not just by name)
+- funcs: ensure all series-returning functions have an `options` attribute
+
+## [0.2.0] - 2019-09-05
+
+### Added
+- delete: implement formula deletion
+- metadata: compute internal metadata from formula constituents
+- metadata: allow specifying metadata for custom operators
+- staircase: add fast path optimization for safe formulas
+- cli: fix migration command
+
+### Changed
+- series: make pruning a general option (not just for priority)
+- funcs: use "fill" as internal fill option name for clarity
+- funcs: use accessor to get options (better third-party operator support)
+- find_series: walks the whole tree properly
+- register_formula: report unknown operators and refuse to register
+
+### Fixed
+- metadata/update: fix name error
+- rename: properly rename the formula when requested
+- update_metadata: fix super call
+- find_series: ensure complete tree traversal
+
+### Removed
+- caches: dropped following tshistory changes
+- tsio: removed delta after/before following tshistory
+
+## [0.1.0] - 2019-07-15
+
+### Added
+- initial working formula and base infrastructure
+- operators:
+  - series: fetch time series by name
+  - add/+: linear series combinations (addition)
+  - priority: build series from several by successive patch application
+  - outliers: outliers handling function
+  - mul/*: scalar × series product
+  - naive: timezone handling
+- formula registration with validation:
+  - detect malformed formulas
+  - detect non-existent series references
+  - detect unknown operators
+- api methods:
+  - register_formula: register new formulas
+  - get_formula: retrieve formula definition
+  - type: get series type
+  - exists: check series existence
+  - get_history: retrieve formula history
+  - list_series: list available series
+  - rename: rename series and update formula references
+  - metadata: metadata support
+- interpreter: lisp-like formula evaluation engine
+- staircase computation with optimizations
+- cli commands:
+  - convert-aliases: convert from legacy alias system
+  - compare-aliases: compare alias vs formula results
+  - ingest: load formulas from csv file
+  - shell: interactive shell with formula features
+- editor helper for formula information collection
+- schema: formula table in dedicated namespace
+- fill option: accept plain values
+- pass get parameters down to individual series
+- conversion from legacy alias component
+
+### Changed
+- interpreter: separate normal from history interpreter
+- prio/arith: use *args notation instead of wrapping in list
+- schema: ensure formula names are unique
+
+### Fixed
+- staircase/gethistory: handle None values properly
+- interpreter/history: ensure series object has proper name
+- interpreter/get: produce empty series when no data
+- register: fix parameter typo
+- convert/aliases: fix conversion for options, allow multiple runs
