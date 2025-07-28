@@ -257,6 +257,87 @@ def test_group_from_series_tzaware(engine, tsh):
     assert tsh.group_internal_metadata(engine, 'tzaware-group-from-series')['tzaware']
 
 
+def test_group_from_series_edge_cases(engine, tsh):
+    # empty group (no bind)
+    tsh.register_group_formula(
+        engine,
+        'group-from-series-empty',
+        '(group-from-series)'
+    )
+    df = tsh.group_get(engine, 'group-from-series-empty')
+    assert len(df) == 0
+    assert df.index.tz is not None  # should be timezone aware
+
+    # single bind
+    ts_single = pd.Series(
+        [1.0, 2.0, 3.0],
+        index=pd.date_range(
+            start=pd.Timestamp('2025-01-01'),
+            freq='D',
+            periods=3
+        )
+    )
+    tsh.update(engine, ts_single, 'single-series', 'test')
+
+    tsh.register_group_formula(
+        engine,
+        'group-from-series-single',
+        '(group-from-series (bind "only" (series "single-series")))'
+    )
+    df = tsh.group_get(engine, 'group-from-series-single')
+    assert_df("""
+            only
+2025-01-01   1.0
+2025-01-02   2.0
+2025-01-03   3.0
+""", df)
+
+    # series with mixed values including nans
+    ts_mixed = pd.Series(
+        [1.0, float('nan'), 3.0],
+        index=pd.date_range(
+            start=pd.Timestamp('2025-01-01'),
+            freq='D',
+            periods=3
+        )
+    )
+    tsh.update(engine, ts_mixed, 'mixed-series', 'test')
+
+    tsh.register_group_formula(
+        engine,
+        'group-from-series-mixed',
+        '(group-from-series '
+        '  (bind "normal" (series "single-series"))'
+        '  (bind "mixed" (series "mixed-series"))'
+        ')'
+    )
+    df = tsh.group_get(engine, 'group-from-series-mixed')
+    assert_df("""
+            normal  mixed
+2025-01-01     1.0    1.0
+2025-01-02     2.0    NaN
+2025-01-03     3.0    3.0
+""", df)
+
+    # scenario name conflicts (same name twice)
+    # both columns are kept with duplicate names
+    tsh.register_group_formula(
+        engine,
+        'group-from-series-conflict',
+        '(group-from-series '
+        '  (bind "same" (series "single-series"))'
+        '  (bind "same" (series "mixed-series"))'
+        ')'
+    )
+    df = tsh.group_get(engine, 'group-from-series-conflict')
+    assert_df("""
+            same  same
+2025-01-01   1.0   1.0
+2025-01-02   2.0   NaN
+2025-01-03   3.0   3.0
+""", df)
+
+
 def test_groupaddseries(engine, tsh):
     df1 = gengroup(
         n_scenarios=3,
