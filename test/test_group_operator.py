@@ -338,6 +338,58 @@ def test_group_from_series_edge_cases(engine, tsh):
 """, df)
 
 
+def test_group_from_series_insertion_dates(engine, tsh):
+    # create series with different insertion dates
+    ts1 = pd.Series(
+        [1.0, 2.0, 3.0],
+        index=pd.date_range(
+            start=pd.Timestamp('2025-01-01'),
+            freq='D',
+            periods=3
+        )
+    )
+
+    # insert series with specific dates
+    idate1 = utcdt(2025, 1, 1)
+    idate2 = utcdt(2025, 1, 2)
+    idate3 = utcdt(2025, 1, 3)
+
+    tsh.update(engine, ts1, 'dated-series1', 'test', insertion_date=idate1)
+    tsh.update(engine, ts1 * 2, 'dated-series2', 'test', insertion_date=idate2)
+    tsh.update(engine, ts1 * 3, 'dated-series3', 'test', insertion_date=idate3)
+
+    # create group formula
+    tsh.register_group_formula(
+        engine,
+        'group-from-series-dates',
+        '(group-from-series '
+        '  (bind "s1" (series "dated-series1"))'
+        '  (bind "s2" (series "dated-series2"))'
+        '  (bind "s3" (series "dated-series3"))'
+        ')'
+    )
+
+    # test group_insertion_dates
+    idates = tsh.group_insertion_dates(engine, 'group-from-series-dates')
+    assert idates == [idate1, idate2, idate3]
+
+    # update one series with a new insertion date
+    idate4 = utcdt(2025, 1, 4)
+    tsh.update(engine, ts1 * 1.5, 'dated-series2', 'test', insertion_date=idate4)
+
+    # check that group insertion dates now includes the new date
+    idates = tsh.group_insertion_dates(engine, 'group-from-series-dates')
+    assert idates == [idate1, idate2, idate3, idate4]
+
+    # test with date bounds
+    idates = tsh.group_insertion_dates(
+        engine, 'group-from-series-dates',
+        from_insertion_date=idate2,
+        to_insertion_date=idate3
+    )
+    assert idates == [idate2, idate3]
+
+
 def test_groupaddseries(engine, tsh):
     df1 = gengroup(
         n_scenarios=3,
