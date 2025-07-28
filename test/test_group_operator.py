@@ -1,6 +1,7 @@
 from datetime import datetime as dt
 
 import pandas as pd
+import pytest
 
 from tshistory.testutil import (
     assert_df,
@@ -388,6 +389,41 @@ def test_group_from_series_insertion_dates(engine, tsh):
         to_insertion_date=idate3
     )
     assert idates == [idate2, idate3]
+
+
+def test_group_from_series_mixed_tzaware_forbidden(engine, tsh):
+    # create naive series
+    ts_naive = pd.Series(
+        [1.0, 2.0, 3.0],
+        index=pd.date_range(
+            start=pd.Timestamp('2025-01-01'),
+            freq='D',
+            periods=3
+        )
+    )
+    tsh.update(engine, ts_naive, 'mixed-naive', 'test')
+
+    # create tzaware series
+    ts_tzaware = pd.Series(
+        [4.0, 5.0, 6.0],
+        index=pd.date_range(
+            start=pd.Timestamp('2025-01-01', tz='utc'),
+            freq='D',
+            periods=3
+        )
+    )
+    tsh.update(engine, ts_tzaware, 'mixed-tzaware', 'test')
+
+    # mixing naive and tzaware series should raise an error
+    with pytest.raises(ValueError, match='has tzaware vs tznaive series'):
+        tsh.register_group_formula(
+            engine,
+            'group-mixed-tzaware',
+            '(group-from-series '
+            '  (bind "naive" (series "mixed-naive"))'
+            '  (bind "tzaware" (series "mixed-tzaware"))'
+            ')'
+        )
 
 
 def test_groupaddseries(engine, tsh):
