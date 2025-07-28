@@ -27,11 +27,8 @@ def test_group_add(engine, tsh):
     idate = utcdt(2025, 5, 1)
 
     tsh.group_update(engine, df1, 'group1', 'test', insertion_date=idate)
-
     tsh.group_update(engine, df1*2, 'group2', 'test', insertion_date=idate)
-
     tsh.group_update(engine, df1*3, 'group3', 'test', insertion_date=idate)
-
 
     tsh.register_group_formula(
         engine,
@@ -77,9 +74,7 @@ def test_group_add(engine, tsh):
     df2.columns = colnames
 
     tsh.group_update(engine, df2*(-1), 'group1', 'test', insertion_date=idate2)
-
     tsh.group_update(engine, df2*(-3), 'group2', 'test', insertion_date=idate2)
-
     tsh.group_update(engine, df2*(-5), 'group3', 'test', insertion_date=idate2)
 
     df = tsh.group_get(engine, 'addgroup')
@@ -291,7 +286,7 @@ def test_groupaddseries(engine, tsh):
     tsh.register_group_formula(
         engine,
         'group-add-series',
-        '''(group-add-series (group "group2") (series "series1"))'''
+        '(group-add-series (group "group2") (series "series1"))'
     )
 
     df = tsh.group_get(engine, 'group-add-series')
@@ -305,7 +300,7 @@ def test_groupaddseries(engine, tsh):
     tsh.register_group_formula(
         engine,
         'group-add-series',
-        '''(group-add-series (group "group2") (series "series1" #:fill 0))'''
+        '(group-add-series (group "group2") (series "series1" #:fill 0))'
     )
 
     df = tsh.group_get(engine, 'group-add-series')
@@ -318,5 +313,3 @@ def test_groupaddseries(engine, tsh):
 2025-05-04  10.0  12.0  14.0
 2025-05-05  12.0  14.0  16.0
 """, df)
-
-
