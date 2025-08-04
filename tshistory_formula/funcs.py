@@ -369,7 +369,7 @@ def byvalue(key: str, operator: BY_VALUE_OPS, value: Union[str, Number]) -> sear
     """
     Yields a query filter operating on metadata items.
 
-    Example: `(add (findseries (by.value "weigth" "<=" 42)))`
+    Example: `(add (findseries (by.value "weight" "<=" 42)))`
 
     This will filter the series having a "weight" metadata entry and
     keep those whose values is <= 42.
