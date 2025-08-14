@@ -41,6 +41,12 @@ class Migrator(_Migrator):
 
 @version('tshistory-formula', '0.19.0')
 def migrate_0190(engine, namespace, interactive):
+    _migrate_form_history_table(engine, namespace, interactive)
+    _migrate_fix_formula_indexes(engine, namespace, interactive)
+
+
+def _migrate_form_history_table(engine, namespace, interactive):
+    """Create form_history table for formula version tracking"""
     ns = namespace
     with engine.begin() as cn:
         cn.execute(f"""
@@ -53,6 +59,20 @@ create table if not exists "{ns}".form_history (
 
 create index if not exists "ix_{ns}_form_history_sid" on "{ns}".form_history(sid);
 """, _binary=False)
+
+
+def _migrate_fix_formula_indexes(engine, namespace, interactive):
+    """Fix indexes in both namespaces used by formula"""
+    from tshistory.migrate import do_fix_indexes
+    from tshistory import dbdiag
+
+    # tshistory-formula uses the same indexes as tshistory
+    # in both the main namespace and the formula-patch namespace
+    main_indexes = dbdiag.get_expected_indexes(namespace)
+    do_fix_indexes(engine, namespace, interactive, main_indexes)
+
+    patch_indexes = dbdiag.get_expected_indexes(f'{namespace}-formula-patch')
+    do_fix_indexes(engine, f'{namespace}-formula-patch', interactive, patch_indexes)
 
 
 @version('tshistory-formula', '0.18.0')
