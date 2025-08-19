@@ -30,18 +30,10 @@ def test_tables(engine, pure):
             ('pure', 'ts_oldmeta'),
             ('pure-formula-patch', 'registry'),
             ('pure-formula-patch', 'revision_metadata'),
-            ('pure-formula-patch-kvstore', 'kvstore'),
-            ('pure-formula-patch-kvstore', 'things'),
-            ('pure-formula-patch-kvstore', 'version'),
-            ('pure-formula-patch-kvstore', 'vkvstore'),
             ('pure-kvstore', 'kvstore'),
             ('pure-kvstore', 'things'),
             ('pure-kvstore', 'version'),
             ('pure-kvstore', 'vkvstore'),
             ('pure.group', 'registry'),
             ('pure.group', 'revision_metadata'),
-            ('pure.group-kvstore', 'kvstore'),
-            ('pure.group-kvstore', 'things'),
-            ('pure.group-kvstore', 'version'),
-            ('pure.group-kvstore', 'vkvstore')
         ]

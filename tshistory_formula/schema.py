@@ -20,7 +20,8 @@ class formula_schema(tsschema):
         tsschema(f'{self.namespace}-formula-patch').create(
             engine,
             base=False,
-            groups=False
+            groups=False,
+            stores=False
         )
 
         kvstore = kvapi.kvstore(str(engine.url), namespace=f'{self.namespace}-kvstore')

@@ -6,6 +6,7 @@ from psyl.lisp import (
 )
 
 from tshistory.migrate import (
+    do_cleanup_kvstore,
     Migrator as _Migrator,
     version
 )
@@ -42,6 +43,7 @@ class Migrator(_Migrator):
 @version('tshistory-formula', '0.19.0')
 def migrate_0190(engine, namespace, interactive):
     _migrate_form_history_table(engine, namespace, interactive)
+    do_cleanup_kvstore(engine, f'{namespace}-formula-patch', interactive)
     _migrate_fix_formula_indexes(engine, namespace, interactive)
 
 
