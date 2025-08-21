@@ -65,15 +65,28 @@ create index if not exists "ix_{ns}_form_history_sid" on "{ns}".form_history(sid
 
 def _migrate_fix_formula_indexes(engine, namespace, interactive):
     """Fix indexes in both namespaces used by formula"""
-    from tshistory.migrate import do_fix_indexes
-    from tshistory import dbdiag
+    from pathlib import Path
+    from tshistory.migrate import (
+        create_revision_metadata_for_ns,
+        do_fix_indexes
+    )
+    from tshistory.sqlparser import (
+        parse_indexes,
+        TSHISTORY_PATH,
+        TSHISTORY_SQLFILES
+    )
 
-    # tshistory-formula uses the same indexes as tshistory
-    # in both the main namespace and the formula-patch namespace
-    main_indexes = dbdiag.get_expected_indexes(namespace)
+    create_revision_metadata_for_ns(engine, f'{namespace}-formula-patch')
+
+    formula_path = Path(__file__).parent
+    sqlfiles = TSHISTORY_SQLFILES + (formula_path / 'schema.sql',)
+    main_indexes = parse_indexes(sqlfiles, namespace)
     do_fix_indexes(engine, namespace, interactive, main_indexes)
 
-    patch_indexes = dbdiag.get_expected_indexes(f'{namespace}-formula-patch')
+    patch_indexes = parse_indexes(
+        (TSHISTORY_PATH / 'registry.sql',),
+        f'{namespace}-formula-patch'
+    )
     do_fix_indexes(engine, f'{namespace}-formula-patch', interactive, patch_indexes)
 
 
