@@ -7,6 +7,7 @@ from psyl.lisp import (
 
 from tshistory.migrate import (
     do_cleanup_kvstore,
+    do_enforce_series_metadata_integrity,
     Migrator as _Migrator,
     version
 )
@@ -45,6 +46,7 @@ def migrate_0190(engine, namespace, interactive):
     _migrate_form_history_table(engine, namespace, interactive)
     do_cleanup_kvstore(engine, f'{namespace}-formula-patch', interactive)
     _migrate_fix_formula_indexes(engine, namespace, interactive)
+    _migrate_formula_patch_metadata_integrity(engine, namespace, interactive)
 
 
 def _migrate_form_history_table(engine, namespace, interactive):
@@ -88,6 +90,11 @@ def _migrate_fix_formula_indexes(engine, namespace, interactive):
         f'{namespace}-formula-patch'
     )
     do_fix_indexes(engine, f'{namespace}-formula-patch', interactive, patch_indexes)
+
+
+def _migrate_formula_patch_metadata_integrity(engine, namespace, interactive):
+    # apply metadata integrity migration to formula-patch namespace
+    do_enforce_series_metadata_integrity(engine, f'{namespace}-formula-patch', interactive)
 
 
 @version('tshistory-formula', '0.18.0')
