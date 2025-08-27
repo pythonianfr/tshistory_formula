@@ -2473,6 +2473,16 @@ def test_dependants(engine, tsh):
         'dep-middle-right'
     ]
 
+    assert tsh.dependents(engine, 'dep-base', direct=True) == [
+        'dep-bottom'
+    ]
+    assert tsh.dependents(engine, 'dep-base') == [
+        'dep-bottom',
+        'dep-middle-left',
+        'dep-middle-right',
+        'dep-top'
+    ]
+
     # update and see
 
     tsh.register_formula(

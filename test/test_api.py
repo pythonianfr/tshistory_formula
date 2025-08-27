@@ -1770,6 +1770,16 @@ def test_depends(tsx):
         'depends-middle-right'
     ]
 
+    assert tsx.depends('depends-base', reverse=True, direct=True) == [
+        'depends-bottom'
+    ]
+    assert tsx.depends('depends-base', reverse=True) == [
+        'depends-bottom',
+        'depends-middle-left',
+        'depends-middle-right',
+        'depends-top'
+    ]
+
     # update and see
 
     tsx.register_formula(
