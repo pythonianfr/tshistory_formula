@@ -42,8 +42,12 @@ class Migrator(_Migrator):
         migrate_group_formula_schema(self.engine, self.namespace, self.interactive)
 
 
-@version('tshistory-formula', '0.19.0')
-def migrate_0190(engine, namespace, interactive):
+@version('tshistory-formula', '0.18.0')
+def migrate_0180(engine, namespace, interactive):
+    _migrate_formula_history(engine, namespace, interactive)
+    _migrate_bound_groups(engine, namespace, interactive)
+    _migrate_freq_and_timezone(engine, namespace, interactive)
+    _migrate_fix_bad_day_freq(engine, namespace, interactive)
     _migrate_form_history_table(engine, namespace, interactive)
     do_cleanup_kvstore(engine, f'{namespace}-formula-patch', interactive)
     _migrate_fix_formula_indexes(engine, namespace, interactive)
@@ -106,14 +110,6 @@ def _migrate_rebuild_dependencies(engine, namespace, interactive):
 
     with engine.begin() as cn:
         rebuild_dependencies(cn, tsh)
-
-
-@version('tshistory-formula', '0.18.0')
-def migrate_0180(engine, namespace, interactive):
-    _migrate_formula_history(engine, namespace, interactive)
-    _migrate_bound_groups(engine, namespace, interactive)
-    _migrate_freq_and_timezone(engine, namespace, interactive)
-    _migrate_fix_bad_day_freq(engine, namespace, interactive)
 
 
 def _migrate_formula_history(engine, namespace, interactive):
