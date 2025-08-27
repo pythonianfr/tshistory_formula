@@ -20,6 +20,7 @@ from tshistory_formula.helper import (
     TIMEZONE_OPS,
     migrate_timezone,
     migrate_fix_day_freq,
+    rebuild_dependencies,
     rename_operator,
     rewrite_groupadd_formula,
     rewrite_sub_formula,
@@ -47,6 +48,7 @@ def migrate_0190(engine, namespace, interactive):
     do_cleanup_kvstore(engine, f'{namespace}-formula-patch', interactive)
     _migrate_fix_formula_indexes(engine, namespace, interactive)
     _migrate_formula_patch_metadata_integrity(engine, namespace, interactive)
+    _migrate_rebuild_dependencies(engine, namespace, interactive)
 
 
 def _migrate_form_history_table(engine, namespace, interactive):
@@ -95,6 +97,15 @@ def _migrate_fix_formula_indexes(engine, namespace, interactive):
 def _migrate_formula_patch_metadata_integrity(engine, namespace, interactive):
     # apply metadata integrity migration to formula-patch namespace
     do_enforce_series_metadata_integrity(engine, f'{namespace}-formula-patch', interactive)
+
+
+def _migrate_rebuild_dependencies(engine, namespace, interactive):
+    print('rebuilding formula dependencies')
+    from tshistory_formula.tsio import timeseries
+    tsh = timeseries(namespace)
+
+    with engine.begin() as cn:
+        rebuild_dependencies(cn, tsh)
 
 
 @version('tshistory-formula', '0.18.0')

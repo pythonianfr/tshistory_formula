@@ -2685,6 +2685,45 @@ def test_nonexistent_series_dependents(engine, tsh):
     assert transitive_deps == [], f"Expected [], got {transitive_deps}"
 
 
+def test_rebuild_dependencies(engine, tsh):
+    from tshistory_formula import helper
+
+    ts = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(dt(2020, 1, 1), freq='D', periods=3)
+    )
+    tsh.update(engine, ts, 'dep-primary', 'test')
+
+    tsh.register_formula(
+        engine,
+        'dep-formula1',
+        '(+ 1 (series "dep-primary"))'
+    )
+
+    tsh.register_formula(
+        engine,
+        'dep-formula2',
+        '(* 2 (series "dep-formula1"))'
+    )
+
+    assert tsh.dependents(engine, 'dep-primary') == ['dep-formula1', 'dep-formula2']
+    assert tsh.dependents(engine, 'dep-formula1') == ['dep-formula2']
+    assert tsh.dependents(engine, 'dep-formula2') == []
+
+    with engine.begin() as cn:
+        cn.execute('truncate "tsh".dependent')
+
+    assert tsh.dependents(engine, 'dep-primary') == []
+    assert tsh.dependents(engine, 'dep-formula1') == []
+
+    with engine.begin() as cn:
+        helper.rebuild_dependencies(cn, tsh)
+
+    assert tsh.dependents(engine, 'dep-primary') == ['dep-formula1', 'dep-formula2']
+    assert tsh.dependents(engine, 'dep-formula1') == ['dep-formula2']
+    assert tsh.dependents(engine, 'dep-formula2') == []
+
+
 def test_fill_and_clip(engine, tsh):
     # setup:
     # 2 series one of length 2, the other 4

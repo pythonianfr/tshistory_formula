@@ -16,6 +16,7 @@ from psyl.lisp import (
 )
 
 from tshistory import search
+from tshistory_formula.search import isformula
 
 
 from tshistory_formula.registry import (
@@ -1007,3 +1008,10 @@ def rewrite_groupadd_formula(tree):
         rewrite_groupadd_formula(item)
         for item in tree
     ]
+
+
+def rebuild_dependencies(cn, tsh):
+    for name in tsh.find(cn, isformula()):
+        formula = tsh.formula(cn, name)
+        tree = parse(formula)
+        tsh.register_dependents(cn, name, tree)
