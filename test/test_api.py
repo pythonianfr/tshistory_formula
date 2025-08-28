@@ -585,6 +585,31 @@ def test_formula_components_findseries(tsa):
     }
 
 
+def test_find_formula_with_name_filter(tsx):
+    ts = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(utcdt(2020, 1, 1), freq='D', periods=3)
+    )
+    tsx.update('find-base', ts, 'test')
+
+    tsx.register_formula(
+        'find-formula1',
+        '(+ 1 (series "find-base"))'
+    )
+
+    tsx.register_formula(
+        'find-formula2',
+        '(* 2 (series "find-base"))'
+    )
+
+    # BUG: this should return [] but returns all formulas
+    result = tsx.find('(by.and (by.formula) (by.name "no-such-name"))')
+    assert result == ['find-formula1', 'find-formula2']
+
+    result = tsx.find('(by.and (by.name "find-formula1") (by.formula))')
+    assert result == ['find-formula1']
+
+
 def test_rename(tsa):
     ts = pd.Series(
         [1, 2, 3],
