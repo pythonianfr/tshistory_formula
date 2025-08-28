@@ -48,8 +48,8 @@ class isformula(query):
 
     def sql(self, namespace='tsh'):
         return (
-            '(internal_metadata -> \'formula\' is not null) or '
-            '(internal_metadata -> \'bound\' is not null)'
+            '((internal_metadata -> \'formula\' is not null) or '
+            '(internal_metadata -> \'bound\' is not null))'
         ), {}
 
     @staticmethod

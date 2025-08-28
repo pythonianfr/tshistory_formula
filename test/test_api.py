@@ -602,9 +602,8 @@ def test_find_formula_with_name_filter(tsx):
         '(* 2 (series "find-base"))'
     )
 
-    # BUG: this should return [] but returns all formulas
     result = tsx.find('(by.and (by.formula) (by.name "no-such-name"))')
-    assert result == ['find-formula1', 'find-formula2']
+    assert result == []
 
     result = tsx.find('(by.and (by.name "find-formula1") (by.formula))')
     assert result == ['find-formula1']
