@@ -4543,6 +4543,84 @@ def test_integration_which_big_gap(engine, tsh):
     assert tsp.equals(tsf)
 
 
+def test_integration_ffill(engine, tsh):
+    # Create storage_ffill series (ends on day 5)
+    storage_ts = pd.Series(
+        [100.0, 110.0, 120.0, 130.0, 140.0],
+        index=pd.date_range(
+            start=dt(2025, 1, 1),
+            periods=5,
+            freq='D'
+        )
+    )
+    tsh.update(engine, storage_ts, 'storage_ffill', 'test')
+
+    # Create flow_short_ffill series (ends on day 3 - earliest end)
+    flow_short_ts = pd.Series(
+        [10.0, 15.0, 20.0],
+        index=pd.date_range(
+            start=dt(2025, 1, 1),
+            periods=3,
+            freq='D'
+        )
+    )
+    tsh.update(engine, flow_short_ts, 'flow_short_ffill', 'test')
+
+    # Create flow_long_ffill series (ends on day 7 - latest end)
+    flow_long_ts = pd.Series(
+        [5.0, 8.0, 12.0, 18.0, 25.0, 30.0, 35.0],
+        index=pd.date_range(
+            start=dt(2025, 1, 1),
+            periods=7,
+            freq='D'
+        )
+    )
+    tsh.update(engine, flow_long_ts, 'flow_long_ffill', 'test')
+
+    # Create formula that adds the two flows with ffill
+    tsh.register_formula(
+        engine,
+        'flow_sum_ffill',
+        ('(add (series "flow_short_ffill" #:fill "ffill")'
+         ' (series "flow_long_ffill" #:fill "ffill"))')
+    )
+
+    # Test the formula result
+    ts = tsh.get(engine, 'flow_sum_ffill')
+    assert_df("""
+2025-01-01    15.0
+2025-01-02    23.0
+2025-01-03    32.0
+2025-01-04    38.0
+2025-01-05    45.0
+2025-01-06    50.0
+2025-01-07    55.0
+""", ts)
+
+    # Create integration formula with storage and flow
+    tsh.register_formula(
+        engine,
+        'integrated_storage_ffill',
+        '(integration "storage_ffill" "flow_sum_ffill")'
+    )
+
+    # Test the integration result
+    ts_integration = tsh.get(engine, 'integrated_storage_ffill')
+    assert_df("""
+2025-01-01    100.0
+2025-01-02    110.0
+2025-01-03    120.0
+2025-01-04    130.0
+2025-01-05    140.0
+""", ts_integration)
+
+    # explanation: the flow is a sum of 2 series, with a ffill option
+    # The integration operator request the flow series when one of the
+    # 2 series is not defined. Hence, the ffill cannot work, the flow
+    # to be integrated appears empty, and the integration operation
+    # returns only the storage series.
+
+
 def test_conditional_operators(engine, tsh):
     # base series
     ts = pd.Series(
