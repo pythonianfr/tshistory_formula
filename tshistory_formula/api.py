@@ -345,33 +345,33 @@ def register_formula_bindings(self,
     And the bindings object provides mappings that tell which
     components of the formula are to be interpreted as groups.
 
-    Given a formula named "form1":
+    Given a formula named "form1"::
 
-    `(add (series "foo") (series "bar") (series "quux"))`
+        (add (series "foo") (series "bar") (series "quux"))
 
-    ... were one wants to treat "foo" and "bar" as groups.
-    The binding is expressed as a dataframe:
+    ... where one wants to treat "foo" and "bar" as groups.
+    The binding is expressed as a dataframe::
 
         binding = pd.DataFrame(
-          [
-              ['foo', 'foo-group', 'group'],
-              ['bar', 'bar-group', 'group'],
-          ],
-          columns=('series', 'group', 'family')
+            [
+                ['foo', 'foo-group', 'group'],
+                ['bar', 'bar-group', 'group'],
+            ],
+            columns=('series', 'group', 'family')
         )
 
-    The complete registration looks like:
+    The complete registration looks like::
 
-    register_formula_bindings(
-        'groupname',
-        'form1',
-        pd.DataFrame(
-        [
-            ['foo', 'foo-group', 'group'],
-            ['bar', 'bar-group', 'group'],
-        ],
-        columns=('series', 'group', 'family')
-    ))
+        register_formula_bindings(
+            'groupname',
+            'form1',
+            pd.DataFrame(
+                [
+                    ['foo', 'foo-group', 'group'],
+                    ['bar', 'bar-group', 'group'],
+                ],
+                columns=('series', 'group', 'family')
+            ))
 
     Within a given family, all groups must have the same number of
     members (series) and the member roles are considered equivalent
