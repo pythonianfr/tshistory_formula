@@ -67,6 +67,8 @@ create table if not exists "{ns}".form_history (
   formula text not null
 );
 
+alter table "{ns}".form_history add column if not exists userid text;
+
 create index if not exists "ix_{ns}_form_history_sid" on "{ns}".form_history(sid);
 """, _binary=False)
 
