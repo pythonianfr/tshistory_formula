@@ -525,8 +525,7 @@ def timestamp(strdate: str,
     Produces an utc timestamp from its input string date in iso format.
 
     The `tz` keyword allows to specify an alternate time zone.
-    The `naive` keyword forces production of a naive timestamp.
-    Both `tz` and `naive` keywords are mutually exlcusive.
+    Setting `tz` to #nil produces a naive timestamp.
     """
     if tz:
         pytz.timezone(tz)
