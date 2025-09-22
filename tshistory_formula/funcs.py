@@ -20,7 +20,6 @@ from psyl.lisp import (
 from tshistory.util import (
     compatible_date,
     empty_series,
-    ensuretz,
     infer_freq,
     patch,
     patchmany,
@@ -724,39 +723,41 @@ def constant(__interpreter__,
     """
     freq = str(freq)
     # normalize to naive if any date is naive
-    if fromdate.tzinfo is None or todate.tzinfo is None:
+    tzaware = not (fromdate.tzinfo is None or todate.tzinfo is None)
+    if not tzaware:
         fromdate = fromdate.replace(tzinfo=None)
         todate = todate.replace(tzinfo=None)
     assert revdate.tzinfo is not None
 
     return _constant(__interpreter__,
+                     tzaware,
                      {'revision_date': __revision_date__,
                       'from_value_date': __from_value_date__,
                       'to_value_date': __to_value_date__},
                      value, fromdate, todate, freq, revdate)
 
 
-def _constant(__interpreter__, args, value, fromdate, todate, freq, revdate):
+def _constant(__interpreter__, tzaware, args, value, fromdate, todate, freq, revdate):
     getargs = __interpreter__.getargs
     qrevdate = args.get('revision_date')
-    if qrevdate and ensuretz(qrevdate) < revdate:
-        return empty_series(True)
+    if qrevdate and compatible_date(tzaware, qrevdate) < revdate:
+        return empty_series(tzaware)
 
     qfromidate = getargs.get('from_insertion_date')
-    if qfromidate and ensuretz(qfromidate) > revdate:
-        return empty_series(True)
+    if qfromidate and compatible_date(tzaware, qfromidate) > revdate:
+        return empty_series(tzaware)
 
     qtoidate = getargs.get('to_insertion_date')
-    if qtoidate and ensuretz(qtoidate) < revdate:
-        return empty_series(True)
+    if qtoidate and compatible_date(tzaware, qtoidate) < revdate:
+        return empty_series(tzaware)
 
     mindate = args.get('from_value_date')
     if mindate:
-        mindate = ensuretz(mindate)
+        mindate = compatible_date(tzaware, mindate)
 
     maxdate = args.get('to_value_date')
     if maxdate:
-        maxdate = ensuretz(maxdate)
+        maxdate = compatible_date(tzaware, maxdate)
 
     dates = pd.date_range(
         start=fromdate,

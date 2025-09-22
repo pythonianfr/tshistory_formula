@@ -3553,6 +3553,17 @@ def test_naive_constant(engine, tsh):
 2025-01-03    3.0
 """, ts)
 
+    # test naive constant with query bounds
+    ts = tsh.get(
+        engine,
+        'naive-constant',
+        from_value_date=dt(2025, 1, 2),  # naive bounds
+        to_value_date=dt(2025, 1, 2)
+    )
+    assert_df("""
+2025-01-02    1.0
+""", ts)
+
 
 def test_constant_today_timetravel(engine, tsh):
     tsh.register_formula(
