@@ -3502,14 +3502,56 @@ def test_naive_constant(engine, tsh):
     tsh.register_formula(
         engine,
         'naive-constant',
-        '(constant 1. (date "2025-1-1") '
-        '             (date "2025-1-3" #:tz "Europe/Paris") '
+        '(constant 1. (date "2025-1-1" #:tz nil) '
+        '             (date "2025-1-3" #:tz nil) '
         '             (freq "D") '
         '             (date "2025-2-1" #:tz "Europe/Paris"))'
     )
 
-    # whoops ... can't we have a naive constant series ?
-    assert tsh.tzaware(engine, 'naive-constant')
+    assert not tsh.tzaware(engine, 'naive-constant')
+
+    ts = tsh.get(engine, 'naive-constant')
+    assert_df("""
+2025-01-01    1.0
+2025-01-02    1.0
+2025-01-03    1.0
+""", ts)
+
+    # mixed case 1: naive fromdate, tzaware todate -> becomes naive
+    tsh.register_formula(
+        engine,
+        'mixed-constant-1',
+        '(constant 2. (date "2025-1-1" #:tz nil) '
+        '             (date "2025-1-3") '  # defaults to UTC
+        '             (freq "D") '
+        '             (date "2025-2-1"))'
+    )
+
+    assert not tsh.tzaware(engine, 'mixed-constant-1')
+    ts = tsh.get(engine, 'mixed-constant-1')
+    assert_df("""
+2025-01-01    2.0
+2025-01-02    2.0
+2025-01-03    2.0
+""", ts)
+
+    # mixed case 2: tzaware fromdate, naive todate -> becomes naive
+    tsh.register_formula(
+        engine,
+        'mixed-constant-2',
+        '(constant 3. (date "2025-1-1") '  # defaults to UTC
+        '             (date "2025-1-3" #:tz nil) '
+        '             (freq "D") '
+        '             (date "2025-2-1"))'
+    )
+
+    assert not tsh.tzaware(engine, 'mixed-constant-2')
+    ts = tsh.get(engine, 'mixed-constant-2')
+    assert_df("""
+2025-01-01    3.0
+2025-01-02    3.0
+2025-01-03    3.0
+""", ts)
 
 
 def test_constant_today_timetravel(engine, tsh):

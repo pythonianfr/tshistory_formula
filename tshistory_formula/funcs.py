@@ -723,8 +723,10 @@ def constant(__interpreter__,
 
     """
     freq = str(freq)
-    assert fromdate.tzinfo is not None
-    assert todate.tzinfo is not None
+    # normalize to naive if any date is naive
+    if fromdate.tzinfo is None or todate.tzinfo is None:
+        fromdate = fromdate.replace(tzinfo=None)
+        todate = todate.replace(tzinfo=None)
     assert revdate.tzinfo is not None
 
     return _constant(__interpreter__,
@@ -772,13 +774,28 @@ def _constant(__interpreter__, args, value, fromdate, todate, freq, revdate):
 
 @metadata('constant')
 def constant_metadata(cn, tsh, tree):
+    itrp = Interpreter(cn, tsh, {})
+    fromdate = itrp.evaluate(tree[2])
+    todate = itrp.evaluate(tree[3])
+    tzaware = fromdate.tzinfo is not None and todate.tzinfo is not None
+
+    if tzaware:
+        return {
+            'constant': {
+                'tzaware': True,
+                'index_type': 'datetime64[ns, UTC]',
+                'value_type': 'float64',
+                'index_dtype': '|M8[ns]',
+                'value_dtype': '<f8'
+            }
+        }
     return {
         'constant': {
-        'tzaware': True,
-        'index_type': 'datetime64[ns, UTC]',
-        'value_type': 'float64',
-        'index_dtype': '|M8[ns]',
-        'value_dtype': '<f8'
+            'tzaware': False,
+            'index_type': 'datetime64[ns]',
+            'value_type': 'float64',
+            'index_dtype': '<M8[ns]',
+            'value_dtype': '<f8'
         }
     }
 
