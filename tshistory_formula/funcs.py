@@ -2020,13 +2020,17 @@ def find_last_values(
     ts = empty_series(tzaware)
 
     if not fill:
+        sliding_to = to_value_date if to_value_date else from_value_date
         while not len(ts):
             args.update({'from_value_date': current_bound})
+            if to_value_date:
+                args.update({'to_value_date': sliding_to})
             ts = __interpreter__.get(name, args)
 
             if current_bound <= search_limit:
                 break
 
+            sliding_to = current_bound
             current_bound = current_bound - period
             period = period * multiplier
     else:
@@ -2034,6 +2038,9 @@ def find_last_values(
         ts = __interpreter__.get(name, args)
         previous_ts = empty_series(tzaware)
         current_bound = compatible_date(tzaware, from_value_date)
+        # to_value_date must stay fixed at from_value_date to find the
+        # last value before it sliding window doesn't work here - we
+        # need to search up to the original boundary
         args.update({'to_value_date': from_value_date})
         while not len(previous_ts):
             args.update({'from_value_date': current_bound})
