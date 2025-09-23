@@ -4612,13 +4612,9 @@ def test_integration_ffill(engine, tsh):
 2025-01-03    120.0
 2025-01-04    130.0
 2025-01-05    140.0
+2025-01-06    190.0
+2025-01-07    245.0
 """, ts_integration)
-
-    # explanation: the flow is a sum of 2 series, with a ffill option
-    # The integration operator request the flow series when one of the
-    # 2 series is not defined. Hence, the ffill cannot work, the flow
-    # to be integrated appears empty, and the integration operation
-    # returns only the storage series.
 
 
 def test_conditional_operators(engine, tsh):

@@ -2116,7 +2116,20 @@ def _integration(__interpreter__, iargs, stock_name, flow_name, fill):
     # and from_value_date is inclusive
     ts_diff = ts_diff[ts_diff.index > first_diff_date]
 
-    if ts_diff is None or not len(ts_diff):
+    if not len(ts_diff):
+        # try searching backward for flow data
+        ts_diff = find_last_values(
+            __interpreter__,
+            flow_name,
+            args.get('revision_date'),
+            first_diff_date,
+            to_value_date,
+            fill,
+            tzaware
+        )
+        ts_diff = ts_diff[ts_diff.index > first_diff_date]
+
+    if not len(ts_diff):
         ts_total = ts_stock
     else:
         if to_value_date:
