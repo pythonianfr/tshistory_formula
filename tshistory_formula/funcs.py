@@ -2014,8 +2014,8 @@ def find_last_values(
     # tzawareness
     search_limit = interval.left
 
-    period = timedelta(days=10)
-    multiplier = 2
+    period = timedelta(days=1)
+    multiplier = 3
     current_bound = compatible_date(tzaware, from_value_date)
     ts = empty_series(tzaware)
 
