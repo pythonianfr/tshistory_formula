@@ -1992,11 +1992,8 @@ def find_last_values(
     Returns a series contained between from_value_date and
     to_value_date If no data is found in this interval, this function
     will look at the left of the lower bound until it finds something
-    (with a hard-coded limit to avoid infinite loops)
+    (using the series interval to know when to stop searching)
     """
-    period = timedelta(days=10)
-    multiplier = 2
-
     args = {}
     if revision_date:
         args['revision_date'] = revision_date
@@ -2007,29 +2004,46 @@ def find_last_values(
     if not from_value_date:
         return __interpreter__.get(name, args)
 
-    current_bound = from_value_date
+    # get the actual data bounds for the series
+    # this gives us the search boundaries (no point searching outside)
+    interval = __interpreter__.tsh.interval(__interpreter__.cn, name)
+    if not interval:
+        return empty_series(tzaware)
+
+    # interval.left already has the correct timezone status based on
+    # tzawareness
+    search_limit = interval.left
+
+    period = timedelta(days=10)
+    multiplier = 2
+    current_bound = compatible_date(tzaware, from_value_date)
     ts = empty_series(tzaware)
+
     if not fill:
         while not len(ts):
             args.update({'from_value_date': current_bound})
             ts = __interpreter__.get(name, args)
-            current_bound = from_value_date - period
-            period = period * multiplier
-            if period > timedelta(days=3000):
+
+            if current_bound <= search_limit:
                 break
+
+            current_bound = current_bound - period
+            period = period * multiplier
     else:
         args.update({'from_value_date': from_value_date})
         ts = __interpreter__.get(name, args)
         previous_ts = empty_series(tzaware)
-        current_bound = from_value_date
+        current_bound = compatible_date(tzaware, from_value_date)
         args.update({'to_value_date': from_value_date})
         while not len(previous_ts):
             args.update({'from_value_date': current_bound})
             previous_ts = __interpreter__.get(name, args)
-            current_bound = from_value_date - period
-            period = period * multiplier
-            if period > timedelta(days=3000):
+
+            if current_bound <= search_limit:
                 break
+
+            current_bound = current_bound - period
+            period = period * multiplier
         if len(previous_ts):
             ts = patch(previous_ts, ts)
 
