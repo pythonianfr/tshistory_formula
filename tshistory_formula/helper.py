@@ -876,6 +876,12 @@ PERIOD_CHANGES = {
     'BAS': 'BYS',
     'BA': 'BYE',
     'd': 'D',
+    'y': 'YE',
+    'm': 'ME',
+    'q': 'QE',
+    'w': 'W',
+    't': 'min',
+    'a': 'YE',
 }
 
 
