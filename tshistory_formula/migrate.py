@@ -42,6 +42,11 @@ class Migrator(_Migrator):
         migrate_group_formula_schema(self.engine, self.namespace, self.interactive)
 
 
+@version('tshistory-formula', '0.18.1')
+def migrate_0181(engine, namespace, interactive):
+    _migrate_rebuild_dependencies(engine, namespace, interactive)
+
+
 @version('tshistory-formula', '0.18.0')
 def migrate_0180(engine, namespace, interactive):
     _migrate_formula_history(engine, namespace, interactive)
