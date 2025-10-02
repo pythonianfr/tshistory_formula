@@ -164,16 +164,10 @@ class timeseries(basets):
             name=name
         )
 
-        # bulk optimization: collect all dependencies and batch the operations
         deps = self.find_series(cn, tree, static=True)
         if not deps:
             return
 
-        # The dependent table tracks: "formula A depends on series B"
-        # But we only register when the DEPENDENT (A) is a formula
-        # Primary series don't have dependents registered in this table
-
-        # single bulk insert - register this formula as depending on its deps
         cn.execute(
             f'insert into "{self.namespace}".dependent (sid, needs) '
             f'select s1.id, s2.id '
@@ -186,8 +180,6 @@ class timeseries(basets):
         )
 
     def _direct_dependents(self, cn, name, static=False):
-        """Get direct dependents only - the base case"""
-        # Step 1: Static dependencies from dependent table
         static_deps = list(cn.execute(
             f'select f.name '
             f'from "{self.namespace}".registry as f, '
@@ -202,7 +194,6 @@ class timeseries(basets):
         if static:
             return set(static_deps)
 
-        # Step 2: Dynamic dependencies from findseries
         formulas_with_findseries = cn.execute(
             f'select name, internal_metadata->\'formula\' '
             f'from "{self.namespace}".registry '
@@ -223,17 +214,14 @@ class timeseries(basets):
         if direct:
             return sorted(self._direct_dependents(cn, name, static=static))
 
-        # Transitive: recursively call direct dependents
-        all_deps = set()
-        direct_deps = self._direct_dependents(cn, name, static=static)
-        all_deps.update(direct_deps)
+        directdeps = self._direct_dependents(cn, name, static=static)
+        alldeps = set(directdeps)
 
-        # Recursively get dependents of each direct dependent
-        for dep in direct_deps:
-            transitive_deps = self.dependents(cn, dep, direct=False, static=static)
-            all_deps.update(transitive_deps)
+        for dep in directdeps:
+            transitivedeps = self.dependents(cn, dep, direct=False, static=static)
+            alldeps.update(transitivedeps)
 
-        return sorted(all_deps)
+        return sorted(alldeps)
 
     @tx
     def depends(self, cn, name, direct=False):
