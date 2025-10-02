@@ -258,6 +258,44 @@ def test_find_dependents(engine, tsh):
     assert tsh.dependents(engine, 'find-dep-level-4') == []
 
 
+def test_dependents_static_vs_dynamic(engine, tsh):
+    ts = pd.Series(
+        [1, 2],
+        index=pd.date_range(
+            start=dt(2022, 1, 1),
+            periods=2,
+            freq='D',
+            tz='CET',
+        )
+    )
+
+    tsh.update(engine, ts, 'base', 'test')
+    tsh.register_formula(
+        engine,
+        'static-dep',
+        '(series "base")'
+    )
+    tsh.register_formula(
+        engine,
+        'dynamic-dep',
+        '(add (findseries (by.name "base")))'
+    )
+
+    assert tsh.dependents(engine, 'base', static=False) == [
+        'dynamic-dep', 'static-dep'
+    ]
+    assert tsh.dependents(engine, 'base', static=True) == [
+        'static-dep'
+    ]
+
+    assert tsh.dependents(engine, 'base', direct=True, static=False) == [
+        'dynamic-dep', 'static-dep'
+    ]
+    assert tsh.dependents(engine, 'base', direct=True, static=True) == [
+        'static-dep'
+    ]
+
+
 def test_empty_find(engine, tsh):
     tsh.register_formula(
         engine,

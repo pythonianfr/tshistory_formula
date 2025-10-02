@@ -53,20 +53,21 @@ class timeseries(basets):
     metadata_compat_excluded = ()
     concurrency = 16
 
-    def find_series(self, cn, tree):
+    def find_series(self, cn, tree, static=False):
         if tree is None:
             return {}
-        tree = helper.replace_findseries(cn, self, tree)
-        return self._find_series(cn, tree)
+        if not static:
+            tree = helper.replace_findseries(cn, self, tree)
+        return self._find_series(cn, tree, static=static)
 
-    def _find_series(self, cn, tree):
+    def _find_series(self, cn, tree, static=False):
         op = tree[0]
         finder = FINDERS.get(op)
         seriestree = finder(cn, self, tree) if finder else {}
         for item in tree:
             if isinstance(item, list):
                 seriestree.update(
-                    self.find_series(cn, item)
+                    self.find_series(cn, item, static=static)
                 )
         return seriestree
 
@@ -164,7 +165,7 @@ class timeseries(basets):
         )
 
         # bulk optimization: collect all dependencies and batch the operations
-        deps = self.find_series(cn, tree)
+        deps = self.find_series(cn, tree, static=True)
         if not deps:
             return
 
@@ -184,7 +185,7 @@ class timeseries(basets):
             deps=list(deps)
         )
 
-    def _direct_dependents(self, cn, name):
+    def _direct_dependents(self, cn, name, static=False):
         """Get direct dependents only - the base case"""
         # Step 1: Static dependencies from dependent table
         static_deps = list(cn.execute(
@@ -198,6 +199,9 @@ class timeseries(basets):
             name=name
         ).scalars())
 
+        if static:
+            return set(static_deps)
+
         # Step 2: Dynamic dependencies from findseries
         formulas_with_findseries = cn.execute(
             f'select name, internal_metadata->\'formula\' '
@@ -207,28 +211,26 @@ class timeseries(basets):
 
         dynamic_deps = []
         for formula_name, formula in formulas_with_findseries:
-            rewritten_tree = helper.replace_findseries(
-                cn, self, parse(formula)
-            )
-            components = self.find_series(cn, rewritten_tree)
+            tree = parse(formula)
+            components = self.find_series(cn, tree, static=False)
             if name in components:
                 dynamic_deps.append(formula_name)
 
         return set(static_deps + dynamic_deps)
 
     @tx
-    def dependents(self, cn, name, direct=False):
+    def dependents(self, cn, name, direct=False, static=False):
         if direct:
-            return sorted(self._direct_dependents(cn, name))
+            return sorted(self._direct_dependents(cn, name, static=static))
 
         # Transitive: recursively call direct dependents
         all_deps = set()
-        direct_deps = self._direct_dependents(cn, name)
+        direct_deps = self._direct_dependents(cn, name, static=static)
         all_deps.update(direct_deps)
 
         # Recursively get dependents of each direct dependent
         for dep in direct_deps:
-            transitive_deps = self.dependents(cn, dep, direct=False)
+            transitive_deps = self.dependents(cn, dep, direct=False, static=static)
             all_deps.update(transitive_deps)
 
         return sorted(all_deps)
