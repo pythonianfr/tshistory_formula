@@ -207,11 +207,31 @@ class formula_httpapi(httpapi):
                     404: 'Does not exist',
                     409: 'Not a formula'
                 },
-                description="""Return a formula
+                description="""Get the formula text for a computed series
 
-The output is a two fields mapping:
-* level : the required level
-* formula : the formula
+**Parameters:**
+- name: series name
+- expanded: if true, recursively substitute all formula references (default: false)
+- level: if >= 0, expand formulas to specified depth (default: -1, no limit)
+- display: if false, include variable bindings in expansion (default: true)
+- remote: if expanded, also expand formulas from secondary sources (default: true)
+
+**Returns:** object with two fields
+```json
+{
+  "level": -1,
+  "formula": "(add (series \"base-series\") (series \"other-series\"))"
+}
+```
+
+**Example:**
+```
+GET /series/formula?name=total-eu-sales
+→ {"level": -1, "formula": "(add (series \"fr-sales\") (series \"de-sales\"))"}
+
+GET /series/formula?name=total-eu-sales&expanded=true
+→ {"level": -1, "formula": "(add (series \"raw-fr\") (series \"raw-de\"))"}
+```
 """
             )
             @api.expect(formula)
@@ -241,11 +261,28 @@ The output is a two fields mapping:
                     400: 'Malformed Formula',
                     409: 'Invalid Formula'
                 },
-                description="""Register a fomula (computed series)
+                description="""Register or update a formula (computed series)
 
-The formula must be a well-formed Lisp expression, use
-known operators and refer to known series, and must
-pass the type checker.
+**Parameters:**
+- name: series name for the formula
+- text: Lisp formula expression
+- reject_unknown: if true, fail if referenced series don't exist (default: true)
+- user: username for audit trail (default: current user from request environment)
+
+**Returns:** empty body
+- 201: formula created
+- 200: formula updated
+
+**Errors:**
+- 400: syntax error in formula (malformed Lisp expression)
+- 409: type error, value error, or assertion error (invalid operators, unknown series, type mismatch)
+
+**Example:**
+```
+PATCH /series/formula
+  name=eu-sales&text=(add (series "fr-sales") (series "de-sales"))
+→ 201 Created
+```
 """
             )
             @api.expect(register_formula)
@@ -284,10 +321,26 @@ pass the type checker.
 
             @api.doc(
                 responses={200: 'Got content', 404: 'Does not exist'},
-                description="""Return the history of a formula
+                description="""Get the modification history of a formula
 
-Comes as a list of tuples of formula, time stamp, time
-zone of the replacement.
+**Parameters:**
+- name: series name
+
+**Returns:** list of historical formula versions
+```json
+[
+  ["(add (series \"a\") (series \"b\"))", "2025-01-15T10:30:00+00:00", "UTC", "alice"],
+  ["(add (series \"a\") (constant 5))", "2024-12-10T08:00:00+00:00", "UTC", "bob"]
+]
+```
+
+Each entry is a tuple: [formula_text, timestamp, timezone, username]
+
+**Example:**
+```
+GET /series/old_formulas?name=total-sales
+→ [["(add (series \"fr\") (series \"de\"))", "2025-01-15T10:00:00+00:00", "UTC", "alice"]]
+```
 """
             )
             @api.expect(oldformulas)
@@ -306,12 +359,30 @@ zone of the replacement.
             @api.doc(
                 responses={200: 'Got content',
                            404: 'Does not exist'},
-                description="""Return the depth of a formula
+                description="""Get the nesting depth of a formula
 
-The depth is the number of time "(series \\<name\\>)"
-expressions must be substited by the underlying formula
-before reaching a state where all series expressions
-refer to primary series.
+Returns the number of times `(series <name>)` expressions must be substituted by their underlying formulas before all series expressions refer to primary (non-formula) series.
+
+**Parameters:**
+- name: series name
+
+**Returns:** integer depth value
+
+**Example:**
+```
+# primary series: base-temp
+# formula level 1: adjusted-temp = (+ 2 (series "base-temp"))
+# formula level 2: final-temp = (+ 1 (series "adjusted-temp"))
+
+GET /series/formula_depth?name=base-temp
+→ 0
+
+GET /series/formula_depth?name=adjusted-temp
+→ 1
+
+GET /series/formula_depth?name=final-temp
+→ 2
+```
 """
             )
             @api.expect(formula_depth)
@@ -328,12 +399,37 @@ refer to primary series.
         class formula_depends(Resource):
 
             @api.doc(
-                responses={200: 'Gotcontent',
+                responses={200: 'Got content',
                            404: 'Does not exist'},
-                description="""Return the dependencies (or dependences) of a formula
+                description="""Get dependencies or dependents of a formula
 
-A formula can use (be used) directly/indirectly by
-other series.
+Returns which series this formula uses (dependencies) or which formulas use this series (dependents).
+
+**Parameters:**
+- name: series name
+- direct: if true, return only direct dependencies/dependents (default: false, returns all transitively)
+- reverse: if true, return dependents instead of dependencies (default: false)
+
+**Returns:** list of series names
+
+**Example:**
+```
+# base-temp (primary)
+# adjusted-temp = (+ 2 (series "base-temp"))
+# final-temp = (+ 1 (series "adjusted-temp"))
+
+GET /series/formula_depends?name=final-temp
+→ ["adjusted-temp", "base-temp"]
+
+GET /series/formula_depends?name=final-temp&direct=true
+→ ["adjusted-temp"]
+
+GET /series/formula_depends?name=base-temp&reverse=true
+→ ["adjusted-temp", "final-temp"]
+
+GET /series/formula_depends?name=base-temp&reverse=true&direct=true
+→ ["adjusted-temp"]
+```
 """
             )
             @api.expect(depends)
@@ -353,14 +449,29 @@ other series.
             @api.doc(
                 responses={200: 'Got content',
                            400: 'Invalid formula'},
-                description="""Evaluate a formula expression
+                description="""Evaluate a formula expression on the fly
 
-You can test a formula expression on the fly without
-persisting it through the "register_formula" API call.
+Execute a formula without persisting it. Useful for developing and debugging formulas before registration, or for one-off computations.
 
-It can be useful for test purposes or in some other
-circumstances (e.g. dashboards might find this
-useful).
+**Parameters:**
+- text: formula expression to evaluate
+- revision_date: evaluate formula at this revision date (ISO8601, optional)
+- from_value_date: restrict time range start (ISO8601, optional)
+- to_value_date: restrict time range end (ISO8601, optional)
+- tz: timezone for index conversion (optional)
+- format: "json" or "tshpack" (default: json)
+
+**Returns:** time series data in requested format
+
+**Errors:**
+- 400: syntax error (prefixed with "syn:") or type error (prefixed with "typ:")
+
+**Example:**
+```
+POST /series/eval_formula
+  text=(add (series "fr-sales") (series "de-sales"))&from_value_date=2025-01-01
+→ {"2025-01-01T00:00:00+00:00": 100.5, "2025-01-02T00:00:00+00:00": 105.2, ...}
+```
 """
             )
             @api.expect(eval_formula)
@@ -395,7 +506,29 @@ useful).
                 responses={200: 'Got content',
                            404: 'Does not exist',
                            409: 'Not a formula'},
-                description='Return the components of a formula'
+                description="""Get the component series of a formula
+
+Returns the series used by a formula, optionally expanded to show the full dependency tree.
+
+**Parameters:**
+- name: series name
+- expanded: if true, recursively show all nested formula components (default: false)
+
+**Returns:** object mapping formula name to list of components
+
+**Example:**
+```
+# base-temp (primary)
+# adjusted-temp = (+ 2 (series "base-temp"))
+# final-temp = (+ 1 (series "adjusted-temp"))
+
+GET /series/formula_components?name=final-temp
+→ {"final-temp": ["adjusted-temp"]}
+
+GET /series/formula_components?name=final-temp&expanded=true
+→ {"final-temp": [{"adjusted-temp": ["base-temp"]}]}
+```
+"""
             )
             @api.expect(formula_components)
             @onerror
@@ -419,7 +552,20 @@ useful).
                 responses={200: 'Got content',
                            404: 'Does not exist',
                            409: 'Not a formula'},
-                description='Return a group formula'
+                description="""Get the formula text for a computed group
+
+**Parameters:**
+- name: group name
+- expanded: if true, recursively substitute all formula references (default: false)
+
+**Returns:** formula text string
+
+**Example:**
+```
+GET /group/formula?name=ensemble-forecast
+→ "(group-add (group \"scenario-a\") (group \"scenario-b\"))"
+```
+"""
             )
             @api.expect(groupformula)
             @onerror
@@ -440,7 +586,27 @@ useful).
                            201: 'Created',
                            400: 'Syntax error',
                            409: 'Invalid formula'},
-                description='Register a group formula'
+                description="""Register or update a group formula
+
+**Parameters:**
+- name: group name for the formula
+- text: Lisp formula expression
+
+**Returns:** empty body
+- 201: formula created
+- 200: formula updated
+
+**Errors:**
+- 400: syntax error in formula
+- 409: type error, value error, or assertion error
+
+**Example:**
+```
+PUT /group/formula
+  name=total-ensemble&text=(group-add (group "ensemble-a") (group "ensemble-b"))
+→ 201 Created
+```
+"""
             )
             @api.expect(register_group_formula)
             @onerror
@@ -473,14 +639,29 @@ useful).
             @api.doc(
                 responses={200: 'Got content',
                            400: 'Invalid formula'},
-                description="""Evaluate a formula expression
+                description="""Evaluate a group formula expression on the fly
 
-You can test a formula expression on the fly without
-persisting it through the "register_group_formula" API call.
+Execute a group formula without persisting it. Useful for developing and debugging group formulas before registration, or for one-off computations.
 
-It can be useful for test purposes or in some other
-circumstances (e.g. dashboards might find this
-useful).
+**Parameters:**
+- text: formula expression to evaluate
+- revision_date: evaluate formula at this revision date (ISO8601, optional)
+- from_value_date: restrict time range start (ISO8601, optional)
+- to_value_date: restrict time range end (ISO8601, optional)
+- tz: timezone for index conversion (optional)
+- format: "json" or "tshpack" (default: json)
+
+**Returns:** group data (DataFrame) in requested format
+
+**Errors:**
+- 400: syntax error (prefixed with "syn:") or type error (prefixed with "typ:")
+
+**Example:**
+```
+POST /group/eval_formula
+  text=(group-add (group "ensemble-a") (group "ensemble-b"))&format=json
+→ {"2025-01-01T00:00:00+00:00": {"scenario-1": 10.5, "scenario-2": 12.3}, ...}
+```
 """
             )
             @api.expect(group_eval_formula)
@@ -514,7 +695,30 @@ useful).
                     responses={200: 'Got content',
                                404: 'Does not exist',
                                409: 'Not a bound formula'},
-                    description='Get the bindings for a bound formula'
+                    description="""Get the bindings for a bound formula
+
+A bound formula "hijacks" a series formula to apply it across multiple series from groups, creating a computed group.
+
+**Parameters:**
+- name: bound formula group name
+
+**Returns:** object with formula name and bindings
+```json
+{
+  "name": "base-formula",
+  "bindings": [
+    {"series": "temp-series", "group": "temp-ensemble", "family": "meteo"},
+    {"series": "wind-series", "group": "wind-ensemble", "family": "meteo"}
+  ]
+}
+```
+
+**Example:**
+```
+GET /group/boundformula?name=hijacked-ensemble
+→ {"name": "base-formula", "bindings": [...]}
+```
+"""
                 )
                 @api.expect(boundformula)
                 @onerror
@@ -535,7 +739,29 @@ useful).
 
                 @api.doc(
                     responses={200: 'Success'},
-                    description='Register formula bindings for a bound formula'
+                    description="""Register or update bindings for a bound formula
+
+Creates a bound formula that applies a series formula across groups by binding its series inputs to group columns.
+
+**Parameters:**
+- name: bound formula group name
+- formulaname: name of the series formula to bind
+- bindings: JSON array of binding objects with "series", "group", and "family" fields
+
+**Returns:** empty body, status 200
+
+**Example:**
+```
+PUT /group/boundformula
+  name=weather-ensemble
+  &formulaname=weather-calc
+  &bindings=[{"series": "temp", "group": "temp-scenarios", "family": "meteo"},
+             {"series": "wind", "group": "wind-scenarios", "family": "meteo"}]
+→ 200 Success
+```
+
+**Note:** The series formula is evaluated for each column of the bound groups, producing a computed group.
+"""
                 )
                 @api.expect(boundformula)
                 @onerror
