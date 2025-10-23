@@ -1949,10 +1949,10 @@ def test_tree_api(tsx, engine):
     # test at-path search before deletion
     sl = tsx.find('(by.at-path "UE.Italy")')
     assert sl == ['ue.italy']
-    
-    sl = tsx.find('(by.at-path "UE")')
+
+    sl = tsx.find('(by.at-path "UE" #:children #t)')
     assert sorted(sl) == ['ue.france', 'ue.italy']
-    
+
     tsx.delete_path('UE.Italy')
     assert tsx.tree() == ['UE.France']
 
@@ -1961,10 +1961,10 @@ def test_tree_api(tsx, engine):
 
     assert tsx.series_path('ue.france') == 'UE.France'
     assert tsx.series_path('ue.italy') is None
-    
+
     # after deletion, at-path should no longer find the deleted path
     sl = tsx.find('(by.at-path "UE.Italy")')
     assert sl == []
-    
-    sl = tsx.find('(by.at-path "UE")')
+
+    sl = tsx.find('(by.at-path "UE" #:children #t)')
     assert sl == ['ue.france']
