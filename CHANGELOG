@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+## [0.18.1] - 2025-11-05
+
+### Changed
+- api/dependents: static parameter to skip findseries expansion
+- constant operator: support naive timestamps and handle tzaware query bounds
+- find_last_values: use series interval to bound search instead of 3000-day limit
+- integration: optimized find_last_values with sliding window for backward search
+
+### Fixed
+- search/isformula: sql operator precedence bug in `and` expressions
+- migrate: rebuild dependency table migration for 0.18.1
+- migrate: ensure form_history table has userid column
+- helper/periods-map: missing periods
+- http/doc: standardized endpoint documentation format
+- integration: flow series with ffill handling
+- date operator: docstring to reflect actual behavior
+- test/api: test_tree_api after byatpath default changed
+
+## [0.18.0] - 2025-08-29
+
 ### Added
 - api:
   - group_formula: federation support
