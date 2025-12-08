@@ -4728,7 +4728,7 @@ def test_conditional_operators(engine, tsh):
 
 
 def test_block_staircase_operator(engine, tsh):
-    # create a forecast series
+    # test with daily revision frequency
     insertion_dates = pd.date_range(
         start=pd.Timestamp('2023-03-01 09:00'),
         end=pd.Timestamp('2023-03-05 09:00'),
@@ -4776,7 +4776,12 @@ def test_block_staircase_operator(engine, tsh):
     tsh.register_formula(
         engine,
         'backtest-series',
-        '(block-staircase  "forecast-series" #:revision_freq_days 1 #:revision_time_hours 11 #:maturity_offset_days 1)'
+        '(block-staircase  '
+            '"forecast-series" '
+            '#:revision_freq_days 1 '
+            '#:revision_time_hours 11 '
+            '#:maturity_offset_days 1'
+        ')'
     )
 
     assert_df("""
@@ -4793,6 +4798,159 @@ def test_block_staircase_operator(engine, tsh):
 2023-03-06 00:00:00+00:00     1000.1
 2023-03-07 00:00:00+00:00    10000.1
 """, tsh.get(engine, 'backtest-series', from_value_date=pd.Timestamp("2023-03-04")))
+
+    # test with hourly revision frequency
+    insertion_dates = pd.date_range(
+        start=pd.Timestamp('2025-03-01 08:00'),
+        end=pd.Timestamp('2025-03-01 14:00'),
+        freq='h',
+        tz='utc'
+    )
+
+    for insertion_date in insertion_dates:
+        ts = pd.Series(
+            np.array([1, 1, 1]) * insertion_date.hour,
+            index=pd.date_range(start=insertion_date, periods=3, freq='h')
+        )
+        tsh.update(
+            engine,
+            ts,
+            'forecast-hourly',
+            'test',
+            insertion_date=insertion_date
+        )
+
+    tsh.register_formula(
+        engine,
+        'backtest-hourly',
+        '(block-staircase '
+            '"forecast-hourly" '
+            '#:revision_freq_hours 2 '
+            '#:revision_time_hours 9 '
+            '#:maturity_offset_hours 1'
+        ')'
+    )
+
+    result = tsh.get(engine, 'backtest-hourly')
+    # with revision every 2 hours starting at 9h and 1h maturity offset
+    # we should get revisions at 9h, 11h, 13h picking data 1h ahead
+    assert_df("""
+2025-03-01 10:00:00+00:00     9.0
+2025-03-01 11:00:00+00:00     9.0
+2025-03-01 12:00:00+00:00    11.0
+2025-03-01 13:00:00+00:00    11.0
+2025-03-01 14:00:00+00:00    13.0
+2025-03-01 15:00:00+00:00    13.0
+2025-03-01 16:00:00+00:00    14.0
+""", result)
+
+
+
+    # test maturity_time parameters
+    insertion_dates = pd.date_range(
+        start=pd.Timestamp('2025-03-01 00:00'),
+        end=pd.Timestamp('2025-03-03 00:00'),
+        freq='D',
+        tz='utc'
+    )
+
+    for i, insertion_date in enumerate(insertion_dates, 1):
+        ts = pd.Series(
+            np.array([1, 1, 1]) * i,
+            index=pd.date_range(start=insertion_date.date(), periods=3, freq='D')
+        )
+        ts = ts.tz_localize('UTC')
+        tsh.update(
+            engine,
+            ts,
+            'forecast-maturity-time',
+            'test',
+            insertion_date=insertion_date
+        )
+
+    tsh.register_formula(
+        engine,
+        'backtest-maturity-time',
+        '(block-staircase '
+            '"forecast-maturity-time" '
+            '#:revision_freq_days 1 '
+            '#:revision_time_hours 0 '
+            '#:maturity_offset_days 0 '
+            '#:maturity_time_hours 12'
+        ')'
+    )
+
+    result = tsh.get(engine, 'backtest-maturity-time')
+    assert_df("""
+2025-03-02 00:00:00+00:00    1.0
+2025-03-03 00:00:00+00:00    2.0
+2025-03-04 00:00:00+00:00    3.0
+2025-03-05 00:00:00+00:00    3.0
+""", result)
+
+
+    # test with different timezone
+    tsh.register_formula(
+        engine,
+        'backtest-paris-tz',
+        '(block-staircase '
+            '"forecast-maturity-time" '
+            '#:revision_freq_days 1 '
+            '#:revision_time_hours 10 '
+            '#:revision_tz "Europe/Paris" '
+            '#:maturity_offset_days 1'
+        ')'
+    )
+
+    result = tsh.get(engine, 'backtest-paris-tz')
+    assert_df("""
+2025-03-03 01:00:00+01:00    1.0
+2025-03-04 01:00:00+01:00    2.0
+2025-03-05 01:00:00+01:00    3.0
+""", result)
+
+    # create data but query outside the range
+    insertion_dates = pd.date_range(
+        start=pd.Timestamp('2025-01-01 00:00'),
+        end=pd.Timestamp('2025-01-03 00:00'),
+        freq='D',
+        tz='utc'
+    )
+
+    for i, insertion_date in enumerate(insertion_dates, 1):
+        ts = pd.Series(
+            np.array([1, 1]) * i,
+            index=pd.date_range(start=insertion_date.date(), periods=2, freq='D')
+        )
+        ts = ts.tz_localize('UTC')
+        tsh.update(
+            engine,
+            ts,
+            'forecast-no-match',
+            'test',
+            insertion_date=insertion_date
+        )
+
+    tsh.register_formula(
+        engine,
+        'backtest-no-match',
+        '(block-staircase '
+            '"forecast-no-match" '
+            '#:revision_freq_days 1 '
+            '#:revision_time_hours 11 '
+            '#:maturity_offset_days 1'
+        ')'
+    )
+
+    # query far in the future where there is no data
+    result = tsh.get(
+        engine,
+        'backtest-no-match',
+        from_value_date=pd.Timestamp('2025-01-01'),
+        to_value_date=pd.Timestamp('2025-01-10')
+    )
+    assert len(result) == 0
+
 
 
 def test_holidays(engine, tsh):
