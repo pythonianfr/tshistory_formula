@@ -2410,26 +2410,29 @@ def linear_insert_date(series: pd.Series, d: datetime) -> pd.Series:
 
 # block staircase
 
-def build_argdict_delta(arg_days, arg_hours):
-    if arg_days is None and arg_hours is None:
+def build_argdict_delta(arg_days, arg_hours, arg_minutes):
+    args = [arg_days, arg_hours, arg_minutes]
+    if all(arg is None for arg in args):
         return None
-    if arg_hours is None:
-        return {'days': arg_days}
-    if arg_days is None:
-        return {'hours': arg_hours}
-    else:
-        return {'days': arg_days, 'hours': arg_hours}
+
+    argdict = {
+        'days': arg_days,
+        'hours': arg_hours,
+        'minutes': arg_minutes
+    }
+    return {k: v for k, v in argdict.items() if v is not None}
 
 
-def build_argdict(arg_days, arg_hours):
-    if arg_days is None and arg_hours is None:
+def build_argdict(arg_days, arg_hours, arg_minutes):
+    args = [arg_days, arg_hours, arg_minutes]
+    if all(arg is None for arg in args):
         return None
-    if arg_hours is None:
-        return {'day': arg_days}
-    if arg_days is None:
-        return {'hour': arg_hours}
-    else:
-        return {'day': arg_days, 'hour': arg_hours}
+    argdict = {
+        'day': arg_days,
+        'hour': arg_hours,
+        'minute': arg_minutes
+    }
+    return {k: v for k, v in argdict.items() if v is not None}
 
 
 @func('block-staircase')
@@ -2437,13 +2440,17 @@ def block_staircase(__interpreter__,
                     __from_value_date__,
                     __to_value_date__,
                     name: seriesname,
+                    revision_freq_minutes: Optional[int] = None,
                     revision_freq_hours: Optional[int] = None,
                     revision_freq_days: Optional[int] = None,
+                    revision_time_minutes: Optional[int] = None,
                     revision_time_hours: Optional[int] = None,
                     revision_time_days: Optional[int] = None,
                     revision_tz: Optional[TIMEZONES] = 'UTC',
+                    maturity_offset_minutes: Optional[int] = None,
                     maturity_offset_hours: Optional[int] = None,
                     maturity_offset_days: Optional[int] = None,
+                    maturity_time_minutes: Optional[int] = None,
                     maturity_time_hours: Optional[int] = None,
                     maturity_time_days: Optional[int] = None,
                     ) -> pd.Series:
@@ -2467,11 +2474,11 @@ def block_staircase(__interpreter__,
         name,
         __from_value_date__,
         __to_value_date__,
-        revision_freq=build_argdict_delta(revision_freq_days, revision_freq_hours),
-        revision_time=build_argdict(revision_time_days, revision_time_hours),
+        revision_freq=build_argdict_delta(revision_freq_days, revision_freq_hours, revision_freq_minutes),
+        revision_time=build_argdict(revision_time_days, revision_time_hours, revision_time_minutes),
         revision_tz=revision_tz,
-        maturity_offset=build_argdict_delta(maturity_offset_days, maturity_offset_hours),
-        maturity_time=build_argdict(maturity_time_days, maturity_time_hours)
+        maturity_offset=build_argdict_delta(maturity_offset_days, maturity_offset_hours, maturity_offset_minutes),
+        maturity_time=build_argdict(maturity_time_days, maturity_time_hours, maturity_time_minutes)
     )
 
     return series

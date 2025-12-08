@@ -4845,6 +4845,45 @@ def test_block_staircase_operator(engine, tsh):
 """, result)
 
 
+    # test with minute-level revision frequency
+    insertion_dates = pd.date_range(
+        start=pd.Timestamp('2025-03-01 10:00'),
+        end=pd.Timestamp('2025-03-01 10:30'),
+        freq='5min',
+        tz='utc'
+    )
+
+    for insertion_date in insertion_dates:
+        ts = pd.Series(
+            np.array([1, 1]) * (insertion_date.hour*100 + insertion_date.minute),
+            index=pd.date_range(start=insertion_date, periods=2, freq='5min')
+        )
+        tsh.update(
+            engine,
+            ts,
+            'forecast-minutes',
+            'test',
+            insertion_date=insertion_date
+        )
+
+    tsh.register_formula(
+        engine,
+        'backtest-minutes',
+        '(block-staircase '
+            '"forecast-minutes" '
+            '#:revision_freq_minutes 10 '
+            '#:revision_time_minutes 5 '
+            '#:maturity_offset_minutes 5'
+        ')'
+    )
+
+    result = tsh.get(engine, 'backtest-minutes')
+    assert_df("""
+2025-03-01 10:10:00+00:00    1005.0
+2025-03-01 10:20:00+00:00    1015.0
+2025-03-01 10:30:00+00:00    1025.0
+""", result)
+
 
     # test maturity_time parameters
     insertion_dates = pd.date_range(
@@ -4951,6 +4990,49 @@ def test_block_staircase_operator(engine, tsh):
     )
     assert len(result) == 0
 
+
+    # test combination of hours and minutes
+    insertion_dates = pd.date_range(
+        start=pd.Timestamp('2025-03-01 08:00'),
+        end=pd.Timestamp('2025-03-01 14:00'),
+        freq='30min',
+        tz='utc'
+    )
+
+    for insertion_date in insertion_dates:
+        ts = pd.Series(
+            np.array([1, 1, 1]) * (insertion_date.hour*100 + insertion_date.minute),
+            index=pd.date_range(start=insertion_date, periods=3, freq='30min')
+        )
+        tsh.update(
+            engine,
+            ts,
+            'forecast-combined',
+            'test',
+            insertion_date=insertion_date
+        )
+
+    tsh.register_formula(
+        engine,
+        'backtest-combined',
+        '(block-staircase '
+            '"forecast-combined" '
+            '#:revision_freq_hours 1 '
+            '#:revision_freq_minutes 30 '
+            '#:revision_time_hours 9 '
+            '#:revision_time_minutes 15 '
+            '#:maturity_offset_hours 0 '
+            '#:maturity_offset_minutes 45'
+        ')'
+    )
+
+    result = tsh.get(engine, 'backtest-combined')
+    assert_df("""
+2025-03-01 10:00:00+00:00     900.0
+2025-03-01 11:30:00+00:00    1030.0
+2025-03-01 13:00:00+00:00    1200.0
+2025-03-01 14:30:00+00:00    1330.0
+""", result)
 
 
 def test_holidays(engine, tsh):
