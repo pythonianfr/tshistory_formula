@@ -279,11 +279,12 @@ def do_migrate_intervals(engine: pgdb, namespace: str, interactive: bool) -> Non
 
 @version('tshistory-formula', '0.16.1')
 def migrate_holidays_operator(engine, namespace, interactive):
-    formulas = engine.execute(
-        f'select name, internal_metadata '
-        f'from "{namespace}".registry '
-        'where internal_metadata->\'formula\' is not null'
-    ).fetchall()
+    with engine.begin() as cn:
+        formulas = cn.execute(
+            f'select name, internal_metadata '
+            f'from "{namespace}".registry '
+            'where internal_metadata->\'formula\' is not null'
+        ).fetchall()
 
     for name, imeta in formulas:
         text = imeta['formula']
@@ -313,11 +314,12 @@ def migrate_revision_table(engine: pgdb, namespace: str, interactive: bool) -> N
 
 @version('tshistory-formula', '0.16.0')
 def rename_today_operator(engine, namespace, interactive):
-    formulas = engine.execute(
-        f'select name, internal_metadata '
-        f'from "{namespace}".registry '
-        'where internal_metadata->\'formula\' is not null'
-    ).fetchall()
+    with engine.begin() as cn:
+        formulas = cn.execute(
+            f'select name, internal_metadata '
+            f'from "{namespace}".registry '
+            'where internal_metadata->\'formula\' is not null'
+        ).fetchall()
 
     for name, imeta in formulas:
         text = imeta['formula']
@@ -586,10 +588,11 @@ def migrate_trig_formulas(engine: pgdb, namespace: str, interactive: bool) -> No
                 rewritten
             )
 
-    series = engine.execute(
-        f'select name, internal_metadata from "{namespace}".registry '
-        'where internal_metadata->\'formula\' is not null'
-    ).fetchall()
+    with engine.begin() as cn:
+        series = cn.execute(
+            f'select name, internal_metadata from "{namespace}".registry '
+            'where internal_metadata->\'formula\' is not null'
+        ).fetchall()
 
     if series:
         reorganise_trig_series(series)
@@ -619,10 +622,11 @@ def migrate_sub_formulas(engine: pgdb, namespace: str, interactive: bool) -> Non
                 rewritten
             )
 
-    series = engine.execute(
-        f'select name, internal_metadata from "{namespace}".registry '
-        'where internal_metadata->\'formula\' is not null'
-    ).fetchall()
+    with engine.begin() as cn:
+        series = cn.execute(
+            f'select name, internal_metadata from "{namespace}".registry '
+            'where internal_metadata->\'formula\' is not null'
+        ).fetchall()
 
     if series:
         reorganise_sub_series(series)
@@ -652,10 +656,11 @@ def migrate_groupadd_formulas(engine: pgdb, namespace: str, interactive: bool) -
                 rewritten
             )
 
-    groups = engine.execute(
-        f'select name, internal_metadata from "{namespace}".group_registry '
-        'where internal_metadata->\'formula\' is not null'
-    ).fetchall()
+    with engine.begin() as cn:
+        groups = cn.execute(
+            f'select name, internal_metadata from "{namespace}".group_registry '
+            'where internal_metadata->\'formula\' is not null'
+        ).fetchall()
 
     if groups:
         reorganise_groupadd_groups(groups)
