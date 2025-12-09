@@ -4,6 +4,7 @@ from psyl.lisp import (
     parse,
     serialize
 )
+from sqlhelp.pgapi import pgdb
 
 from tshistory.migrate import (
     do_cleanup_kvstore,
@@ -43,12 +44,12 @@ class Migrator(_Migrator):
 
 
 @version('tshistory-formula', '0.18.1')
-def migrate_0181(engine, namespace, interactive):
+def migrate_0181(engine: pgdb, namespace: str, interactive: bool) -> None:
     _migrate_rebuild_dependencies(engine, namespace, interactive)
 
 
 @version('tshistory-formula', '0.18.0')
-def migrate_0180(engine, namespace, interactive):
+def migrate_0180(engine: pgdb, namespace: str, interactive: bool) -> None:
     _migrate_formula_history(engine, namespace, interactive)
     _migrate_bound_groups(engine, namespace, interactive)
     _migrate_freq_and_timezone(engine, namespace, interactive)
@@ -60,7 +61,7 @@ def migrate_0180(engine, namespace, interactive):
     _migrate_rebuild_dependencies(engine, namespace, interactive)
 
 
-def _migrate_form_history_table(engine, namespace, interactive):
+def _migrate_form_history_table(engine: pgdb, namespace: str, interactive: bool) -> None:
     """Create form_history table for formula version tracking"""
     ns = namespace
     with engine.begin() as cn:
@@ -78,7 +79,7 @@ create index if not exists "ix_{ns}_form_history_sid" on "{ns}".form_history(sid
 """, _binary=False)
 
 
-def _migrate_fix_formula_indexes(engine, namespace, interactive):
+def _migrate_fix_formula_indexes(engine: pgdb, namespace: str, interactive: bool) -> None:
     """Fix indexes in both namespaces used by formula"""
     from pathlib import Path
     from tshistory.migrate import (
@@ -105,12 +106,12 @@ def _migrate_fix_formula_indexes(engine, namespace, interactive):
     do_fix_indexes(engine, f'{namespace}-formula-patch', interactive, patch_indexes)
 
 
-def _migrate_formula_patch_metadata_integrity(engine, namespace, interactive):
+def _migrate_formula_patch_metadata_integrity(engine: pgdb, namespace: str, interactive: bool) -> None:
     # apply metadata integrity migration to formula-patch namespace
     do_enforce_series_metadata_integrity(engine, f'{namespace}-formula-patch', interactive)
 
 
-def _migrate_rebuild_dependencies(engine, namespace, interactive):
+def _migrate_rebuild_dependencies(engine: pgdb, namespace: str, interactive: bool) -> None:
     print('rebuilding formula dependencies')
     from tshistory_formula.tsio import timeseries
     tsh = timeseries(namespace)
@@ -119,7 +120,7 @@ def _migrate_rebuild_dependencies(engine, namespace, interactive):
         rebuild_dependencies(cn, tsh)
 
 
-def _migrate_formula_history(engine, namespace, interactive):
+def _migrate_formula_history(engine: pgdb, namespace: str, interactive: bool) -> None:
     ns = namespace
     sql = (
         f'create table if not exists "{ns}".form_history ('
@@ -135,7 +136,7 @@ def _migrate_formula_history(engine, namespace, interactive):
         )
 
 
-def _migrate_bound_groups(engine, namespace, interactive):
+def _migrate_bound_groups(engine: pgdb, namespace: str, interactive: bool) -> None:
     import json
     import pandas as pd
     from tshistory_formula.tsio import timeseries
@@ -203,7 +204,7 @@ create index if not exists "ix_{ns}_group_series_map_seriesid" on "{ns}".group_s
             )
 
 
-def _migrate_freq_and_timezone(engine, namespace, interactive):
+def _migrate_freq_and_timezone(engine: pgdb, namespace: str, interactive: bool) -> None:
     with engine.begin() as cn:
         formulas = cn.execute(
             f'select name, internal_metadata '
@@ -233,7 +234,7 @@ def _migrate_freq_and_timezone(engine, namespace, interactive):
             )
 
 
-def _migrate_fix_bad_day_freq(engine, namespace, interactive):
+def _migrate_fix_bad_day_freq(engine: pgdb, namespace: str, interactive: bool) -> None:
     with engine.begin() as cn:
         formulas = cn.execute(
             f'select name, internal_metadata '
@@ -256,7 +257,7 @@ def _migrate_fix_bad_day_freq(engine, namespace, interactive):
 
 
 @version('tshistory-formula', '0.17.0')
-def do_migrate_intervals(engine, namespace, interactive):
+def do_migrate_intervals(engine: pgdb, namespace: str, interactive: bool) -> None:
     from tshistory.migrate import migrate_intervals
 
     migrate_intervals(engine, f'{namespace}-formula-patch', interactive)
@@ -304,7 +305,7 @@ def migrate_holidays_operator(engine, namespace, interactive):
 
 
 @version('tshistory-formula', '0.16.0')
-def migrate_revision_table(engine, namespace, interactive):
+def migrate_revision_table(engine: pgdb, namespace: str, interactive: bool) -> None:
     from tshistory.migrate import migrate_add_diffstart_diffend
 
     migrate_add_diffstart_diffend(engine, f'{namespace}-formula-patch', interactive)
@@ -340,7 +341,7 @@ def rename_today_operator(engine, namespace, interactive):
             )
 
 
-def migrate_formula_schema(engine, namespace, interactive):
+def migrate_formula_schema(engine: pgdb, namespace: str, interactive: bool) -> None:
     print('migrate formula schema')
     ns = namespace
     from tshistory.tsio import timeseries as tshclass
@@ -468,7 +469,7 @@ def migrate_formula_schema(engine, namespace, interactive):
         cn.execute(f'drop table "{ns}".formula')
 
 
-def migrate_group_formula_schema(engine, namespace, interactive):
+def migrate_group_formula_schema(engine: pgdb, namespace: str, interactive: bool) -> None:
     print('migrate group formula schema')
     ns = namespace
     from tshistory.tsio import timeseries as tshclass
@@ -545,7 +546,7 @@ def migrate_group_formula_schema(engine, namespace, interactive):
         cn.execute(f'drop table "{ns}".group_binding')
 
 
-def migrate_to_formula_patch(engine, namespace, interactive):
+def migrate_to_formula_patch(engine: pgdb, namespace: str, interactive: bool) -> None:
     print('migrate to formula patch')
     ns_name = f'{namespace}-formula-patch'
     with engine.begin() as cn:
@@ -561,7 +562,7 @@ def migrate_to_formula_patch(engine, namespace, interactive):
     schem.create(engine)
 
 
-def migrate_trig_formulas(engine, namespace, interactive):
+def migrate_trig_formulas(engine: pgdb, namespace: str, interactive: bool) -> None:
     print('migrate trig formulas')
     from tshistory_formula.tsio import timeseries
     tsh = timeseries(namespace)  # noqa: F841
@@ -594,7 +595,7 @@ def migrate_trig_formulas(engine, namespace, interactive):
         reorganise_trig_series(series)
 
 
-def migrate_sub_formulas(engine, namespace, interactive):
+def migrate_sub_formulas(engine: pgdb, namespace: str, interactive: bool) -> None:
     print('migrate sub formulas')
     from tshistory_formula.tsio import timeseries
     tsh = timeseries(namespace)  # noqa: F841
@@ -627,7 +628,7 @@ def migrate_sub_formulas(engine, namespace, interactive):
         reorganise_sub_series(series)
 
 
-def migrate_groupadd_formulas(engine, namespace, interactive):
+def migrate_groupadd_formulas(engine: pgdb, namespace: str, interactive: bool) -> None:
     print('migrate group-add formulas')
     from tshistory_formula.tsio import timeseries
     tsh = timeseries(namespace)  # noqa: F841
