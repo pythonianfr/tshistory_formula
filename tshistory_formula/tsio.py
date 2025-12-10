@@ -13,6 +13,7 @@ from tshistory.tsio import timeseries as basets
 from tshistory.util import (
     compatible_date,
     empty_series,
+    ensure_plugin_registration,
     patch,
     ts,
     tx,
@@ -38,6 +39,8 @@ from tshistory_formula.registry import (
 
 
 L = logging.getLogger('tshistory.tsio')
+
+ensure_plugin_registration()
 
 
 class timeseries(basets):
