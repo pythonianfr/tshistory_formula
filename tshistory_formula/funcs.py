@@ -421,6 +421,24 @@ def byor(*queries: search.query) -> search.query:
     return search.or_(*queries)
 
 
+@func('by.at-path')
+def byatpath(path: str, children: bool=False) -> search.query:
+    """
+    Yields a query filter operating on series tree path.
+
+    Example: `(add (findseries (by.at-path "production.france")))`
+
+    This will filter the series at the specified path in the tree.
+
+    The `children` keyword controls whether to include all series in
+    child paths.
+
+    Example: `(add (findseries (by.at-path "production" #:children #t)))`
+
+    """
+    return search.byatpath(path, children)
+
+
 def asof_transform(tree):
     posargs, _kwargs = buildargs(tree[1:])
     return [

@@ -872,6 +872,50 @@ def test_more_filter(engine, tsh):
     assert tsh.tzaware(engine, 'find.and')
 
 
+def test_by_at_path(engine, tsh):
+    a = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(utcdt(2023, 1, 1), periods=3, freq='D')
+    )
+    tsh.update(engine, a, 'path-test-fr', 'Babar')
+    tsh.update(engine, a * 2, 'path-test-de', 'Celeste')
+
+    tsh.set_in_tree(engine, 'path-test-fr', 'Production.France')
+    tsh.set_in_tree(engine, 'path-test-de', 'Production.Germany')
+
+    tsh.register_formula(
+        engine,
+        'find.by.path',
+        '(add (findseries (by.at-path "Production.France")))'
+    )
+    ts = tsh.get(engine, 'find.by.path')
+    assert_df("""
+2023-01-01 00:00:00+00:00    1.0
+2023-01-02 00:00:00+00:00    2.0
+2023-01-03 00:00:00+00:00    3.0
+""", ts)
+
+    tsh.register_formula(
+        engine,
+        'find.by.path',
+        '(add (findseries (by.at-path "Production" #:children #t)))'
+    )
+    ts = tsh.get(engine, 'find.by.path')
+    assert_df("""
+2023-01-01 00:00:00+00:00    3.0
+2023-01-02 00:00:00+00:00    6.0
+2023-01-03 00:00:00+00:00    9.0
+""", ts)
+
+    tsh.register_formula(
+        engine,
+        'find.by.path',
+        '(add (findseries (by.at-path "Production")))'
+    )
+    ts = tsh.get(engine, 'find.by.path')
+    assert len(ts) == 0
+
+
 def test_filter_vs_tzaware(engine, tsh):
     a = pd.Series(
         [1, 2, 3],
