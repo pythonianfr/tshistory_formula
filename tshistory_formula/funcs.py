@@ -3,6 +3,7 @@ from typing import List, Union, Optional, Tuple
 import calendar
 from functools import reduce
 import operator
+import re
 
 import holidays
 import numpy as np
@@ -1781,6 +1782,9 @@ def upsample_transform(tree):
     return top
 
 
+FREQ_PATTERN = re.compile(r'(\d*)([A-Z]+)')
+
+
 @func('upsample')
 @argscope('upsample', upsample_transform)
 def upsample(__interpreter__,
@@ -1810,9 +1814,38 @@ def upsample(__interpreter__,
             series = _fill_series(series, fillopt, origin_freq)
 
     # we want to extend the series to the next expected timestep
-    extended_series = series.iloc[[-1]].rename(
-        lambda x: x + pd.tseries.frequencies.to_offset(origin_freq)
-    )
+    last_ts = series.index[-1]
+
+    if not tzaware_series(series):
+        next_ts = last_ts + pd.tseries.frequencies.to_offset(origin_freq)
+    else:
+        # For tzaware series, pandas "to_offset" return unexpected
+        # timestamp when localized series are given in UTC, for
+        # frequencies bigger than day.  We need to determine the
+        # correct timedelta by another way.
+
+        # identify in the pattern of origin_freq if there are "nfreq" and "freq"
+        freq_match = FREQ_PATTERN.match(origin_freq)
+        delta = None
+        if freq_match:
+            nfreq = int(freq_match.group(1)) if freq_match.group(1) else 1
+            str_freq = freq_match.group(2)
+
+            # delta determination thanks to relativedelta
+            if str_freq in ['YE', 'YS', 'BYE', 'BYS']:
+                delta = relativedelta(years=nfreq)
+            elif str_freq in ['QE', 'QS', 'BQE', 'BQS']:
+                delta = relativedelta(months=nfreq*3)
+            elif str_freq in ['ME', 'MS', 'BME', 'BMS']:
+                delta = relativedelta(months=nfreq)
+
+        if delta is not None:
+            # use relativedelta for Y, Q, M frequencies
+            next_ts = pd.Timestamp(last_ts + delta)
+        else:
+            next_ts = last_ts + pd.tseries.frequencies.to_offset(origin_freq)
+
+    extended_series = pd.Series([series.iloc[-1]], index=[next_ts])
     series = pd.concat([series, extended_series])
 
     upsampled = series.resample(freq)

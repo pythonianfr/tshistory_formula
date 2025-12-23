@@ -2621,8 +2621,7 @@ Freq: 3h, Name: upsample-formula-daily, dtype: float64
 2027-01-01 00:00:00+01:00    0
 """, extended_series)
 
-
-    # not ok with the series converted to UTC
+    # and utc ?
     extended_series_utc = ts.tz_convert('UTC').iloc[[-1]].rename(
         lambda x: x + pd.tseries.frequencies.to_offset("YS")
     )
@@ -2639,16 +2638,15 @@ Freq: 3h, Name: upsample-formula-daily, dtype: float64
     )
 
     ts2 = tsh.get(engine, 'upsample-formula-ys')
-    # HERE, we expect an end on the 31st of december 2026
+    # here, we got an end on the 31st of december 2026 -> ok
     assert_df("""
-2026-01-01 18:00:00+00:00    0.0
-2026-01-01 19:00:00+00:00    0.0
-2026-01-01 20:00:00+00:00    0.0
-2026-01-01 21:00:00+00:00    0.0
-2026-01-01 22:00:00+00:00    0.0
+2026-12-31 18:00:00+00:00    0.0
+2026-12-31 19:00:00+00:00    0.0
+2026-12-31 20:00:00+00:00    0.0
+2026-12-31 21:00:00+00:00    0.0
+2026-12-31 22:00:00+00:00    0.0
 Freq: h, Name: upsample-formula-ys, dtype: float64
 """, ts2.tail())
-
 
 
 def test_upsample_fillopt(engine, tsh):
