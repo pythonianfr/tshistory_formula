@@ -2604,6 +2604,52 @@ Freq: 3h, Name: upsample-formula-daily, dtype: float64
 Freq: 3h, Name: upsample-formula-daily, dtype: float64
 """, ts2.tail())
 
+    # series extension to next expected timestep for yearly localized series
+    ts = pd.Series(
+        [2, 0],
+        index=[
+            pd.Timestamp('2025-01-01T00:00:00+01:00'),
+            pd.Timestamp('2026-01-01T00:00:00+01:00'),
+        ]
+    )
+
+    # ok with the series localized
+    extended_series = ts.iloc[[-1]].rename(
+        lambda x: x + pd.tseries.frequencies.to_offset("YS")
+    )
+    assert_df("""
+2027-01-01 00:00:00+01:00    0
+""", extended_series)
+
+
+    # not ok with the series converted to UTC
+    extended_series_utc = ts.tz_convert('UTC').iloc[[-1]].rename(
+        lambda x: x + pd.tseries.frequencies.to_offset("YS")
+    )
+    assert_df("""
+2026-01-01 23:00:00+00:00    0
+""", extended_series_utc)
+
+    tsh.update(engine, ts, 'upsample-ys', 'Babar')
+
+    tsh.register_formula(
+        engine,
+        'upsample-formula-ys',
+        '(upsample (series "upsample-ys") (freq "h") (freq "YS") #:method "ffill")'
+    )
+
+    ts2 = tsh.get(engine, 'upsample-formula-ys')
+    # HERE, we expect an end on the 31st of december 2026
+    assert_df("""
+2026-01-01 18:00:00+00:00    0.0
+2026-01-01 19:00:00+00:00    0.0
+2026-01-01 20:00:00+00:00    0.0
+2026-01-01 21:00:00+00:00    0.0
+2026-01-01 22:00:00+00:00    0.0
+Freq: h, Name: upsample-formula-ys, dtype: float64
+""", ts2.tail())
+
+
 
 def test_upsample_fillopt(engine, tsh):
     yearly_nas = pd.Series(
