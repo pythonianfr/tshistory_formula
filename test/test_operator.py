@@ -701,6 +701,55 @@ def test_filter_bybasket(engine, tsh):
 """, ts)
 
 
+def test_deleted_basket_breaks_register_formula(engine, tsh):
+    a = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(utcdt(2026, 1, 1), periods=3, freq='D')
+    )
+    tsh.update(engine, a, 'ghost-basket-series-A', 'Babar')
+    tsh.update(engine, a, 'unrelated-series', 'Babar')
+
+    tsh.register_basket(
+        engine,
+        'ghost-basket',
+        '(by.name "ghost-basket-series")'
+    )
+
+    tsh.register_formula(
+        engine,
+        'formula-with-ghost-basket',
+        '(add (findseries (by.basket "ghost-basket")))'
+    )
+
+    tsh.delete_basket(engine, 'ghost-basket')
+
+    # register_formula on a dependent is broken
+    with pytest.raises(TypeError) as err:
+        tsh.register_formula(
+            engine,
+            'formula-referencing-ghost',
+            '(series "formula-with-ghost-basket")'
+        )
+    assert err.value.args[0] == "'NoneType' object is not subscriptable"
+
+    # rename on an unrelated series is also broken
+    with pytest.raises(TypeError) as err:
+        tsh.rename(engine, 'unrelated-series', 'unrelated-series-renamed')
+    assert err.value.args[0] == "'NoneType' object is not subscriptable"
+
+    # but register_formula on an independent formula should work
+    tsh.register_formula(
+        engine,
+        'innocent-formula',
+        '(series "unrelated-series")'
+    )
+
+    tsh.delete(engine, 'formula-with-ghost-basket')
+    tsh.delete(engine, 'ghost-basket-series-A')
+    tsh.delete(engine, 'unrelated-series')
+    tsh.delete(engine, 'innocent-formula')
+
+
 def test_more_filter(engine, tsh):
     a = pd.Series(
         [1, 2, 3],
