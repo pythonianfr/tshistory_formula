@@ -187,7 +187,7 @@ def depends(self, name: str, direct=False, reverse=False) -> List[str]:
             return []
 
         if reverse:
-            return self.tsh.dependents(cn, name, direct=direct)
+            return self.tsh.dependents(cn, name, direct=direct, static=False)
 
         return self.tsh.depends(cn, name, direct=direct)
 
@@ -231,7 +231,7 @@ def formula_components(self,
 
         parsed = parse(form)
         names = list(
-            self.tsh.find_series(cn, parsed)
+            self.tsh.find_series(cn, parsed, static=False)
         )
 
         # compute expansion of the remotely defined formula

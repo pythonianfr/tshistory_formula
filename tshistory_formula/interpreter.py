@@ -125,7 +125,7 @@ def has_compatible_operators(cn, tsh, tree, good_operators):
            for op in operators):
         return False
 
-    names = tsh.find_series(cn, tree)
+    names = tsh.find_series(cn, tree, static=False)
     for name in names:
         formula = tsh.formula(cn, name)
         if formula:

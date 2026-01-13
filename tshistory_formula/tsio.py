@@ -56,14 +56,14 @@ class timeseries(basets):
     metadata_compat_excluded = ()
     concurrency = 16
 
-    def find_series(self, cn, tree, static=False):
+    def find_series(self, cn, tree, static=True):
         if tree is None:
             return {}
         if not static:
             tree = helper.replace_findseries(cn, self, tree)
         return self._find_series(cn, tree, static=static)
 
-    def _find_series(self, cn, tree, static=False):
+    def _find_series(self, cn, tree, static=True):
         op = tree[0]
         finder = FINDERS.get(op)
         seriestree = finder(cn, self, tree) if finder else {}
@@ -167,7 +167,7 @@ class timeseries(basets):
             name=name
         )
 
-        deps = self.find_series(cn, tree, static=True)
+        deps = self.find_series(cn, tree)
         if not deps:
             return
 
@@ -182,7 +182,7 @@ class timeseries(basets):
             deps=list(deps)
         )
 
-    def _direct_dependents(self, cn, name, static=False):
+    def _direct_dependents(self, cn, name, static=True):
         static_deps = list(cn.execute(
             f'select f.name '
             f'from "{self.namespace}".registry as f, '
@@ -213,7 +213,7 @@ class timeseries(basets):
         return set(static_deps + dynamic_deps)
 
     @tx
-    def dependents(self, cn, name, direct=False, static=False):
+    def dependents(self, cn, name, direct=False, static=True):
         if direct:
             return sorted(self._direct_dependents(cn, name, static=static))
 
@@ -230,7 +230,7 @@ class timeseries(basets):
     def depends(self, cn, name, direct=False):
         formula = self.formula(cn, name)
         tree = parse(formula)
-        deps = set(self.find_series(cn, tree))
+        deps = set(self.find_series(cn, tree, static=False))
         if direct:
             return sorted(deps)
 
@@ -507,7 +507,7 @@ class timeseries(basets):
             return super().interval(cn, name, notz)
 
         tree = parse(formula)
-        series = self.find_series(cn, tree)
+        series = self.find_series(cn, tree, static=False)
         if not series:
             # e.g. '(constant ...)' series
             return None
@@ -624,7 +624,7 @@ class timeseries(basets):
 
         formula = self.formula(cn, name)
         tree = parse(formula)
-        series = self.find_series(cn, tree)
+        series = self.find_series(cn, tree, static=False)
         allrevs = []
         for name in series:
             if not self.exists(cn, name):
@@ -781,7 +781,8 @@ class timeseries(basets):
             tree = parse(text)
             series = self.find_series(
                 cn,
-                tree
+                tree,
+                static=False
             )
             if newname in series:
                 errors.append(fname)
@@ -1057,7 +1058,7 @@ class timeseries(basets):
                 shownames=bindings['series'].values,
                 scopes=False
             )
-            series = self.find_series(cn, tree)
+            series = self.find_series(cn, tree, static=False)
 
             # let's only keep the groups that are really used
             # users like to provide mappings that contain
@@ -1270,7 +1271,7 @@ class timeseries(basets):
                 'to_value_date': to_value_date,
             }
         )
-        series = self.find_series(cn, new_tree)
+        series = self.find_series(cn, new_tree, static=False)
         formula = serialize(new_tree)
 
         groupmap = defaultdict(dict)

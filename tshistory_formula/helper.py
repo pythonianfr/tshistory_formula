@@ -401,7 +401,7 @@ def scan_descendant_nodes(cn, tsh, name):
     def explore_tree(cn, tsh, tree, depth):
         depth += 1
         depths.append(depth)
-        lseries = tsh.find_series(cn, tree)
+        lseries = tsh.find_series(cn, tree, static=False)
         for series in lseries:
             formula = tsh.formula(cn, series)
             if not formula:
