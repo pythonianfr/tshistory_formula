@@ -28,6 +28,7 @@ from tshistory.util import (
     tzaware_series
 )
 from tshistory import search
+from tshistory_formula.search import bynothing
 from tshistory_formula.registry import (
     finder,
     func,
@@ -333,6 +334,8 @@ def bybasket(__interpreter__,
     """
     i = __interpreter__
     query = i.tsh.basket_definition(i.cn, basketname)
+    if query is None:
+        return bynothing()
     return search.query.fromexpr(query)
 
 

@@ -9,6 +9,16 @@ from tshistory.search import (
 IMPORTCALLBACK = None
 
 
+class bynothing(query):
+    # internal safety object for missing baskets
+
+    def sql(self, namespace='tsh'):
+        return 'FALSE', {}
+
+    def __expr__(self):
+        return '(by.nothing)'
+
+
 class byformulacontents(query):
     __slots__ = ('query',)
 
