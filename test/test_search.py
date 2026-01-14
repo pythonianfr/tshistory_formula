@@ -106,6 +106,22 @@ def test_replace_findseries(engine, tsh):
     )
 
 
+def test_find_series_static_on_expanded_tree(engine, tsh):
+    ts = pd.Series([1], [pd.Timestamp('2024-01-01', tz='UTC')])
+    tsh.update(engine, ts, 'static-test-a', 'test')
+    tsh.update(engine, ts, 'static-test-b', 'test')
+
+    formula = '(add (findseries (by.name "static-test")))'
+    tree = lisp.parse(formula)
+
+    expanded_tree = replace_findseries(engine, tsh, tree)
+
+    static_result = set(tsh.find_series(engine, expanded_tree, static=True))
+    dynamic_result = set(tsh.find_series(engine, expanded_tree, static=False))
+
+    assert static_result == dynamic_result == {'static-test-a', 'static-test-b'}
+
+
 def test_find_from_expr(engine, tsh):
     expr = '(by.formulacontents "whatever")'
     tsh.find(engine, query.fromexpr(expr))

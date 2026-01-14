@@ -1058,7 +1058,7 @@ class timeseries(basets):
                 shownames=bindings['series'].values,
                 scopes=False
             )
-            series = self.find_series(cn, tree, static=False)
+            series = self.find_series(cn, tree)
 
             # let's only keep the groups that are really used
             # users like to provide mappings that contain
@@ -1271,7 +1271,7 @@ class timeseries(basets):
                 'to_value_date': to_value_date,
             }
         )
-        series = self.find_series(cn, new_tree, static=False)
+        series = self.find_series(cn, new_tree)
         formula = serialize(new_tree)
 
         groupmap = defaultdict(dict)
