@@ -25,6 +25,7 @@ from tshistory_formula import (
     api,  # trigger extension  # noqa: F401
     interpreter,
     helper,
+    search,
     types
 )
 from tshistory_formula.registry import (
@@ -805,6 +806,39 @@ class timeseries(basets):
         if self.patch.exists(cn, oldname):
             self.patch.rename(cn, oldname, newname)
         super().rename(cn, oldname, newname)
+
+    @tx
+    def rename_basket(self, cn, oldname, newname, group=False):
+        formulas = self.find(
+            cn,
+            search.byformulacontents(f'by.basket "{oldname}"')
+        )
+
+        def edit(tree, oldname, newname):
+            newtree = []
+            bybasket = False
+            for node in tree:
+                if isinstance(node, list):
+                    newtree.append(edit(node, oldname, newname))
+                    continue
+                if node == 'by.basket':
+                    bybasket = True
+                    newtree.append(node)
+                    continue
+                elif node == oldname and bybasket:
+                    node = newname
+                newtree.append(node)
+                bybasket = False
+            return newtree
+
+        for fname in formulas:
+            text = self.formula(cn, fname)
+            tree = parse(text)
+            newtext = serialize(edit(tree, oldname, newname))
+            if newtext != text:
+                self.update_internal_metadata(cn, fname, {'formula': newtext})
+
+        super().rename_basket(cn, oldname, newname, group=group)
 
 
     # find override

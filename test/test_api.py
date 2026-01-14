@@ -1968,3 +1968,46 @@ def test_tree_api(tsx, engine):
 
     sl = tsx.find('(by.at-path "UE" #:children #t)')
     assert sl == ['ue.france']
+
+
+def test_rename_basket(tsx):
+    ts = pd.Series(
+        [1, 2, 3],
+        pd.date_range(utcdt(2026, 1, 1), freq='D', periods=3)
+    )
+    tsx.update('rb-series-a', ts, 'Babar')
+    tsx.update('rb-series-b', ts, 'Babar')
+    tsx.update('rb-other', ts, 'Babar')
+
+    tsx.register_basket('rb-basket', '(by.name "rb-series")')
+    tsx.register_basket('rb-other-basket', '(by.name "rb-other")')
+
+    tsx.register_formula(
+        'rb-formula-with-basket',
+        '(add (findseries (by.basket "rb-basket")))'
+    )
+    tsx.register_formula(
+        'rb-formula-other-basket',
+        '(add (findseries (by.basket "rb-other-basket")))'
+    )
+    tsx.register_formula(
+        'rb-formula-no-basket',
+        '(add (series "rb-series-a") (series "rb-series-b"))'
+    )
+
+    tsx.rename_basket('rb-basket', 'rb-basket-renamed')
+
+    assert tsx.formula('rb-formula-with-basket') == '(add (findseries (by.basket "rb-basket-renamed")))'
+    assert tsx.formula('rb-formula-other-basket') == '(add (findseries (by.basket "rb-other-basket")))'
+    assert tsx.formula('rb-formula-no-basket') == '(add (series "rb-series-a") (series "rb-series-b"))'
+
+    assert tsx.basket_definition('rb-basket') is None
+    assert tsx.basket_definition('rb-basket-renamed') == '(by.name "rb-series")'
+
+    with pytest.raises(ValueError) as err:
+        tsx.rename_basket('no-such-basket', 'whatever')
+    assert 'does not exist' in str(err.value)
+
+    with pytest.raises(ValueError) as err:
+        tsx.rename_basket('rb-basket-renamed', 'rb-other-basket')
+    assert 'already exists' in str(err.value)
