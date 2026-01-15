@@ -1540,11 +1540,10 @@ def test_slice_upsample(engine, tsh):
 
     result = tsh.get(engine, 'sliced-upsample')
 
-    # the slice should cut at july 2026 but we have data until the end of 2027
     assert_df("""
-2027-12-31 21:00:00    400.0
-2027-12-31 22:00:00    400.0
-2027-12-31 23:00:00    400.0
+2026-07-14 22:00:00    300.0
+2026-07-14 23:00:00    300.0
+2026-07-15 00:00:00    300.0
 """, result[-3:])
 
 

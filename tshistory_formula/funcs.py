@@ -1445,9 +1445,15 @@ def slice(series: pd.Series,
 
     Example: `(slice (series "cut-me") #:fromdate (date "2018-01-01"))`
     """
-    # the series operator did request with fromdate/todate
-    # because of our `scope` hint
-    # hence we a little to do
+    # apply actual slicing to handle cases where inner operators
+    # (like upsample) may have extended the date range
+    if fromdate is not None or todate is not None:
+        tzaware = tzaware_series(series)
+        fromdate = compatible_date(tzaware, fromdate)
+        todate = compatible_date(tzaware, todate)
+        options = series.options.copy()
+        series = series.loc[fromdate:todate]
+        series.options = options
     return series
 
 
