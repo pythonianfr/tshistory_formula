@@ -1515,6 +1515,39 @@ def test_slice_options(engine, tsh):
 """, ts)
 
 
+def test_slice_upsample(engine, tsh):
+    ts = pd.Series(
+        [100, 200, 300, 400, 500],
+        index=[
+            pd.Timestamp('2024-01-01'),
+            pd.Timestamp('2025-01-01'),
+            pd.Timestamp('2026-01-01'),
+            pd.Timestamp('2027-01-01'),
+            pd.Timestamp('2028-01-01'),
+        ]
+    )
+    tsh.update(engine, ts, 'annual-to-2028', 'Babar')
+
+    # upsample to hourly then slice until july 2026
+    tsh.register_formula(
+        engine,
+        'sliced-upsample',
+        '(slice '
+        '  (upsample (series "annual-to-2028") (freq "h") (freq "YS") #:method "ffill") '
+        '  #:todate (date "2026-07-15")'
+        ')'
+    )
+
+    result = tsh.get(engine, 'sliced-upsample')
+
+    # the slice should cut at july 2026 but we have data until the end of 2027
+    assert_df("""
+2027-12-31 21:00:00    400.0
+2027-12-31 22:00:00    400.0
+2027-12-31 23:00:00    400.0
+""", result[-3:])
+
+
 def test_scalar_pow(engine, tsh):
     base = pd.Series(
         [1, 2, 3],
