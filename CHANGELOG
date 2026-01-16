@@ -1,6 +1,21 @@
 # Changelog
 
-## [Unreleased]
+## [0.18.2] - 2026-01-16
+
+### Added
+- operator/block-staircase: minutes inputs support
+- operators: expose by.at-path to formulas
+- formula: propagate basket rename to formulas using by.basket
+
+### Changed
+- formula: static=True is now the default for find_series/dependents
+- operator/resample: calculation of extended aware series for Y, M and Q origin_freq
+
+### Fixed
+- migrate: engine.execute bugs
+- formula/tsio: ensure_plugin_registration called on init
+- formula: handle deleted baskets gracefully in by.basket
+- operator/slice: actually perform the slicing
 
 ## [0.18.1] - 2025-11-05
 
